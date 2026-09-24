@@ -1,0 +1,67 @@
+name: Check and deploy Espada
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "1"
+      EXPO_NO_TELEMETRY: "1"
+      EXPO_NO_DOTENV: "1"
+      EXPO_PUBLIC_DATA_MODE: demo
+      APP_ENV: github-pages
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Check types and learning rules
+        run: npm run check
+      - name: Set project site path
+        shell: bash
+        run: |
+          repository_name="${GITHUB_REPOSITORY#*/}"
+          if [[ "$repository_name" == *.github.io ]]; then
+            echo 'GITHUB_PAGES_BASE_PATH=' >> "$GITHUB_ENV"
+          else
+            echo "GITHUB_PAGES_BASE_PATH=/$repository_name" >> "$GITHUB_ENV"
+          fi
+      - name: Export the public demo
+        run: npm run build:pages
+      - name: Upload site artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
