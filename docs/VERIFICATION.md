@@ -1,3 +1,9 @@
+# Compact interface verification — 2026-09-24
+
+- Shared visual density reduced while keeping 44 px minimum action targets. No core/repository/database behavior changed.
+- Browser checks: teacher group/student selection and compact report list, 390 × 844 student home and navigation, disclosure expansion, answer selection, full independent check and completed-homework status with date. Browser error log empty.
+- Correctly distinguishes a completed check from topic mastery; watching a lesson/video does not grant mastery. Existing synthetic records survive reload.
+
 # Group workflow verification — 2026-09-24
 
 - TypeScript and 47 tests pass. New tests cover group filtering, exact-class authorization, active roster selection, atomic issuance, retry idempotence and separate pupil completion.

@@ -7,6 +7,7 @@ import { uid } from "../core/ids";
 import { checkQuestions } from "../core/engine";
 import { topicMastery, reviewSuggestions } from "../core/reports";
 import {
+  Steps,
   Button,
   Card,
   Txt,
@@ -107,20 +108,20 @@ export function Lesson({
   }
   return (
     <View
-      style={{ gap: 23, maxWidth: 900, width: "100%", alignSelf: "center" }}
+      style={{ gap: 16, maxWidth: 900, width: "100%", alignSelf: "center" }}
     >
       <Button secondary small onPress={back} icon="arrow-left">
         Back to learning
       </Button>
       <View>
-        <Pill>
+        <Pill icon={stage === "complete" ? "check-circle" : "book-open"}>
           {stage === "complete"
             ? "CHECK COMPLETE"
             : t.practice
               ? `ШАГ ${stage === "lesson" ? 1 : stage === "practice" ? 2 : 3} ИЗ 3`
               : "МАТЕРИАЛЫ ТЕМЫ"}
         </Pill>
-        <Txt size={34} weight="600" style={{ marginTop: 12 }}>
+        <Txt size={27} weight="600" style={{ marginTop: 12 }}>
           {t.title}
         </Txt>
         <Txt color={colors.muted}>{t.objective}</Txt>
@@ -135,26 +136,10 @@ export function Lesson({
         </Button>
       )}
       {t.practice && (
-        <View style={styles.row}>
-          {["Lesson", "Guided practice", "Independent check"].map((x, i) => (
-            <View key={x} style={{ flex: 1, gap: 7 }}>
-              <View
-                style={{
-                  height: 4,
-                  borderRadius: 3,
-                  backgroundColor:
-                    i <=
-                    { lesson: 0, practice: 1, check: 2, complete: 3 }[stage]
-                      ? colors.green
-                      : "#E1E6DD",
-                }}
-              />
-              <Txt size={11} color={colors.muted}>
-                {x}
-              </Txt>
-            </View>
-          ))}
-        </View>
+        <Steps
+          labels={["Урок", "Практика", "Проверка"]}
+          current={{ lesson: 0, practice: 1, check: 2, complete: 3 }[stage]}
+        />
       )}
       {Boolean(error) && (
         <Card style={{ backgroundColor: "#FFF2EF" }}>
@@ -350,7 +335,10 @@ export function Lesson({
             const q = t.checks.find((q) => q.id === a.questionId)!;
             return (
               <Card key={a.questionId}>
-                <Pill tone={q.answer === a.choice ? "green" : "gold"}>
+                <Pill
+                  icon={q.answer === a.choice ? "check-circle" : "rotate-ccw"}
+                  tone={q.answer === a.choice ? "green" : "gold"}
+                >
                   {q.answer === a.choice ? "Understood" : "Worth another look"}
                 </Pill>
                 <Txt weight="600">{q.prompt}</Txt>

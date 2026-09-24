@@ -4,7 +4,17 @@ import { View, Pressable } from "react-native";
 import { useLearning } from "../services/context";
 import { sections } from "../data/outline";
 import { topicMastery } from "../core/reports";
-import { Button, Card, Txt, Field, Pill, Icon, colors, styles } from "./ui";
+import {
+  Button,
+  Card,
+  Txt,
+  Field,
+  Pill,
+  Icon,
+  Disclosure,
+  colors,
+  styles,
+} from "./ui";
 export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
   const { state, actor } = useLearning();
   const [query, setQuery] = useState("");
@@ -27,10 +37,10 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
     ),
   );
   return (
-    <View style={{ gap: 22 }}>
+    <View style={{ gap: 16 }}>
       <View style={{ gap: 8 }}>
         <Pill>МАТЕМАТИКА · 108 ТЕМ</Pill>
-        <Txt size={34} weight="600">
+        <Txt size={27} weight="600">
           Темы
         </Txt>
         <Txt color={colors.muted}>
@@ -58,13 +68,19 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
       />
       <View style={[styles.row, { flexWrap: "wrap" }]}>
         <Button
+          icon="chevrons-down"
           small
           secondary
           onPress={() => setExpanded(sections.map((s) => s.id))}
         >
           Развернуть всё
         </Button>
-        <Button small secondary onPress={() => setExpanded([])}>
+        <Button
+          small
+          secondary
+          icon="chevrons-up"
+          onPress={() => setExpanded([])}
+        >
           Свернуть всё
         </Button>
       </View>
@@ -94,18 +110,18 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
               }
               style={{
                 backgroundColor: "#EDF1E8",
-                padding: 20,
-                borderRadius: 16,
+                padding: 13,
+                borderRadius: 12,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 14,
+                gap: 10,
               }}
             >
-              <Txt size={25} color={colors.green} weight="600">
+              <Txt size={20} color={colors.green} weight="600">
                 {String(section.number).padStart(2, "0")}
               </Txt>
               <View style={{ flex: 1, gap: 5 }}>
-                <Txt size={18} weight="600">
+                <Txt size={16} weight="600">
                   {section.title}
                 </Txt>
                 <Txt size={12} color={colors.muted}>
@@ -119,10 +135,10 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
             {open && (
               <View
                 style={{
-                  marginLeft: 25,
+                  marginLeft: 12,
                   borderLeftWidth: 2,
                   borderColor: "#D1DBCA",
-                  paddingLeft: 18,
+                  paddingLeft: 10,
                   paddingTop: 12,
                   gap: 10,
                 }}
@@ -148,7 +164,7 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
                           borderWidth: 1,
                           borderColor: colors.line,
                           borderRadius: 14,
-                          padding: 17,
+                          padding: 12,
                           gap: 10,
                         }}
                       >
@@ -188,6 +204,15 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
                         <View style={[styles.row, { flexWrap: "wrap" }]}>
                           {isStudent && (
                             <Pill
+                              icon={
+                                skill.status === "Освоено"
+                                  ? "check-circle"
+                                  : skill.status === "Получается"
+                                    ? "trending-up"
+                                    : skill.status === "Изучаю"
+                                      ? "clock"
+                                      : "circle"
+                              }
                               tone={
                                 skill.status === "Ещё не проверяли"
                                   ? "neutral"
@@ -213,8 +238,7 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
           </View>
         );
       })}
-      <Card>
-        <Txt weight="600">Дополнительная практика</Txt>
+      <Disclosure title="Дополнительная практика" icon="book-open">
         <Txt size={13} color={colors.muted}>
           Материалы первой версии, сохранённые вместе с результатами.
         </Txt>
@@ -225,7 +249,7 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
               {t.title}
             </Button>
           ))}
-      </Card>
+      </Disclosure>
     </View>
   );
 }

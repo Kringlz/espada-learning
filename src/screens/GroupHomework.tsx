@@ -5,6 +5,8 @@ import { uid } from "../core/ids";
 import { groupStudents } from "../core/groups";
 import { errorMessage } from "../i18n/errors";
 import {
+  Pill,
+  Notice,
   Button,
   Card,
   Choice,
@@ -24,6 +26,7 @@ export function GroupHomework({ classId }: { classId: string }) {
   const [reason, setReason] = useState("");
   const [priority, setPriority] = useState(false);
   const [notice, setNotice] = useState("");
+  const [noticeError, setNoticeError] = useState(false);
   const [requestId, setRequestId] = useState(uid);
   const assignments = s.assignments.filter(
     (a) => a.classId === classId && a.groupAssignmentId,
@@ -33,6 +36,7 @@ export function GroupHomework({ classId }: { classId: string }) {
     .sort((a, b) => b[0].at.localeCompare(a[0].at));
   async function send() {
     try {
+      setNoticeError(false);
       await dispatch({
         type: "assignGroup",
         id: requestId,
@@ -51,6 +55,7 @@ export function GroupHomework({ classId }: { classId: string }) {
       setPriority(false);
       setOpen(false);
     } catch (e) {
+      setNoticeError(true);
       setNotice(errorMessage(e));
     }
   }
@@ -64,9 +69,12 @@ export function GroupHomework({ classId }: { classId: string }) {
           Одно задание — всем активным ученикам группы. Каждый выполняет его
           самостоятельно.
         </Txt>
-        {!!notice && <Txt accessibilityRole="alert">{notice}</Txt>}
+        {!!notice && (
+          <Notice tone={noticeError ? "error" : "success"}>{notice}</Notice>
+        )}
         {!open ? (
           <Button
+            icon="plus-circle"
             disabled={!members.length}
             onPress={() => {
               setNotice("");
@@ -133,6 +141,7 @@ export function GroupHomework({ classId }: { classId: string }) {
             />
             <Button
               disabled={saving || !topicId || !reason.trim() || !members.length}
+              icon="send"
               onPress={() => void send()}
             >
               {saving ? "Отправляем…" : "Выдать задание всей группе"}
@@ -162,6 +171,16 @@ export function GroupHomework({ classId }: { classId: string }) {
                 {s.topics.find((t) => t.id === batch[0].topicId)?.title}
               </Txt>
               <Txt>{batch[0].reason}</Txt>
+              <Pill
+                icon={
+                  batch.every((a) => a.completedAt) ? "check-circle" : "clock"
+                }
+                tone={batch.every((a) => a.completedAt) ? "green" : "gold"}
+              >
+                {batch.every((a) => a.completedAt)
+                  ? "Выполнено всей группой"
+                  : "В работе"}
+              </Pill>
               <Txt size={13} color={colors.muted}>
                 {dateText(batch[0].at)} · Выполнили:{" "}
                 {batch.filter((a) => a.completedAt).length} из {batch.length}

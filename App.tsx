@@ -247,9 +247,9 @@ function Shell() {
             {
               flexDirection: mobile ? "column" : "row",
               alignItems: "center",
-              gap: mobile ? 4 : 13,
-              paddingHorizontal: mobile ? 8 : 16,
-              paddingVertical: mobile ? 10 : 14,
+              gap: mobile ? 3 : 10,
+              paddingHorizontal: mobile ? 3 : 12,
+              paddingVertical: mobile ? 8 : 10,
               borderRadius: 10,
               backgroundColor: selectedTab === t ? "#E8EEDF" : "transparent",
               opacity: pressed ? 0.7 : 1,
@@ -283,11 +283,11 @@ function Shell() {
           {desktop && (
             <View
               style={{
-                width: 228,
+                width: 210,
                 borderRightWidth: 1,
                 borderColor: colors.line,
-                padding: 25,
-                gap: 36,
+                padding: 18,
+                gap: 24,
                 backgroundColor: "#F7F8F2",
               }}
             >
@@ -299,28 +299,12 @@ function Shell() {
                 {nav()}
               </View>
               <View style={{ flex: 1 }} />
-              <View
-                style={{
-                  padding: 16,
-                  backgroundColor: "#EDF0E5",
-                  borderRadius: 12,
-                  gap: 9,
-                }}
-              >
-                <Icon name="message-circle" size={21} />
-                <Txt size={13} weight="600">
-                  Better, together.
-                </Txt>
-                <Txt size={12} color={colors.muted}>
-                  Bring your questions to your next tutoring session.
-                </Txt>
-              </View>
               <View>
                 <Txt size={11} color={colors.muted}>
                   Small steps. Lasting understanding.
                 </Txt>
                 <Txt size={10} color="#87907F" style={{ marginTop: 8 }}>
-                  ESPADA LEARNING · V0.1
+                  ESPADA LEARNING
                 </Txt>
               </View>
             </View>
@@ -328,8 +312,8 @@ function Shell() {
           <View style={{ flex: 1, minWidth: 0 }}>
             <View
               style={{
-                paddingHorizontal: desktop ? 38 : 20,
-                paddingVertical: 17,
+                paddingHorizontal: desktop ? 24 : 14,
+                paddingVertical: 10,
                 borderBottomWidth: 1,
                 borderColor: colors.line,
                 backgroundColor: "#FCFCF9",
@@ -356,7 +340,23 @@ function Shell() {
                   </Txt>
                 </View>
               ) : (
-                <Brand />
+                <View style={{ gap: 2, flexShrink: 1 }}>
+                  <Txt size={16} weight="600">
+                    {topic
+                      ? "Урок"
+                      : result
+                        ? "Результат работы"
+                        : translate(tab)}
+                  </Txt>
+                  <Txt size={11} color={colors.muted}>
+                    Espada ·{" "}
+                    {actor.role === "student"
+                      ? "Ученик"
+                      : actor.role === "admin"
+                        ? "Администратор"
+                        : "Учитель"}
+                  </Txt>
+                </View>
               )}
               <View style={[styles.row, { gap: 12 }]}>
                 {desktop && (
@@ -368,7 +368,7 @@ function Shell() {
                   accessibilityRole="button"
                   accessibilityLabel="Обновить учебные данные"
                   onPress={() => void refresh()}
-                  style={{ padding: 10 }}
+                  style={{ padding: 12, minWidth: 44, minHeight: 44 }}
                 >
                   <Icon name="refresh-cw" size={17} color={colors.muted} />
                 </Pressable>
@@ -408,7 +408,7 @@ function Shell() {
             {mode === "demo" && (
               <View
                 style={{
-                  paddingHorizontal: desktop ? 38 : 20,
+                  paddingHorizontal: desktop ? 24 : 14,
                   paddingVertical: 8,
                   backgroundColor: "#F4F1E8",
                 }}
@@ -455,13 +455,13 @@ function Shell() {
               }}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={{
-                paddingHorizontal: desktop ? 38 : 20,
-                paddingTop: desktop ? 30 : 24,
-                paddingBottom: 40,
+                paddingHorizontal: desktop ? 24 : 14,
+                paddingTop: 16,
+                paddingBottom: 24,
                 alignItems: "center",
               }}
             >
-              <View style={{ width: "100%", maxWidth: 1280 }}>
+              <View style={{ width: "100%", maxWidth: 1100 }}>
                 {actor.role === "student" ? (
                   <View key={actor.id}>
                     <View
@@ -534,7 +534,7 @@ function Shell() {
                   />
                 )}
               </View>
-              <View style={{ marginTop: 35 }}>
+              <View style={{ marginTop: 20 }}>
                 <Txt size={11} color={colors.muted}>
                   {saving
                     ? "Saving…"

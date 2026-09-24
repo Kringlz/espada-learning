@@ -10,8 +10,8 @@ export function Profile() {
   const [confirm, setConfirm] = useState(false);
   const requested = s.deletionRequests.some((r) => r.studentId === actor.id);
   return (
-    <View style={{ gap: 24, maxWidth: 800 }}>
-      <Txt size={34} weight="600">
+    <View style={{ gap: 16, maxWidth: 800 }}>
+      <Txt size={27} weight="600">
         Your learning space.
       </Txt>
       <Card>

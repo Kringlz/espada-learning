@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "Espada",
     slug: "espada-learning",
-    version: "0.2.0",
+    version: "0.2.1",
     orientation: "default",
     scheme: "espada",
     userInterfaceStyle: "light",

@@ -8,6 +8,8 @@ import { ReportTemplate, TeacherReport, ReportArea } from "../core/types";
 import { uid } from "../core/ids";
 import { validateReport, validateReportTemplate } from "../core/reports";
 import {
+  Steps,
+  Notice,
   Button,
   Card,
   Choice,
@@ -96,43 +98,62 @@ export function TeacherReports({
       />
     );
   return (
-    <View style={{ gap: 20 }}>
+    <View style={{ gap: 14 }}>
       {back && (
         <Button secondary onPress={back}>
           Назад к обзору
         </Button>
       )}
-      <Txt size={30} weight="600">
+      <Txt size={26} weight="600">
         Результаты тестов
       </Txt>
-      <Txt color={colors.muted}>
-        Выберите группу и ученика. Затем добавьте результат или откройте нужную
-        работу для исправления.
-      </Txt>
-      <GroupPicker value={group?.id ?? ""} onChange={chooseGroup} />
-      {group && (
-        <StudentPicker
-          key={group.id}
-          classId={group.id}
-          value={student?.id ?? ""}
-          onChange={(studentId) => {
-            setSelection({ classId, studentId });
-            setEdit(null);
-            setQuery("");
-            setShowHistory(false);
-            setNotice("");
-          }}
-        />
+      {!student && (
+        <Txt size={13} color={colors.muted}>
+          Выберите группу и ученика. Затем добавьте результат или откройте
+          нужную работу для исправления.
+        </Txt>
       )}
+      <Steps
+        labels={["Группа", "Ученик", "Работа"]}
+        current={!group ? 0 : !student ? 1 : 2}
+      />
+      <View style={styles.grid}>
+        <View style={{ flex: 1, minWidth: 260 }}>
+          <GroupPicker value={group?.id ?? ""} onChange={chooseGroup} />
+        </View>
+        {group && (
+          <View style={{ flex: 1, minWidth: 260 }}>
+            <StudentPicker
+              key={group.id}
+              classId={group.id}
+              value={student?.id ?? ""}
+              onChange={(studentId) => {
+                setSelection({ classId, studentId });
+                setEdit(null);
+                setQuery("");
+                setShowHistory(false);
+                setNotice("");
+              }}
+            />
+          </View>
+        )}
+      </View>
       {student && (
         <>
-          {!!notice && <Txt accessibilityRole="alert">{notice}</Txt>}
-          <Txt size={22} weight="600">
-            3. Работы · {student.name}
-          </Txt>
-          <Button onPress={() => setCreating(true)}>
-            Добавить результат теста
-          </Button>
+          {!!notice && <Notice>{notice}</Notice>}
+          <View
+            style={[
+              styles.row,
+              { justifyContent: "space-between", flexWrap: "wrap" },
+            ]}
+          >
+            <Txt size={18} weight="600">
+              Работы · {student.name}
+            </Txt>
+            <Button icon="plus" onPress={() => setCreating(true)}>
+              Добавить результат теста
+            </Button>
+          </View>
           {!!reports.length && (
             <Field
               label="Найти работу ученика"
@@ -143,22 +164,36 @@ export function TeacherReports({
           )}
           {matches.map((r) => (
             <Card key={r.id}>
-              <Txt size={20} weight="600">
-                {templates.find((t) => t.id === r.templateId)?.name}
-              </Txt>
-              <Txt>
-                {dateText(r.date)} · Оценка: {r.grade}
-              </Txt>
-              <Pill>
-                {r.status === "published"
-                  ? "Виден ученику"
-                  : "Черновик · ученик не видит"}
-              </Pill>
-              <Button secondary onPress={() => setEdit(r)}>
-                {r.status === "published"
-                  ? "Исправить результат"
-                  : "Продолжить черновик"}
-              </Button>
+              <View
+                style={[styles.row, { flexWrap: "wrap", alignItems: "center" }]}
+              >
+                <View style={{ flex: 1, minWidth: 160, gap: 5 }}>
+                  <Txt size={16} weight="600">
+                    {templates.find((t) => t.id === r.templateId)?.name}
+                  </Txt>
+                  <Txt size={13} color={colors.muted}>
+                    {dateText(r.date)} · Оценка: {r.grade}
+                  </Txt>
+                  <Pill
+                    icon={r.status === "published" ? "check-circle" : "edit-3"}
+                    tone={r.status === "published" ? "green" : "neutral"}
+                  >
+                    {r.status === "published"
+                      ? "Опубликовано"
+                      : "Черновик · не виден ученику"}
+                  </Pill>
+                </View>
+                <Button
+                  secondary
+                  small
+                  icon="edit-2"
+                  onPress={() => setEdit(r)}
+                >
+                  {r.status === "published"
+                    ? "Исправить результат"
+                    : "Продолжить черновик"}
+                </Button>
+              </View>
             </Card>
           ))}
           {!matches.length && (
@@ -170,7 +205,12 @@ export function TeacherReports({
               </Txt>
             </Card>
           )}
-          <Button secondary small onPress={() => setShowHistory(!showHistory)}>
+          <Button
+            secondary
+            small
+            icon="clock"
+            onPress={() => setShowHistory(!showHistory)}
+          >
             {showHistory
               ? "Скрыть историю изменений"
               : "История изменений ученика"}
@@ -220,7 +260,12 @@ export function TeacherReports({
           )}
         </>
       )}
-      <Button secondary small onPress={() => setShowTemplates(!showTemplates)}>
+      <Button
+        secondary
+        small
+        icon="settings"
+        onPress={() => setShowTemplates(!showTemplates)}
+      >
         {showTemplates
           ? "Скрыть настройки шаблонов"
           : "Настроить шаблоны тестов"}
@@ -360,22 +405,24 @@ function ReportEditor({
     }
   }
   return (
-    <View style={{ gap: 20 }}>
-      <Button secondary disabled={saving} onPress={() => close()}>
+    <View style={{ gap: 14 }}>
+      <Button
+        secondary
+        small
+        icon="arrow-left"
+        disabled={saving}
+        onPress={() => close()}
+      >
         Назад к работам
       </Button>
-      <Txt size={28} weight="600">
+      <Txt size={26} weight="600">
         {review
           ? "Проверьте перед сохранением"
           : existing
             ? "Исправление результата"
             : "Новый результат теста"}
       </Txt>
-      {Boolean(notice) && (
-        <Txt color={colors.red} accessibilityRole="alert">
-          {notice}
-        </Txt>
-      )}
+      {!!notice && <Notice tone="error">{notice}</Notice>}
       <Card style={{ backgroundColor: colors.light }}>
         <Txt size={13} color={colors.muted}>
           {className}
@@ -389,6 +436,10 @@ function ReportEditor({
             : "Результат будет сохранён этому ученику."}
         </Txt>
       </Card>
+      <Steps
+        labels={["Заполнение", "Проверка", "Сохранение"]}
+        current={review ? 1 : 0}
+      />
       {review && t ? (
         <>
           <Card>
@@ -415,7 +466,11 @@ function ReportEditor({
               После публикации ученик увидит результат в разделе «Прогресс».
             </Txt>
           </Card>
-          <Button disabled={saving} onPress={() => void save("published")}>
+          <Button
+            icon="check"
+            disabled={saving}
+            onPress={() => void save("published")}
+          >
             {saving
               ? "Сохраняем…"
               : existing?.status === "published"
@@ -426,6 +481,7 @@ function ReportEditor({
             <Button
               secondary
               disabled={saving}
+              icon="save"
               onPress={() => void save("draft")}
             >
               Сохранить как черновик
@@ -577,7 +633,11 @@ function ReportEditor({
                   onChangeText={setReason}
                 />
               )}
-              <Button disabled={saving || !sid} onPress={preview}>
+              <Button
+                icon="arrow-right"
+                disabled={saving || !sid}
+                onPress={preview}
+              >
                 Проверить и сохранить
               </Button>
             </>
@@ -639,11 +699,11 @@ function TemplateEditor({
     }
   }
   return (
-    <View style={{ gap: 20 }}>
+    <View style={{ gap: 14 }}>
       <Button secondary onPress={close}>
         Назад к работам
       </Button>
-      <Txt size={28} weight="600">
+      <Txt size={26} weight="600">
         {source ? "Новая версия шаблона" : "Новый шаблон"}
       </Txt>
       <Txt color={colors.muted}>
@@ -651,11 +711,7 @@ function TemplateEditor({
         названий, связей или шкалы новая версия будет иметь отдельную историю
         сравнения.
       </Txt>
-      {Boolean(notice) && (
-        <Txt color={colors.red} accessibilityRole="alert">
-          {notice}
-        </Txt>
-      )}
+      {!!notice && <Notice tone="error">{notice}</Notice>}
       <Card>
         <Field label="Название работы" value={name} onChangeText={setName} />
         <View style={[styles.row, { flexWrap: "wrap" }]}>

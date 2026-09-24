@@ -1,5 +1,14 @@
 # Project log
 
+## 0.2.1 — 2026-09-24
+
+- Compact cards, spacing, headings and report rows, with comfortable 44 px minimum action targets.
+- Mobile header identifies the current screen; group/student selections and lesson stages have clear step indicators.
+- Labeled icons distinguish pending/completed homework, published reports, drafts, upload success and errors.
+- Completed homework remains accessible in an expandable list. Recommendations and supplemental practice can be expanded on demand.
+- No changes to scoring, permissions, storage, group assignment rules or existing learning records.
+- Verified responsive UI at 390 × 844, disclosures and a full lesson/check/completed-homework flow; 47 application tests pass.
+
 ## 0.2.0 — 2026-09-24
 
 - Teachers select a group before seeing or choosing its pupils.

@@ -6,7 +6,7 @@ import { Topic, VideoLesson } from "../core/types";
 import { useLearning } from "../services/context";
 import { pickVideo, uploadVideo, resolveVideo } from "../services/videos";
 import { LessonVideo } from "./LessonVideo";
-import { Button, Card, Txt, Field, colors } from "./ui";
+import { Button, Card, Txt, Field, Notice, SectionTitle, colors } from "./ui";
 function StoredPlayer({
   video,
   seconds,
@@ -124,9 +124,7 @@ export function VideoLessons({ topic }: { topic: Topic }) {
   }
   return (
     <Card>
-      <Txt size={23} weight="600">
-        Видеоуроки
-      </Txt>
+      <SectionTitle title="Видеоуроки" icon="video" />
       <Txt size={13} color={colors.muted}>
         {staff
           ? "Добавьте объяснение к этой теме. Ученики смогут смотреть его здесь."
@@ -227,16 +225,8 @@ export function VideoLessons({ topic }: { topic: Topic }) {
           )}
         </View>
       )}
-      {!!error && (
-        <Txt color={colors.red} accessibilityRole="alert">
-          {error}
-        </Txt>
-      )}
-      {!!notice && (
-        <Txt color={colors.green} accessibilityRole="status">
-          {notice}
-        </Txt>
-      )}
+      {!!error && <Notice tone="error">{error}</Notice>}
+      {!!notice && <Notice>{notice}</Notice>}
     </Card>
   );
 }

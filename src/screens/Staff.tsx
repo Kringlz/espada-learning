@@ -12,6 +12,7 @@ import { useLearning } from "../services/context";
 import { Topic, Profile, Classroom } from "../core/types";
 import { uid } from "../core/ids";
 import {
+  Icon,
   Button,
   Card,
   Txt,
@@ -66,11 +67,11 @@ export function Staff({
   if (studentTopic) {
     const t = s.topics.find((t) => t.id === studentTopic)!;
     return (
-      <View style={{ gap: 20 }}>
+      <View style={{ gap: 14 }}>
         <Button secondary onPress={() => setStudentTopic(null)}>
           Назад к прогрессу ученика
         </Button>
-        <Txt size={28} weight="600">
+        <Txt size={26} weight="600">
           {t.title}
         </Txt>
         <VideoLessons topic={t} />
@@ -84,19 +85,19 @@ export function Staff({
     );
   }
   return (
-    <View style={{ gap: 24 }}>
+    <View style={{ gap: 16 }}>
       <View>
         <Pill>
           {actor.role === "admin" ? "ADMINISTRATOR" : "TEACHER"} WORKSPACE
         </Pill>
-        <Txt size={34} weight="600" style={{ marginTop: 10 }}>
+        <Txt size={27} weight="600" style={{ marginTop: 10 }}>
           {tab === "Overview"
-            ? "Good teaching starts with insight."
+            ? "Кабинет учителя"
             : tab === "Assessments"
               ? "From paper to a clearer next step."
               : tab === "Students"
                 ? "Группы и домашняя работа"
-                : "A thoughtful foundation for learning."}
+                : "Учебная программа"}
         </Txt>
         <Txt color={colors.muted}>
           {tab === "Overview"
@@ -108,18 +109,30 @@ export function Staff({
         <>
           <View style={styles.grid}>
             {[
-              { title: "Assigned students", value: students.length },
+              {
+                title: "Assigned students",
+                icon: "users" as const,
+                value: students.length,
+              },
               {
                 title: "Published assessments",
+                icon: "file-text" as const,
                 value: (s.reports ?? []).filter((a) => a.status === "published")
                   .length,
               },
-              { title: "Checks completed", value: s.attempts.length },
+              {
+                title: "Checks completed",
+                icon: "check-circle" as const,
+                value: s.attempts.length,
+              },
             ].map((x) => (
-              <Card key={x.title} style={{ flex: 1, minWidth: 190 }}>
-                <Txt size={32} weight="600">
-                  {x.value}
-                </Txt>
+              <Card key={x.title} style={{ flex: 1, minWidth: 145 }}>
+                <View style={styles.row}>
+                  <Icon name={x.icon} color={colors.green} />
+                  <Txt size={25} weight="600">
+                    {x.value}
+                  </Txt>
+                </View>
                 <Txt color={colors.muted}>{x.title}</Txt>
               </Card>
             ))}
@@ -230,11 +243,11 @@ export function Staff({
           (() => {
             const topic = s.topics.find((t) => t.id === videoTopic)!;
             return (
-              <View style={{ gap: 22 }}>
+              <View style={{ gap: 16 }}>
                 <Button secondary onPress={() => setVideoTopic(null)}>
                   Назад к темам
                 </Button>
-                <Txt size={30} weight="600">
+                <Txt size={26} weight="600">
                   {topic.title}
                 </Txt>
                 <VideoLessons key={topic.id} topic={topic} />
@@ -269,11 +282,11 @@ function ContentEditor({ topic, close }: { topic: Topic; close: () => void }) {
   const [error, setError] = useState("");
   const locked = s.attempts.some((a) => a.topicId === topic.id);
   return (
-    <View style={{ gap: 20, maxWidth: 900 }}>
+    <View style={{ gap: 14, maxWidth: 900 }}>
       <Button secondary onPress={close}>
         Back to curriculum
       </Button>
-      <Txt size={30} weight="600">
+      <Txt size={26} weight="600">
         Edit {t.title}
       </Txt>
       <Card>
@@ -396,8 +409,8 @@ function Management() {
     }
   }
   return (
-    <View style={{ gap: 24, maxWidth: 1000 }}>
-      <Txt size={34} weight="600">
+    <View style={{ gap: 16, maxWidth: 1000 }}>
+      <Txt size={27} weight="600">
         Manage your learning community.
       </Txt>
       {Boolean(notice) && (

@@ -17,6 +17,8 @@ import {
 } from "../core/reports";
 import { assessmentScore } from "../core/engine";
 import {
+  Disclosure,
+  Icon,
   Button,
   Card,
   Txt,
@@ -50,7 +52,7 @@ function Grade({
       <Txt size={12} color={colors.muted}>
         Оценка
       </Txt>
-      <Txt size={36} weight="700">
+      <Txt size={28} weight="700">
         {report.grade}
         <Txt size={14} color={colors.muted}>
           {" "}
@@ -120,6 +122,9 @@ export function Home({
   const homework = s.assignments.filter(
     (a) => a.studentId === actor.id && !a.completedAt,
   );
+  const completedHomework = s.assignments.filter(
+    (a) => a.studentId === actor.id && a.completedAt,
+  );
   const activity = s.activities
     .filter(
       (a) =>
@@ -129,9 +134,9 @@ export function Home({
     )
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
   return (
-    <View style={{ gap: 22 }}>
+    <View style={{ gap: 16 }}>
       <View>
-        <Txt size={30} weight="600">
+        <Txt size={26} weight="600">
           Главная
         </Txt>
         <Txt color={colors.muted}>
@@ -139,91 +144,135 @@ export function Home({
         </Txt>
       </View>
       <MyGroups />
-      <View>
-        <SectionTitle title="Домашнее задание" />
-        <Card
-          style={{
-            padding: 18,
-            gap: 10,
-            borderColor: "#B5C7AD",
-            backgroundColor: "#F0F4E9",
-          }}
-        >
-          {homework.length ? (
-            <>
-              <Pill>Задано учителем · {homework.length}</Pill>
-              {homework.map((a) => (
-                <View key={a.id} style={{ gap: 9 }}>
-                  <Txt weight="600">
-                    {s.topics.find((t) => t.id === a.topicId)?.title}
-                  </Txt>
-                  <Txt size={13} color={colors.muted}>
-                    {a.classId
-                      ? `Для группы: ${s.classes.find((c) => c.id === a.classId)?.name ?? a.className ?? "Группа"}`
-                      : "Ранее выданное задание"}
-                  </Txt>
-                  <Txt size={14}>{a.reason}</Txt>
-                  <Button onPress={() => openTopic(a.topicId)}>
-                    Открыть задание
-                  </Button>
-                </View>
-              ))}
-            </>
-          ) : (
-            <Txt>
-              На сегодня заданий нет. Можно продолжить учёбу в своём темпе.
-            </Txt>
-          )}
-        </Card>
-      </View>
-      <View>
-        <SectionTitle
-          title="Последняя работа"
-          action="Все работы"
-          onPress={() => navigate("Progress")}
-        />
-        <Card>
-          {latest && template ? (
-            <>
-              <View
-                style={[
-                  styles.row,
-                  {
-                    alignItems: "flex-start",
-                    flexWrap: "wrap",
-                    justifyContent: "space-between",
-                  },
-                ]}
-              >
-                <View style={{ flex: 1, minWidth: 160, gap: 8 }}>
-                  <Txt size={20} weight="600">
-                    {template.name}
-                  </Txt>
-                  <Txt size={13} color={colors.muted}>
-                    {dateText(latest.date)}
-                  </Txt>
-                  {unseen(s, latest) && (
-                    <Pill tone="gold">Новый результат</Pill>
-                  )}
-                  {latest.demo && (
-                    <Txt size={12} color={colors.muted}>
-                      Учебный пример
+      <View style={styles.grid}>
+        <View style={{ flex: 1, minWidth: 260 }}>
+          <SectionTitle title="Домашнее задание" icon="clipboard" />
+          <Card
+            style={{
+              padding: 18,
+              gap: 10,
+              borderColor: "#B5C7AD",
+              backgroundColor: "#F0F4E9",
+            }}
+          >
+            {homework.length ? (
+              <>
+                <Pill tone="gold" icon="clock">
+                  К выполнению · {homework.length}
+                </Pill>
+                {homework.map((a) => (
+                  <View key={a.id} style={{ gap: 9 }}>
+                    <Txt weight="600">
+                      {s.topics.find((t) => t.id === a.topicId)?.title}
                     </Txt>
-                  )}
-                </View>
-                <Grade report={latest} template={template} />
+                    <Txt size={13} color={colors.muted}>
+                      {a.classId
+                        ? `Для группы: ${s.classes.find((c) => c.id === a.classId)?.name ?? a.className ?? "Группа"}`
+                        : "Ранее выданное задание"}
+                    </Txt>
+                    <Txt size={14}>{a.reason}</Txt>
+                    <Button
+                      icon="arrow-right"
+                      onPress={() => openTopic(a.topicId)}
+                    >
+                      Открыть задание
+                    </Button>
+                  </View>
+                ))}
+              </>
+            ) : (
+              <View style={[styles.row, { alignItems: "flex-start" }]}>
+                <Icon
+                  name={completedHomework.length ? "check-circle" : "coffee"}
+                  color={colors.green}
+                />
+                <Txt style={{ flex: 1 }}>
+                  На сегодня заданий нет. Можно продолжить учёбу в своём темпе.
+                </Txt>
               </View>
-              <Button onPress={() => openResult(latest.id)}>
-                Посмотреть результаты
-              </Button>
-            </>
-          ) : (
-            <Txt>{empty}</Txt>
-          )}
-        </Card>
+            )}
+          </Card>
+        </View>
+        <View style={{ flex: 1, minWidth: 260 }}>
+          <SectionTitle
+            icon="file-text"
+            title="Последняя работа"
+            action="Все работы"
+            onPress={() => navigate("Progress")}
+          />
+          <Card>
+            {latest && template ? (
+              <>
+                <View
+                  style={[
+                    styles.row,
+                    {
+                      alignItems: "flex-start",
+                      flexWrap: "wrap",
+                      justifyContent: "space-between",
+                    },
+                  ]}
+                >
+                  <View style={{ flex: 1, minWidth: 160, gap: 8 }}>
+                    <Txt size={20} weight="600">
+                      {template.name}
+                    </Txt>
+                    <Txt size={13} color={colors.muted}>
+                      {dateText(latest.date)}
+                    </Txt>
+                    {unseen(s, latest) && (
+                      <Pill tone="gold" icon="bell">
+                        Новый результат
+                      </Pill>
+                    )}
+                    {latest.demo && (
+                      <Txt size={12} color={colors.muted}>
+                        Учебный пример
+                      </Txt>
+                    )}
+                  </View>
+                  <Grade report={latest} template={template} />
+                </View>
+                <Button
+                  icon="bar-chart-2"
+                  onPress={() => openResult(latest.id)}
+                >
+                  Посмотреть результаты
+                </Button>
+              </>
+            ) : (
+              <Txt>{empty}</Txt>
+            )}
+          </Card>
+        </View>
       </View>
+      {!!completedHomework.length && (
+        <Disclosure
+          title={`Выполненные задания · ${completedHomework.length}`}
+          icon="check-circle"
+        >
+          {completedHomework.map((a) => (
+            <View key={a.id} style={{ gap: 6 }}>
+              <Pill icon="check-circle">
+                Выполнено · {dateText(a.completedAt!)}
+              </Pill>
+              <Txt weight="600">
+                {s.topics.find((t) => t.id === a.topicId)?.title}
+              </Txt>
+              <Button
+                secondary
+                small
+                icon="book-open"
+                onPress={() => openTopic(a.topicId)}
+              >
+                Открыть выполненное задание
+              </Button>
+            </View>
+          ))}
+        </Disclosure>
+      )}
       <View>
-        <SectionTitle title="Продолжить учёбу" />
+        <SectionTitle title="Продолжить учёбу" icon="play-circle" />
         <Card>
           {activity ? (
             <>
@@ -233,27 +282,26 @@ export function Home({
               <Txt size={14} color={colors.muted}>
                 Вернитесь к уроку и продолжите с сохранённого места.
               </Txt>
-              <Button onPress={() => openTopic(activity.topicId)}>
+              <Button icon="play" onPress={() => openTopic(activity.topicId)}>
                 Продолжить
               </Button>
             </>
           ) : (
             <>
               <Txt>Выберите тему: уроки и практика доступны всем.</Txt>
-              <Button onPress={() => navigate("Learn")}>
+              <Button icon="book-open" onPress={() => navigate("Learn")}>
                 Уроки и практика
               </Button>
             </>
           )}
         </Card>
       </View>
-      <View>
-        <SectionTitle title="Что повторить" />
-        <Txt size={13} color={colors.muted} style={{ marginBottom: 12 }}>
+      <Disclosure title="Что повторить · рекомендации" icon="refresh-cw">
+        <Txt size={13} color={colors.muted}>
           По желанию · подсказки по результатам, а не домашнее задание.
         </Txt>
         <Suggestions studentId={actor.id} openTopic={openTopic} />
-      </View>
+      </Disclosure>
     </View>
   );
 }
@@ -412,7 +460,7 @@ export function ReportDetail({
       </Card>
     );
   return (
-    <View style={{ gap: 24 }}>
+    <View style={{ gap: 16 }}>
       <Button secondary small onPress={back} icon="arrow-left">
         Назад
       </Button>
@@ -635,12 +683,13 @@ export function Progress({
       />
     );
   return (
-    <View style={{ gap: 24 }}>
-      <Txt size={30} weight="600">
+    <View style={{ gap: 16 }}>
+      <Txt size={26} weight="600">
         Прогресс
       </Txt>
       <View style={[styles.row, { flexWrap: "wrap" }]}>
         <Button
+          icon="bar-chart-2"
           selected={view === "reports"}
           secondary={view !== "reports"}
           onPress={() => setView("reports")}
@@ -648,6 +697,7 @@ export function Progress({
           Результаты работ
         </Button>
         <Button
+          icon="git-branch"
           selected={view === "topics"}
           secondary={view !== "topics"}
           onPress={() => setView("topics")}
@@ -726,13 +776,17 @@ export function Progress({
                     ]}
                   >
                     <View style={{ flex: 1, minWidth: 140, gap: 7 }}>
-                      <Txt size={19} weight="600">
+                      <Txt size={16} weight="600">
                         {t.name}
                       </Txt>
                       <Txt size={13} color={colors.muted}>
                         {dateText(r.date)} · версия {t.version}
                       </Txt>
-                      {unseen(s, r) && <Pill tone="gold">Новый результат</Pill>}
+                      {unseen(s, r) && (
+                        <Pill tone="gold" icon="bell">
+                          Новый результат
+                        </Pill>
+                      )}
                       {r.demo && (
                         <Txt size={12} color={colors.muted}>
                           Учебный пример
@@ -740,15 +794,17 @@ export function Progress({
                       )}
                     </View>
                     <Grade report={r} template={t} />
+                    <Button
+                      small
+                      icon="arrow-right"
+                      secondary
+                      onPress={() =>
+                        openResult ? openResult(r.id) : setLocalDetail(r.id)
+                      }
+                    >
+                      Посмотреть результаты
+                    </Button>
                   </View>
-                  <Button
-                    secondary
-                    onPress={() =>
-                      openResult ? openResult(r.id) : setLocalDetail(r.id)
-                    }
-                  >
-                    Посмотреть результаты
-                  </Button>
                 </Card>
               );
             })}

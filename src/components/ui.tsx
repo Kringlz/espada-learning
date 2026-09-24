@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Text,
   View,
@@ -43,7 +43,7 @@ export function Txt({
     <Text
       {...props}
       style={[
-        { fontSize: size, color, fontWeight: weight, lineHeight: size * 1.5 },
+        { fontSize: size, color, fontWeight: weight, lineHeight: size * 1.4 },
         style,
       ]}
     >
@@ -62,7 +62,18 @@ export function Icon({
   size?: number;
   color?: string;
 }) {
-  return <Feather name={name} size={size} color={color} selectable={false} />;
+  return (
+    <Feather
+      accessible={false}
+      accessibilityElementsHidden
+      importantForAccessibility="no"
+      aria-hidden
+      name={name}
+      size={size}
+      color={color}
+      selectable={false}
+    />
+  );
 }
 export function Button({
   children,
@@ -97,7 +108,7 @@ export function Button({
         {
           backgroundColor: secondary ? "#F0F3EC" : colors.green,
           opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
-          paddingVertical: small ? 10 : 13,
+          paddingVertical: small ? 8 : 10,
         },
       ]}
     >
@@ -127,16 +138,22 @@ export function Card({
 export function Pill({
   children,
   tone = "green",
+  icon,
 }: {
   children: React.ReactNode;
   tone?: "green" | "gold" | "neutral";
+  icon?: React.ComponentProps<typeof Icon>["name"];
 }) {
   return (
     <View
       style={{
         alignSelf: "flex-start",
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 5,
+        maxWidth: "100%",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
         borderRadius: 7,
         backgroundColor:
           tone === "gold"
@@ -146,8 +163,16 @@ export function Pill({
               : "#EAF0E7",
       }}
     >
+      {icon && (
+        <Icon
+          name={icon}
+          size={13}
+          color={tone === "gold" ? "#795B24" : colors.green}
+        />
+      )}
       <Txt
-        size={11}
+        style={{ flexShrink: 1 }}
+        size={12}
         weight="600"
         color={tone === "gold" ? "#795B24" : colors.green}
       >
@@ -206,8 +231,10 @@ export function SectionTitle({
   title,
   action,
   onPress,
+  icon,
 }: {
   title: string;
+  icon?: React.ComponentProps<typeof Icon>["name"];
   action?: string;
   onPress?: () => void;
 }) {
@@ -215,12 +242,15 @@ export function SectionTitle({
     <View
       style={[
         styles.row,
-        { justifyContent: "space-between", marginBottom: 16 },
+        { justifyContent: "space-between", marginBottom: 8, flexWrap: "wrap" },
       ]}
     >
-      <Txt size={21} weight="600" style={{ flexShrink: 1 }}>
-        {title}
-      </Txt>
+      <View style={[styles.row, { flex: 1, gap: 8 }]}>
+        {icon && <Icon name={icon} size={19} color={colors.green} />}
+        <Txt size={18} weight="600" style={{ flexShrink: 1 }}>
+          {title}
+        </Txt>
+      </View>
       {action && (
         <Pressable
           accessibilityRole="button"
@@ -264,30 +294,175 @@ export function Choice({
         style={{
           width: 19,
           height: 19,
-          borderRadius: 10,
+          borderRadius: multiple ? 5 : 10,
+          alignItems: "center",
+          justifyContent: "center",
           borderWidth: 1,
           borderColor: selected ? colors.green : "#9EA89F",
           backgroundColor: selected ? colors.green : "transparent",
         }}
-      />
+      >
+        {selected && <Icon name="check" size={13} color="#fff" />}
+      </View>
       <Txt style={{ flex: 1 }}>{label}</Txt>
     </Pressable>
   );
 }
+export function Disclosure({
+  title,
+  children,
+  icon = "info",
+  initiallyOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  icon?: React.ComponentProps<typeof Icon>["name"];
+  initiallyOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(initiallyOpen);
+  return (
+    <View
+      style={{
+        borderWidth: 1,
+        borderColor: colors.line,
+        borderRadius: 12,
+        backgroundColor: colors.white,
+      }}
+    >
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityState={{ expanded: open }}
+        aria-expanded={open}
+        onPress={() => setOpen(!open)}
+        style={{
+          padding: 12,
+          minHeight: 44,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <Icon name={icon} size={18} color={colors.green} />
+        <Txt weight="600" size={14} style={{ flex: 1 }}>
+          {title}
+        </Txt>
+        <Icon name={open ? "chevron-up" : "chevron-down"} size={16} />
+      </Pressable>
+      <View
+        style={{
+          display: open ? "flex" : "none",
+          padding: 14,
+          paddingTop: 2,
+          gap: 10,
+        }}
+      >
+        {children}
+      </View>
+    </View>
+  );
+}
+
+export function Notice({
+  children,
+  tone = "success",
+}: {
+  children: React.ReactNode;
+  tone?: "success" | "error" | "info";
+}) {
+  const color = tone === "error" ? colors.red : colors.green;
+  return (
+    <View
+      accessibilityRole={tone === "error" ? "alert" : undefined}
+      accessibilityLiveRegion="polite"
+      style={{
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: 9,
+        padding: 12,
+        borderRadius: 10,
+        backgroundColor: tone === "error" ? "#FFF0EA" : colors.light,
+      }}
+    >
+      <Icon
+        name={
+          tone === "error"
+            ? "alert-circle"
+            : tone === "success"
+              ? "check-circle"
+              : "info"
+        }
+        size={18}
+        color={color}
+      />
+      <Txt size={14} color={color} style={{ flex: 1 }}>
+        {children}
+      </Txt>
+    </View>
+  );
+}
+
+export function Steps({
+  labels,
+  current,
+}: {
+  labels: string[];
+  current: number;
+}) {
+  return (
+    <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+      {labels.map((label, i) => (
+        <View
+          key={label}
+          accessibilityLabel={`${label}: ${i < current ? "готово" : i === current ? "текущий шаг" : "следующий шаг"}`}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 5,
+            paddingVertical: 6,
+            paddingHorizontal: 8,
+            borderRadius: 8,
+            backgroundColor: i === current ? colors.light : "transparent",
+          }}
+        >
+          <Icon
+            name={
+              i < current
+                ? "check-circle"
+                : i === current
+                  ? "arrow-right-circle"
+                  : "circle"
+            }
+            size={14}
+            color={i <= current ? colors.green : colors.muted}
+          />
+          <Txt
+            size={12}
+            weight={i === current ? "600" : "400"}
+            color={i <= current ? colors.green : colors.muted}
+          >
+            {label}
+          </Txt>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
   card: {
     backgroundColor: "#fff",
-    borderRadius: 18,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 24,
-    gap: 14,
+    padding: 16,
+    gap: 10,
   },
   button: {
     minHeight: 44,
     borderRadius: 10,
-    paddingHorizontal: 18,
+    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -299,8 +474,8 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#CCD4CA",
     borderRadius: 9,
-    padding: 13,
-    minHeight: 48,
+    padding: 11,
+    minHeight: 44,
     fontSize: 15,
     color: colors.ink,
     backgroundColor: "#fff",
@@ -311,12 +486,12 @@ export const styles = StyleSheet.create({
     gap: 12,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 15,
-    minHeight: 52,
+    padding: 11,
+    minHeight: 44,
     borderRadius: 10,
   },
   divider: { height: 1, backgroundColor: colors.line, marginVertical: 8 },
-  grid: { flexDirection: "row", gap: 20, flexWrap: "wrap" },
+  grid: { flexDirection: "row", gap: 12, flexWrap: "wrap" },
   label: {
     fontSize: 11,
     fontWeight: "700",

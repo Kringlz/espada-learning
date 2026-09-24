@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { useLearning } from "../services/context";
 import { groupStudents, teachingGroups } from "../core/groups";
-import { Button, Card, Field, Txt, colors, styles } from "./ui";
+import { Button, Card, Field, Txt, Icon, colors, styles } from "./ui";
 
 export function GroupPicker({
   value,
@@ -16,28 +16,36 @@ export function GroupPicker({
   const group = groups.find((c) => c.id === value);
   return (
     <Card>
-      <Txt size={20} weight="600">
-        {group ? "Выбранная группа" : "1. Выберите группу"}
-      </Txt>
       {group ? (
-        <>
-          <Txt size={22} weight="600">
-            {group.name}
-          </Txt>
-          <Txt color={colors.muted}>
-            Активных учеников: {groupStudents(s, group.id).length}
-          </Txt>
-          <Button secondary small onPress={() => onChange("")}>
-            Сменить группу
+        <View style={[styles.row, { flexWrap: "wrap", gap: 10 }]}>
+          <Icon name="users" color={colors.green} />
+          <View style={{ flex: 1, minWidth: 150, gap: 3 }}>
+            <Txt size={12} color={colors.muted}>
+              Группа · учеников: {groupStudents(s, group.id).length}
+            </Txt>
+            <Txt size={16} weight="600">
+              {group.name}
+            </Txt>
+          </View>
+          <Button secondary small icon="repeat" onPress={() => onChange("")}>
+            Сменить
           </Button>
-        </>
+        </View>
       ) : (
         <>
-          <Txt color={colors.muted}>
+          <Txt size={18} weight="600">
+            Выберите группу
+          </Txt>
+          <Txt size={13} color={colors.muted}>
             Сначала выберите группу. Затем появятся только её ученики.
           </Txt>
           {groups.map((c) => (
-            <Button key={c.id} secondary onPress={() => onChange(c.id)}>
+            <Button
+              key={c.id}
+              icon="users"
+              secondary
+              onPress={() => onChange(c.id)}
+            >
               {c.name}
             </Button>
           ))}
@@ -73,27 +81,35 @@ export function StudentPicker({
   );
   return (
     <Card>
-      <Txt size={20} weight="600">
-        {selected ? "Выбранный ученик" : "2. Выберите ученика"}
-      </Txt>
       {selected ? (
-        <>
-          <Txt size={22} weight="600">
-            {selected.name}
-          </Txt>
+        <View style={[styles.row, { flexWrap: "wrap", gap: 10 }]}>
+          <Icon name="user-check" color={colors.green} />
+          <View style={{ flex: 1, minWidth: 140, gap: 3 }}>
+            <Txt size={12} color={colors.muted}>
+              Ученик
+            </Txt>
+            <Txt size={16} weight="600">
+              {selected.name}
+            </Txt>
+          </View>
           <Button
             secondary
             small
+            icon="repeat"
+            label="Сменить ученика"
             onPress={() => {
               setQuery("");
               onChange("");
             }}
           >
-            Сменить ученика
+            Сменить
           </Button>
-        </>
+        </View>
       ) : (
         <>
+          <Txt size={18} weight="600">
+            Выберите ученика
+          </Txt>
           {!!students.length && (
             <Field
               label="Поиск ученика в группе"
@@ -104,7 +120,12 @@ export function StudentPicker({
           )}
           <View style={[styles.row, { flexWrap: "wrap" }]}>
             {matches.map((p) => (
-              <Button key={p.id} secondary onPress={() => onChange(p.id)}>
+              <Button
+                key={p.id}
+                icon="user"
+                secondary
+                onPress={() => onChange(p.id)}
+              >
                 {p.name}
               </Button>
             ))}
@@ -125,14 +146,19 @@ export function MyGroups() {
   const groups = s.classes.filter((c) => c.studentIds.includes(actor.id));
   return (
     <Card style={{ backgroundColor: colors.light }}>
-      <Txt size={20} weight="600">
-        {groups.length > 1 ? "Мои группы" : "Моя группа"}
-      </Txt>
-      {groups.map((c) => (
-        <Txt key={c.id} size={20} weight="600">
-          {c.name}
-        </Txt>
-      ))}
+      <View style={[styles.row, { alignItems: "flex-start", gap: 9 }]}>
+        <Icon name="users" size={18} color={colors.green} />
+        <View style={{ flex: 1, gap: 3 }}>
+          <Txt size={12} color={colors.muted}>
+            {groups.length > 1 ? "Мои группы" : "Моя группа"}
+          </Txt>
+          {groups.map((c) => (
+            <Txt key={c.id} size={15} weight="600">
+              {c.name}
+            </Txt>
+          ))}
+        </View>
+      </View>
       {!groups.length && (
         <Txt>Вы пока не добавлены в группу. Обратитесь к преподавателю.</Txt>
       )}
