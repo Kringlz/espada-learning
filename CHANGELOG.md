@@ -1,5 +1,14 @@
 # Project log
 
+## 0.2.0 — 2026-09-24
+
+- Teachers select a group before seeing or choosing its pupils.
+- Homework is issued to a whole group's active roster atomically; completion is tracked per pupil.
+- Students see all their groups on Home and Profile, and the group name on each new assignment.
+- Teacher test results use a group → pupil → work flow, with separate template/history controls and a review step before saving corrections.
+- Existing results, memberships and individual assignments are preserved. Backend migration 005 adds the matching checked command; Pages remains a browser-local demo.
+- Validation: 47 application tests and PostgreSQL migration/permission tests, including duplicate retries, cross-group denial and independent completion.
+
 ## 0.1.0 — 2026-09-24
 
 First working version of Espada, a Russian-language math learning app.

@@ -1,10 +1,13 @@
+import { GroupPicker, StudentPicker } from "../components/Groups";
+import { GroupHomework } from "./GroupHomework";
+import { groupStudents, teachingGroups } from "../core/groups";
 import { TeacherReports } from "./TeacherReports";
 import { topicMastery } from "../core/reports";
 import { errorMessage } from "../i18n/errors";
 import { TopicTree } from "../components/TopicTree";
 import { VideoLessons } from "../components/VideoLessons";
 import React, { useState } from "react";
-import { View, Pressable } from "react-native";
+import { View } from "react-native";
 import { useLearning } from "../services/context";
 import { Topic, Profile, Classroom } from "../core/types";
 import { uid } from "../core/ids";
@@ -12,7 +15,6 @@ import {
   Button,
   Card,
   Txt,
-  Icon,
   Pill,
   Field,
   SectionTitle,
@@ -22,54 +24,38 @@ import {
   Choice,
 } from "../components/ui";
 import { Progress } from "./Student";
-export function Staff({ tab }: { tab: string }) {
-  const { state: s, actor, dispatch, saving, mode } = useLearning();
+export function Staff({
+  tab,
+  onScreenChange,
+}: {
+  tab: string;
+  onScreenChange: () => void;
+}) {
+  const { state: s, actor } = useLearning();
   const students = s.profiles.filter((p) => p.role === "student" && p.active);
-  const [studentId, setStudentId] = useState(students[0]?.id ?? "");
+  const [classId, setClassId] = useState("");
+  const group = teachingGroups(s, actor).find((c) => c.id === classId);
+  const [studentId, setStudentId] = useState("");
+  const selectedStudent = groupStudents(s, group?.id ?? "").find(
+    (p) => p.id === studentId,
+  );
+  function changeGroup(id: string) {
+    setClassId(id);
+    setStudentId("");
+    setDetail(false);
+    setStudentTopic(null);
+  }
   const [detail, setDetail] = useState(false);
-  const [assignmentTopic, setAssignmentTopic] = useState(s.topics[0]?.id ?? "");
-  const [topicQuery, setTopicQuery] = useState("");
-  const [reason, setReason] = useState("");
-  const [override, setOverride] = useState(false);
-  const [notice, setNotice] = useState("");
   const [create, setCreate] = useState(false);
   const [studentTopic, setStudentTopic] = useState<string | null>(null);
   const [videoTopic, setVideoTopic] = useState<string | null>(null);
   const [topicEdit, setTopicEdit] = useState<Topic | null>(null);
-  async function act(fn: () => Promise<void>, message: string) {
-    try {
-      await fn();
-      setNotice(message);
-    } catch (e) {
-      setNotice(errorMessage(e));
-    }
-  }
-  const studentSelector = (
-    <View style={{ gap: 10 }}>
-      <Txt size={13} weight="600">
-        Student
-      </Txt>
-      <View style={[styles.row, { flexWrap: "wrap" }]}>
-        {students.map((p) => (
-          <Button
-            key={p.id}
-            small
-            secondary={studentId !== p.id}
-            onPress={() => {
-              setStudentId(p.id);
-              setDetail(false);
-            }}
-          >
-            {p.name}
-          </Button>
-        ))}
-      </View>
-      {!students.length && <Txt>No students assigned to your classes yet.</Txt>}
-    </View>
-  );
   if (tab === "Assessments" || create)
     return (
       <TeacherReports
+        onScreenChange={onScreenChange}
+        classId={group?.id ?? ""}
+        onGroupChange={changeGroup}
         startNew={create}
         back={create ? () => setCreate(false) : undefined}
       />
@@ -109,7 +95,7 @@ export function Staff({ tab }: { tab: string }) {
             : tab === "Assessments"
               ? "From paper to a clearer next step."
               : tab === "Students"
-                ? "Every learner has a story."
+                ? "Группы и домашняя работа"
                 : "A thoughtful foundation for learning."}
         </Txt>
         <Txt color={colors.muted}>
@@ -118,11 +104,6 @@ export function Staff({ tab }: { tab: string }) {
             : "All changes connect to the same student learning records."}
         </Txt>
       </View>
-      {Boolean(notice) && (
-        <Card>
-          <Txt accessibilityRole="alert">{notice}</Txt>
-        </Card>
-      )}
       {tab === "Overview" && (
         <>
           <View style={styles.grid}>
@@ -152,8 +133,8 @@ export function Staff({ tab }: { tab: string }) {
                 <View key={c.id} style={{ gap: 8, paddingVertical: 10 }}>
                   <Txt weight="600">{c.name}</Txt>
                   <Txt color={colors.muted} size={13}>
-                    {c.studentIds.length} learners · {c.teacherIds.length}{" "}
-                    teacher(s)
+                    {groupStudents(s, c.id).length} учеников · преподавателей:{" "}
+                    {c.teacherIds.length}
                   </Txt>
                 </View>
               ))}
@@ -211,86 +192,34 @@ export function Staff({ tab }: { tab: string }) {
       )}
       {tab === "Students" && (
         <>
-          {studentSelector}
-          {Boolean(studentId) && (
+          <GroupPicker value={group?.id ?? ""} onChange={changeGroup} />
+          {group && (
             <>
-              <Card>
-                <Txt size={21} weight="600">
-                  Домашнее задание
-                </Txt>
-                <Txt size={13}>
-                  Выбрано:{" "}
-                  {s.topics.find((t) => t.id === assignmentTopic)?.title}
-                </Txt>
-                <Field
-                  label="Найти тему для задания"
-                  value={topicQuery}
-                  onChangeText={setTopicQuery}
-                />
-                <View style={[styles.row, { flexWrap: "wrap" }]}>
-                  {s.topics
-                    .filter((t) =>
-                      t.title.toLowerCase().includes(topicQuery.toLowerCase()),
-                    )
-                    .slice(0, 8)
-                    .map((t) => (
-                      <Button
-                        key={t.id}
-                        small
-                        secondary={assignmentTopic !== t.id}
-                        onPress={() => setAssignmentTopic(t.id)}
-                      >
-                        {t.title}
-                      </Button>
-                    ))}
-                </View>
-                <Field
-                  label="Что нужно сделать"
-                  value={reason}
-                  onChangeText={setReason}
-                  placeholder="A clear reason the student will see"
-                  multiline
-                />
-                <Choice
-                  multiple
-                  label="Отметить задание как приоритетное"
-                  selected={override}
-                  onPress={() => setOverride(!override)}
-                />
-                <Button
-                  disabled={saving || !reason.trim()}
-                  onPress={() =>
-                    void act(async () => {
-                      await dispatch({
-                        type: "assign",
-                        assignment: {
-                          id: uid(),
-                          studentId,
-                          topicId: assignmentTopic,
-                          teacherId: actor.id,
-                          reason,
-                          override,
-                          at: new Date().toISOString(),
-                        },
-                      });
-                      setReason("");
-                    }, "Assignment saved and visible to the student.")
-                  }
-                >
-                  Assign topic
-                </Button>
-              </Card>
-              <Button secondary onPress={() => setDetail(!detail)}>
-                {detail
-                  ? "Hide learning profile"
-                  : "View student learning profile"}
-              </Button>
-              {detail && (
-                <Progress
-                  key={studentId}
-                  studentId={studentId}
-                  openTopic={setStudentTopic}
-                />
+              <GroupHomework key={group.id} classId={group.id} />
+              <StudentPicker
+                key={group.id}
+                classId={group.id}
+                value={selectedStudent?.id ?? ""}
+                onChange={(id) => {
+                  setStudentId(id);
+                  setDetail(false);
+                }}
+              />
+              {selectedStudent && (
+                <>
+                  <Button secondary onPress={() => setDetail(!detail)}>
+                    {detail
+                      ? "Скрыть прогресс ученика"
+                      : "Посмотреть прогресс ученика"}
+                  </Button>
+                  {detail && (
+                    <Progress
+                      key={studentId}
+                      studentId={studentId}
+                      openTopic={setStudentTopic}
+                    />
+                  )}
+                </>
               )}
             </>
           )}

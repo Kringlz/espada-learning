@@ -1,7 +1,7 @@
 import { ReportDetail } from "./src/screens/Reports";
 import { errorMessage } from "./src/i18n/errors";
 import { translate } from "./src/i18n";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   ScrollView,
@@ -172,6 +172,9 @@ function Shell() {
   const selectedTab = topic ? "Learn" : result ? "Progress" : tab;
   const [accountOpen, setAccountOpen] = useState(false);
   const scroller = useRef<ScrollView>(null);
+  const scrollStaffToTop = useCallback(() => {
+    scroller.current?.scrollTo({ y: 0, animated: false });
+  }, []);
   const tabs =
     actor.role === "student"
       ? ["Home", "Learn", "Progress", "Profile"]
@@ -524,7 +527,11 @@ function Shell() {
                 ) : tab === "Profile" ? (
                   <Profile />
                 ) : (
-                  <Staff key={`${actor.id}-${tab}`} tab={tab} />
+                  <Staff
+                    key={`${actor.id}-${tab}`}
+                    tab={tab}
+                    onScreenChange={scrollStaffToTop}
+                  />
                 )}
               </View>
               <View style={{ marginTop: 35 }}>

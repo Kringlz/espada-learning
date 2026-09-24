@@ -11,6 +11,7 @@ import {
   Area,
 } from "./types";
 import { uid } from "./ids";
+import { groupStudents, teachingGroups } from "./groups";
 export const canAccess = (s: State, actor: Profile, studentId: string) =>
   actor.active &&
   (actor.role === "admin" ||
@@ -645,8 +646,60 @@ export function applyCommand(
       ];
       break;
     }
+    case "assignGroup": {
+      const group = teachingGroups(s, actor).find((c) => c.id === cmd.classId);
+      if (!group) throw Error("Эта группа недоступна. Выберите свою группу.");
+      if (
+        !cmd.id ||
+        !cmd.reason.trim() ||
+        typeof cmd.override !== "boolean" ||
+        !s.topics.some((t) => t.id === cmd.topicId)
+      )
+        throw Error("Выберите тему и напишите задание для группы.");
+      const previous = s.audit.find(
+        (a) => a.entityId === cmd.id && a.action === "group.assigned",
+      );
+      if (previous) {
+        const sent = previous.after as typeof cmd;
+        if (
+          previous.actorId !== actorId ||
+          sent.classId !== cmd.classId ||
+          sent.topicId !== cmd.topicId ||
+          sent.reason !== cmd.reason.trim() ||
+          sent.override !== cmd.override
+        )
+          throw Error("Это задание уже отправлено с другими данными.");
+        return s;
+      }
+      const members = groupStudents(s, group.id);
+      if (!members.length) throw Error("В группе нет активных учеников.");
+      for (const member of members) {
+        s.assignments.push({
+          id: uid(),
+          studentId: member.id,
+          classId: group.id,
+          className: group.name,
+          groupAssignmentId: cmd.id,
+          topicId: cmd.topicId,
+          teacherId: actorId,
+          reason: cmd.reason.trim(),
+          override: cmd.override,
+          at: now,
+        });
+      }
+      audit(
+        cmd.id,
+        "group.assigned",
+        null,
+        { ...cmd, reason: cmd.reason.trim() },
+        cmd.reason.trim(),
+      );
+      break;
+    }
     case "assign": {
       const a = cmd.assignment;
+      if (a.classId || a.className || a.groupAssignmentId)
+        throw Error("Используйте выдачу задания группе.");
       requireStaff(a.studentId);
       if (
         !s.profiles.some(

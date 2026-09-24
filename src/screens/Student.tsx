@@ -1,3 +1,4 @@
+import { MyGroups } from "../components/Groups";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { useLearning } from "../services/context";
@@ -24,6 +25,7 @@ export function Profile() {
             : "Connected account · access controlled by your tutoring organisation"}
         </Txt>
       </Card>
+      {actor.role === "student" && <MyGroups />}
       <Card>
         <Txt size={20} weight="600">
           Learning, with care

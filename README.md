@@ -36,11 +36,11 @@ See [Russian guide](docs/REPORTS_RU.md) and [central mastery policy and limitati
 ## Try the full cycle
 
 1. Switch to **Мария Соколова** in the account menu.
-2. Open **Работы → Новый шаблон**. Define its name, grade scale, areas, coverage and linked existing topics.
-3. **Добавить результат** for a synthetic student: enter the date, teacher grade and correct/total counts. Blank pairs mean missing. Save a draft or publish.
+2. Open **Работы → group → student**. Templates are managed separately under **Настроить шаблоны тестов**.
+3. **Добавить результат теста**: choose a template, enter the date, grade and correct/total counts, then **Проверить и сохранить**. Review the summary and save a draft or publish.
 4. Switch to that student. Open the exact result from **Главная → Посмотреть результаты**, then inspect counts and compatible earlier work.
 5. Open **Учёба** or a suggested lesson. Complete a new independent check. The topic state updates separately from the teacher's results.
-6. Return as teacher and **Изменить результат** with a reason. The record is updated without duplicate evidence and the audit retains prior values.
+6. Return as teacher and **Исправить результат** with a reason. The record is updated without duplicate evidence and the audit retains prior values.
 
 Other synthetic accounts: **Иван Орлов** is an unassigned teacher and cannot read Alexey's or Sasha's results; **Анна Белова** administers classes, accounts, content and deletion requests. A fresh **Саша Романов** account has no seeded assessment history.
 
@@ -53,7 +53,7 @@ Demo records are shared among these identities on one browser/device. Different 
 - Connected text lesson → guided practice → independent check → feedback → next recommendation.
 - Staff MP4 uploads (up to 50 MB) per topic, multiple videos, persistent local files or private Supabase Storage, student playback positions and retry/error states. Videos never grant topic mastery. Educational video assets must be supplied by the company.
 - Versioned aggregate assessment templates, numeric teacher grades, correct/total counts, missing data, draft/publication and audited corrections. Legacy partial-credit marks remain archived.
-- Teacher assignments and priorities, class difficulty summaries without rankings, student profiles and recent work.
+- Group-first student selection, whole-group homework with individual completion and priorities, group names on student Home/Profile, and a guided teacher result editor with review before saving.
 - Admin class/account management, lesson/question editing, access disabling and deletion-request processing.
 - Central configurable topic mastery policy, compatible-assessment radar, per-area histories with counts and fixed 0–100 scales, readable alternatives and empty states.
 - Supabase Auth adapter, private native session storage, relational PostgreSQL schema, RLS and transactional server-side mutations.

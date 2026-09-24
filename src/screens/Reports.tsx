@@ -1,3 +1,4 @@
+import { MyGroups } from "../components/Groups";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import Svg, { Circle, Line, Polygon, Text as SvgText } from "react-native-svg";
@@ -137,6 +138,7 @@ export function Home({
           Радуемся каждому шагу, {actor.name.split(" ")[0]}.
         </Txt>
       </View>
+      <MyGroups />
       <View>
         <SectionTitle title="Домашнее задание" />
         <Card
@@ -154,6 +156,11 @@ export function Home({
                 <View key={a.id} style={{ gap: 9 }}>
                   <Txt weight="600">
                     {s.topics.find((t) => t.id === a.topicId)?.title}
+                  </Txt>
+                  <Txt size={13} color={colors.muted}>
+                    {a.classId
+                      ? `Для группы: ${s.classes.find((c) => c.id === a.classId)?.name ?? a.className ?? "Группа"}`
+                      : "Ранее выданное задание"}
                   </Txt>
                   <Txt size={14}>{a.reason}</Txt>
                   <Button onPress={() => openTopic(a.topicId)}>

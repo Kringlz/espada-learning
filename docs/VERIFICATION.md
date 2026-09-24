@@ -1,3 +1,10 @@
+# Group workflow verification — 2026-09-24
+
+- TypeScript and 47 tests pass. New tests cover group filtering, exact-class authorization, active roster selection, atomic issuance, retry idempotence and separate pupil completion.
+- Migrations 001–005 and all SQL test suites passed on disposable local PostgreSQL 17 (`espada_groups_20260924`). Group tests cover blocked direct helper access, student/outsider denial, invalid input, empty groups, roster changes, private reads and separate completion.
+- Browser production preview: no pupil list before group selection; selected group reveals only its pupils. Edited a synthetic result through the review step and saved it. Issued one homework task to two demo pupils; the second pupil sees it with the group name, and Profile displays their group.
+- Hosted Pages still uses browser-local demo storage; a real Supabase service was not configured. Existing hosted backends require migration 005 before using the new group command.
+
 # Проверка обновления результатов и состояний тем — 24 сентября 2026
 
 - Проверка типов и **42 автоматических теста** пройдены. 14 новых сценариев покрывают корректные/неверные счётчики, пропуски, сопоставимость и порядок разделов, правила освоения, повторные вопросы, исправления, права, удаление и отделение демонстрационных данных.

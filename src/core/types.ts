@@ -96,6 +96,9 @@ export type Activity = {
 export type Assignment = {
   id: string;
   studentId: string;
+  classId?: string;
+  className?: string;
+  groupAssignmentId?: string;
   topicId: string;
   teacherId: string;
   reason: string;
@@ -205,6 +208,14 @@ export type Command =
     }
   | { type: "attachVideo"; topicId: string; video: VideoLesson }
   | { type: "assign"; assignment: Assignment }
+  | {
+      type: "assignGroup";
+      id: string;
+      classId: string;
+      topicId: string;
+      reason: string;
+      override: boolean;
+    }
   | { type: "saveTemplate"; template: Template }
   | { type: "saveTopic"; topic: Topic }
   | { type: "saveClass"; classroom: Classroom }

@@ -10,7 +10,7 @@ Supabase combines PostgreSQL with managed authentication. Its [React Native guid
 
 No hosted resources have been created. Once an owner has authorized and configured a Supabase project:
 
-1. Apply migrations `001_learning.sql`, `002_russian_curriculum.sql`, `003_topic_videos.sql`, and `004_teacher_reports.sql` in order using the SQL editor or your migration pipeline. On an existing v1 database apply only 002–004. Apply `supabase/seed.sql` for curriculum and template content only. See [Russian video/upgrade guide](UPDATES_RU.md).
+1. Apply migrations `001_learning.sql`, `002_russian_curriculum.sql`, `003_topic_videos.sql`, `004_teacher_reports.sql`, and `005_group_homework.sql` in order using the SQL editor or your migration pipeline. On an existing v1 database apply only the missing migrations through 005. Apply `supabase/seed.sql` for curriculum and template content only. See [Russian video/upgrade guide](UPDATES_RU.md).
 2. Disable public sign-up. Provision initial authentication accounts through the Supabase dashboard using your approved onboarding process. Do not place passwords in seed files.
 3. Bootstrap the first administrator using a SQL insert into `public.profiles` with the matching `auth.users.id`, display name, `role='admin'`, and `active=true`. Ordinary clients cannot self-promote.
 4. Sign in as that administrator; create app profiles for already-provisioned auth users by pasting their Auth UUID. Create classes and select teacher/student members. A teacher gets access only through class membership.
@@ -23,6 +23,8 @@ No hosted resources have been created. Once an owner has authorized and configur
 Relational tables: `profiles`, `classes`, `class_memberships`, `topics`, `assessment_templates`, `assessments`, `attempts`, `activities`, `assignments`, `audit_events`, `deletion_requests`, `parent_links`, `report_templates`, `teacher_reports`, `report_reads`.
 
 Identity, ownership and relationships use typed primary/foreign keys. Variable lesson/question content and versioned record snapshots use JSONB. Marks are validated against their template transactionally. This keeps the small initial curriculum straightforward; normalize item banks and marking rows further when building advanced reporting or high-volume imports.
+
+Group homework uses the checked `assignGroup` command. It validates membership in the exact class, snapshots its active student roster and writes all individual completion records atomically. Copies carry `classId`, `className` and a shared `groupAssignmentId`. An audit receipt makes retries idempotent, including after membership changes. Existing individual assignments remain readable; staff UI issues new homework only to groups.
 
 Parent links have no client access policies. They are reserved for a future verified guardian workflow; creating a row alone does not expose student records.
 

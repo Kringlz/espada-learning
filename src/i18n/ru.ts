@@ -8,7 +8,7 @@ export const ru: Record<string, string> = {
   Profile: "Профиль",
   Overview: "Обзор",
   Assessments: "Работы",
-  Students: "Ученики",
+  Students: "Группы",
   Curriculum: "Программа",
   Manage: "Управление",
   student: "Ученик",
