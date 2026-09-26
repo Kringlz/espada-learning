@@ -86,6 +86,7 @@ Demo mode is local and intentionally insecure; use a single active tab. The conn
 - TypeScript and 52 application tests pass, including independently checked answer sets for all 60 new demo questions.
 - All migrations 001–006 applied to an empty local PostgreSQL 17 database; prior permissions/video/report/group SQL tests and 19 new lesson flow/security checks passed.
 - Checked import dry run, atomic rollback on the last invalid question, idempotent retries, stable-ID upserts, retained omitted questions/options, hidden drafts/keys, ownership checks, exact 4/4/2 tests, saved answers, immutable snapshots, exact multiple-choice grading and changing retry sets.
+- GitHub PR #1: build and PostgreSQL database jobs passed; production deployment was skipped.
 - A real restart of the local PostgreSQL cluster preserved the saved attempt records unchanged.
 - Browser: selected answers, refreshed and resumed the same attempt, submitted and inspected score/explanations; imported the sample JSON through file upload, reviewed counts, saved drafts, edited an explanation and published a lesson. Inspected lesson/test/results at desktop and 390px mobile width. Missing database configuration displays an explicit message.
 - Web/iOS/Android JS exports built locally. No physical-device test, hosted Supabase Auth/PostgREST connection, or production deployment was performed. The localhost fixture-auth bridge is only a development tool.
