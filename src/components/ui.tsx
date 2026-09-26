@@ -106,7 +106,13 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: secondary ? "#F0F3EC" : colors.green,
+          backgroundColor: secondary
+            ? selected
+              ? "#DDE9D8"
+              : "#F0F3EC"
+            : colors.green,
+          borderWidth: 1,
+          borderColor: selected ? colors.green : "transparent",
           opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
           paddingVertical: small ? 8 : 10,
         },

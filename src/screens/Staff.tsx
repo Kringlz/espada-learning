@@ -1,3 +1,4 @@
+import { LessonLibrary } from "../lessons/LessonLibrary";
 import { GroupPicker, StudentPicker } from "../components/Groups";
 import { GroupHomework } from "./GroupHomework";
 import { groupStudents, teachingGroups } from "../core/groups";
@@ -50,6 +51,7 @@ export function Staff({
   const [create, setCreate] = useState(false);
   const [studentTopic, setStudentTopic] = useState<string | null>(null);
   const [videoTopic, setVideoTopic] = useState<string | null>(null);
+  const [showLessonLibrary, setShowLessonLibrary] = useState(true);
   const [topicEdit, setTopicEdit] = useState<Topic | null>(null);
   if (tab === "Assessments" || create)
     return (
@@ -238,8 +240,32 @@ export function Staff({
           )}
         </>
       )}
+      {tab === "Curriculum" && (
+        <View style={[styles.row, { flexWrap: "wrap" }]}>
+          <Button
+            secondary
+            small
+            icon="book-open"
+            selected={showLessonLibrary}
+            onPress={() => setShowLessonLibrary(true)}
+          >
+            Уроки и тесты
+          </Button>
+          <Button
+            secondary
+            small
+            icon="git-branch"
+            selected={!showLessonLibrary}
+            onPress={() => setShowLessonLibrary(false)}
+          >
+            Дерево тем
+          </Button>
+        </View>
+      )}
       {tab === "Curriculum" &&
-        (videoTopic ? (
+        (showLessonLibrary ? (
+          <LessonLibrary />
+        ) : videoTopic ? (
           (() => {
             const topic = s.topics.find((t) => t.id === videoTopic)!;
             return (

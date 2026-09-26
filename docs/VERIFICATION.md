@@ -79,3 +79,15 @@ The source-level comparison test also verifies that papers with different admini
 ## Practical limitations
 
 Demo mode is local and intentionally insecure; use a single active tab. The connected console refreshes on foreground or manually; it does not subscribe to real-time updates. Browser pending commands survive reload but not tab-session closure. Staff unsaved edits do not survive closure. Connected offline cold-start requires the service. Native stack swipe-back, deep links, password recovery/MFA UI and complete Auth deletion are remaining work. Content and heuristics need educator validation. See PRODUCTION_BACKLOG.md for priorities.
+
+
+## Persistent lessons — 2026-09-26
+
+- TypeScript and 52 application tests pass, including independently checked answer sets for all 60 new demo questions.
+- All migrations 001–006 applied to an empty local PostgreSQL 17 database; prior permissions/video/report/group SQL tests and 19 new lesson flow/security checks passed.
+- Checked import dry run, atomic rollback on the last invalid question, idempotent retries, stable-ID upserts, retained omitted questions/options, hidden drafts/keys, ownership checks, exact 4/4/2 tests, saved answers, immutable snapshots, exact multiple-choice grading and changing retry sets.
+- A real restart of the local PostgreSQL cluster preserved the saved attempt records unchanged.
+- Browser: selected answers, refreshed and resumed the same attempt, submitted and inspected score/explanations; imported the sample JSON through file upload, reviewed counts, saved drafts, edited an explanation and published a lesson. Inspected lesson/test/results at desktop and 390px mobile width. Missing database configuration displays an explicit message.
+- Web/iOS/Android JS exports built locally. No physical-device test, hosted Supabase Auth/PostgREST connection, or production deployment was performed. The localhost fixture-auth bridge is only a development tool.
+
+Setup and repeatable checks: [LESSONS.md](LESSONS.md).

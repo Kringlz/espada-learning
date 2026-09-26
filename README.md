@@ -27,6 +27,12 @@ No `.env` is required for the demo. Copy `.env.example` to `.env` when configuri
 
 The app now uses Russian throughout its interface and original lesson content. The supplied PDF is represented by 108 topics in 22 expandable sections. Teachers/admins upload MP4 video lessons from **Программа → topic → Загрузить видеоурок**; students watch from **Учёба**. See [Russian usage and upgrade guide](docs/UPDATES_RU.md). Existing evidence is retained.
 
+## Persistent lessons and 10-question tests
+
+New: **Учёба → Уроки и тесты** for students; **Программа → Уроки и тесты** for administrators. Secure server-generated tests, saved attempts, results, question editing and transactional JSON imports use PostgreSQL via Supabase. This module requires a configured backend; ordinary browser demo mode shows an explicit connection-needed message.
+
+[Russian setup, local preview and content import instructions](docs/LESSONS.md) · [three demo lesson banks](content/demo-lessons.json). Demos are not embedded in the app bundle or automatically seeded on production. The local PostgreSQL preview has explicit fixture authentication and is not a hosted Supabase verification.
+
 ## Results and topic mastery
 
 Student navigation is **Главная / Учёба / Прогресс / Профиль**. Home puts assigned homework and the latest teacher grade first. Progress separates **Результаты работ** (correct/total counts and compatible assessment comparisons) from **Изучение тем** (topic-specific evidence). Broad aggregate scores and video activity never grant individual-topic mastery.
@@ -71,7 +77,7 @@ npm run seed:generate      # Regenerate original curriculum SQL and test fixture
 For database tests, create an **empty disposable local PostgreSQL database**, then:
 
 ```sh
-ESPADA_TEST_DATABASE_URL=postgresql://localhost/espada_test ./scripts/test-database.sh
+ESPADA_TEST_DATABASE_URL=postgresql://localhost/espada_lessons_test ./scripts/test-database.sh
 ```
 
 The test bootstrap creates minimal Auth and Storage shims. **Never run `supabase/tests/bootstrap.sql` or demo fixtures on a real hosted project.** Hosted setup uses the migration and curriculum seed only.

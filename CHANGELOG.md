@@ -1,5 +1,11 @@
 # Project log
 
+## Unreleased — persistent lessons
+
+- Added Supabase lesson catalogue, secure 4/4/2 tests, saved attempts and immutable graded snapshots.
+- Added Russian student/result screens, admin editor and validated transactional JSON import.
+- Added three explicit demo banks, local PostgreSQL preview and database CI checks. Hosted Supabase setup and deployment remain pending.
+
 ## 0.2.1 — 2026-09-24
 
 - Compact cards, spacing, headings and report rows, with comfortable 44 px minimum action targets.

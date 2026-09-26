@@ -10,7 +10,7 @@ Supabase combines PostgreSQL with managed authentication. Its [React Native guid
 
 No hosted resources have been created. Once an owner has authorized and configured a Supabase project:
 
-1. Apply migrations `001_learning.sql`, `002_russian_curriculum.sql`, `003_topic_videos.sql`, `004_teacher_reports.sql`, and `005_group_homework.sql` in order using the SQL editor or your migration pipeline. On an existing v1 database apply only the missing migrations through 005. Apply `supabase/seed.sql` for curriculum and template content only. See [Russian video/upgrade guide](UPDATES_RU.md).
+1. Apply migrations `001_learning.sql`, `002_russian_curriculum.sql`, `003_topic_videos.sql`, `004_teacher_reports.sql`, `005_group_homework.sql`, and `006_persistent_lessons.sql` in order using the SQL editor or your migration pipeline. On an existing v1 database apply only the missing migrations through 006. Apply `supabase/seed.sql` for curriculum and template content only. See [Russian video/upgrade guide](UPDATES_RU.md).
 2. Disable public sign-up. Provision initial authentication accounts through the Supabase dashboard using your approved onboarding process. Do not place passwords in seed files.
 3. Bootstrap the first administrator using a SQL insert into `public.profiles` with the matching `auth.users.id`, display name, `role='admin'`, and `active=true`. Ordinary clients cannot self-promote.
 4. Sign in as that administrator; create app profiles for already-provisioned auth users by pasting their Auth UUID. Create classes and select teacher/student members. A teacher gets access only through class membership.
@@ -55,3 +55,7 @@ SQL migrations, row-level policies and RPC commands were exercised on local Post
 ## Video storage
 
 Migration 003 creates a private 50 MB MP4 bucket and checked `attachVideo` / `saveVideoPosition` commands. Published attachments are visible to active organisation members. Insert paths are scoped to the authenticated staff uploader; object ownership and actual metadata are checked before attachment. Existing published objects cannot be overwritten or deleted through the client. Failed unattached uploads may be removed by their owner. Signed playback URLs expire after six hours. Standard uploads buffer at most 50 MB; resumable uploads/transcoding are future work. Local demo video bytes use IndexedDB on web and Expo FileSystem document storage natively, never persisted blob URLs or base64 in AsyncStorage.
+
+## Persistent lesson tests
+
+Migration 006 adds a separate server-graded question bank and attempt snapshots. See [LESSONS.md](LESSONS.md) for RPCs, local preview, import semantics and hosted configuration. These results do not silently alter existing teacher reports or topic mastery calculations. New lesson answer saves are online, version-checked operations with explicit retry; the legacy learning-command outbox does not handle them.

@@ -14,7 +14,11 @@
     "check": "npm run typecheck && npm test",
     "seed:generate": "node --import tsx scripts/generate-seed.ts",
     "format": "prettier --write App.tsx index.ts app.config.ts src tests scripts/*.ts",
-    "build:pages": "expo export --platform web && node scripts/prepare-pages.mjs"
+    "build:pages": "expo export --platform web && node scripts/prepare-pages.mjs",
+    "test:lessons:db": "node scripts/test-lessons.mjs",
+    "lessons:seed:local": "node scripts/seed-demo-lessons.mjs --local-preview",
+    "lessons:server:local": "node scripts/lesson-preview-server.mjs --local-preview",
+    "lessons:preview": "EXPO_PUBLIC_DATA_MODE=demo EXPO_PUBLIC_LESSON_PREVIEW_URL=http://127.0.0.1:55433 expo start --web --clear"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

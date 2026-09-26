@@ -1,3 +1,4 @@
+import { LessonLibrary } from "../lessons/LessonLibrary";
 import { translate } from "../i18n";
 import React, { useState, useEffect } from "react";
 import { View } from "react-native";
@@ -62,6 +63,7 @@ export function Lesson({
   useEffect(() => {
     if (persisted) setActivity(persisted);
   }, [persisted?.updatedAt, persisted?.stage]);
+  const [storedLessons, setStoredLessons] = useState(false);
   const [viewLesson, setViewLesson] = useState(false);
   const stage = viewLesson ? "lesson" : activity.stage;
   const qs = activity.questionIds.map((id) =>
@@ -106,6 +108,10 @@ export function Lesson({
       );
     }
   }
+  if (storedLessons)
+    return (
+      <LessonLibrary topicId={topicId} back={() => setStoredLessons(false)} />
+    );
   return (
     <View
       style={{ gap: 16, maxWidth: 900, width: "100%", alignSelf: "center" }}
@@ -126,6 +132,9 @@ export function Lesson({
         </Txt>
         <Txt color={colors.muted}>{t.objective}</Txt>
       </View>
+      <Button secondary icon="book-open" onPress={() => setStoredLessons(true)}>
+        Уроки и тесты по этой теме
+      </Button>
       {activity.stage !== "lesson" && (
         <Button secondary small onPress={() => setViewLesson(!viewLesson)}>
           {viewLesson

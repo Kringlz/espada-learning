@@ -1,3 +1,4 @@
+import { LessonLibrary } from "../lessons/LessonLibrary";
 import { MyGroups } from "../components/Groups";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
@@ -305,9 +306,34 @@ export function Home({
     </View>
   );
 }
-export const Learn = ({ openTopic }: { openTopic: (id: string) => void }) => (
-  <TopicTree openTopic={openTopic} />
-);
+export function Learn({ openTopic }: { openTopic: (id: string) => void }) {
+  const [library, setLibrary] = useState(true);
+  return (
+    <View style={{ gap: 14 }}>
+      <View style={[styles.row, { flexWrap: "wrap" }]}>
+        <Button
+          secondary
+          small
+          icon="book-open"
+          selected={library}
+          onPress={() => setLibrary(true)}
+        >
+          Уроки и тесты
+        </Button>
+        <Button
+          secondary
+          small
+          icon="git-branch"
+          selected={!library}
+          onPress={() => setLibrary(false)}
+        >
+          Дерево тем
+        </Button>
+      </View>
+      {library ? <LessonLibrary /> : <TopicTree openTopic={openTopic} />}
+    </View>
+  );
+}
 
 function ResultRadar({
   template,
