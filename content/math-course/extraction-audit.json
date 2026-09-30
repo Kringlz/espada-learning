@@ -1,0 +1,3418 @@
+[
+  {
+    "topic": "A05-01",
+    "page": 2,
+    "glyphs": 1146,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-01",
+    "page": 3,
+    "glyphs": 1250,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-01",
+    "page": 4,
+    "glyphs": 1344,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-01",
+    "page": 5,
+    "glyphs": 1161,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-01",
+    "page": 6,
+    "glyphs": 1423,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-01",
+    "page": 7,
+    "glyphs": 1235,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-01",
+    "page": 8,
+    "glyphs": 1203,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-01",
+    "page": 9,
+    "glyphs": 655,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-01",
+    "page": 9,
+    "glyphs": 363,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-01",
+    "page": 9,
+    "glyphs": 396,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-02",
+    "page": 10,
+    "glyphs": 1172,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-02",
+    "page": 11,
+    "glyphs": 1193,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-02",
+    "page": 12,
+    "glyphs": 1257,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-02",
+    "page": 13,
+    "glyphs": 1245,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-02",
+    "page": 14,
+    "glyphs": 1157,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-02",
+    "page": 15,
+    "glyphs": 532,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-02",
+    "page": 15,
+    "glyphs": 373,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-02",
+    "page": 15,
+    "glyphs": 299,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-03",
+    "page": 16,
+    "glyphs": 1065,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-03",
+    "page": 17,
+    "glyphs": 1108,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-03",
+    "page": 18,
+    "glyphs": 1390,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A05-03",
+    "page": 19,
+    "glyphs": 1308,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A05-03",
+    "page": 20,
+    "glyphs": 1112,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-03",
+    "page": 21,
+    "glyphs": 1399,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A05-03",
+    "page": 22,
+    "glyphs": 1281,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-03",
+    "page": 23,
+    "glyphs": 1071,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-03",
+    "page": 23,
+    "glyphs": 151,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-03",
+    "page": 23,
+    "glyphs": 401,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-04",
+    "page": 24,
+    "glyphs": 1574,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-04",
+    "page": 25,
+    "glyphs": 1620,
+    "unassigned": 0,
+    "figures": 2,
+    "tables": 0
+  },
+  {
+    "topic": "A05-04",
+    "page": 26,
+    "glyphs": 1749,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A05-04",
+    "page": 27,
+    "glyphs": 1800,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A05-04",
+    "page": 28,
+    "glyphs": 1656,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-04",
+    "page": 29,
+    "glyphs": 649,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-04",
+    "page": 29,
+    "glyphs": 543,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A05-04",
+    "page": 29,
+    "glyphs": 420,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-01",
+    "page": 30,
+    "glyphs": 568,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G05-01",
+    "page": 31,
+    "glyphs": 773,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-01",
+    "page": 32,
+    "glyphs": 860,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "G05-01",
+    "page": 33,
+    "glyphs": 558,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-01",
+    "page": 34,
+    "glyphs": 375,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-01",
+    "page": 34,
+    "glyphs": 36,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-01",
+    "page": 34,
+    "glyphs": 79,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-02",
+    "page": 35,
+    "glyphs": 490,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G05-02",
+    "page": 36,
+    "glyphs": 685,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-02",
+    "page": 37,
+    "glyphs": 469,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G05-02",
+    "page": 38,
+    "glyphs": 539,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-02",
+    "page": 39,
+    "glyphs": 338,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-02",
+    "page": 39,
+    "glyphs": 51,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G05-02",
+    "page": 39,
+    "glyphs": 103,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-01",
+    "page": 2,
+    "glyphs": 1104,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-01",
+    "page": 3,
+    "glyphs": 1118,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-01",
+    "page": 4,
+    "glyphs": 1351,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-01",
+    "page": 5,
+    "glyphs": 1278,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-01",
+    "page": 6,
+    "glyphs": 1320,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-01",
+    "page": 7,
+    "glyphs": 1442,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-01",
+    "page": 8,
+    "glyphs": 1093,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-01",
+    "page": 9,
+    "glyphs": 766,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-01",
+    "page": 9,
+    "glyphs": 157,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-01",
+    "page": 9,
+    "glyphs": 506,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 10,
+    "glyphs": 1105,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 11,
+    "glyphs": 1077,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 12,
+    "glyphs": 1138,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-02",
+    "page": 13,
+    "glyphs": 1123,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 14,
+    "glyphs": 1301,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 15,
+    "glyphs": 1299,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 16,
+    "glyphs": 1176,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-02",
+    "page": 17,
+    "glyphs": 1207,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 18,
+    "glyphs": 1103,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 19,
+    "glyphs": 494,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 19,
+    "glyphs": 200,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-02",
+    "page": 19,
+    "glyphs": 355,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-03",
+    "page": 20,
+    "glyphs": 1025,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-03",
+    "page": 21,
+    "glyphs": 1154,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-03",
+    "page": 22,
+    "glyphs": 1493,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-03",
+    "page": 23,
+    "glyphs": 1227,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-03",
+    "page": 24,
+    "glyphs": 1280,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-03",
+    "page": 25,
+    "glyphs": 1429,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-03",
+    "page": 26,
+    "glyphs": 1166,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-03",
+    "page": 27,
+    "glyphs": 602,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-03",
+    "page": 27,
+    "glyphs": 165,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-03",
+    "page": 27,
+    "glyphs": 260,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-04",
+    "page": 28,
+    "glyphs": 657,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-04",
+    "page": 29,
+    "glyphs": 708,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-04",
+    "page": 30,
+    "glyphs": 888,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-04",
+    "page": 31,
+    "glyphs": 609,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-04",
+    "page": 32,
+    "glyphs": 327,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-04",
+    "page": 32,
+    "glyphs": 66,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-04",
+    "page": 32,
+    "glyphs": 105,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-05",
+    "page": 33,
+    "glyphs": 728,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-05",
+    "page": 34,
+    "glyphs": 792,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-05",
+    "page": 35,
+    "glyphs": 937,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-05",
+    "page": 36,
+    "glyphs": 798,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-05",
+    "page": 37,
+    "glyphs": 503,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-05",
+    "page": 37,
+    "glyphs": 45,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-05",
+    "page": 37,
+    "glyphs": 205,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-06",
+    "page": 38,
+    "glyphs": 647,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-06",
+    "page": 39,
+    "glyphs": 951,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-06",
+    "page": 40,
+    "glyphs": 691,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A06-06",
+    "page": 41,
+    "glyphs": 927,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-06",
+    "page": 42,
+    "glyphs": 712,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-06",
+    "page": 43,
+    "glyphs": 543,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-06",
+    "page": 43,
+    "glyphs": 66,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A06-06",
+    "page": 43,
+    "glyphs": 164,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G06-01",
+    "page": 44,
+    "glyphs": 474,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G06-01",
+    "page": 45,
+    "glyphs": 705,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "G06-01",
+    "page": 46,
+    "glyphs": 993,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G06-01",
+    "page": 47,
+    "glyphs": 494,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G06-01",
+    "page": 48,
+    "glyphs": 339,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G06-01",
+    "page": 48,
+    "glyphs": 44,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G06-01",
+    "page": 48,
+    "glyphs": 87,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-01",
+    "page": 2,
+    "glyphs": 712,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-01",
+    "page": 3,
+    "glyphs": 989,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-01",
+    "page": 4,
+    "glyphs": 976,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-01",
+    "page": 5,
+    "glyphs": 624,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-01",
+    "page": 6,
+    "glyphs": 354,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-01",
+    "page": 6,
+    "glyphs": 97,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-01",
+    "page": 6,
+    "glyphs": 156,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-02",
+    "page": 7,
+    "glyphs": 615,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-02",
+    "page": 8,
+    "glyphs": 757,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A07-02",
+    "page": 9,
+    "glyphs": 973,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-02",
+    "page": 10,
+    "glyphs": 617,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-02",
+    "page": 11,
+    "glyphs": 264,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-02",
+    "page": 11,
+    "glyphs": 86,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-02",
+    "page": 11,
+    "glyphs": 126,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-03",
+    "page": 12,
+    "glyphs": 764,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-03",
+    "page": 13,
+    "glyphs": 835,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-03",
+    "page": 14,
+    "glyphs": 878,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-03",
+    "page": 15,
+    "glyphs": 601,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-03",
+    "page": 16,
+    "glyphs": 345,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-03",
+    "page": 16,
+    "glyphs": 72,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-03",
+    "page": 16,
+    "glyphs": 136,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-04",
+    "page": 17,
+    "glyphs": 672,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-04",
+    "page": 18,
+    "glyphs": 822,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-04",
+    "page": 19,
+    "glyphs": 879,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-04",
+    "page": 20,
+    "glyphs": 596,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-04",
+    "page": 21,
+    "glyphs": 272,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-04",
+    "page": 21,
+    "glyphs": 43,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-04",
+    "page": 21,
+    "glyphs": 162,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-05",
+    "page": 22,
+    "glyphs": 638,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-05",
+    "page": 23,
+    "glyphs": 600,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-05",
+    "page": 24,
+    "glyphs": 737,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A07-05",
+    "page": 25,
+    "glyphs": 586,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-05",
+    "page": 26,
+    "glyphs": 223,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-05",
+    "page": 26,
+    "glyphs": 67,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-05",
+    "page": 26,
+    "glyphs": 151,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-06",
+    "page": 27,
+    "glyphs": 692,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-06",
+    "page": 28,
+    "glyphs": 734,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-06",
+    "page": 29,
+    "glyphs": 774,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A07-06",
+    "page": 30,
+    "glyphs": 594,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-06",
+    "page": 31,
+    "glyphs": 309,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-06",
+    "page": 31,
+    "glyphs": 69,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-06",
+    "page": 31,
+    "glyphs": 114,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-07",
+    "page": 32,
+    "glyphs": 608,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-07",
+    "page": 33,
+    "glyphs": 562,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A07-07",
+    "page": 34,
+    "glyphs": 891,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-07",
+    "page": 35,
+    "glyphs": 565,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-07",
+    "page": 36,
+    "glyphs": 372,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-07",
+    "page": 36,
+    "glyphs": 37,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-07",
+    "page": 36,
+    "glyphs": 152,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-08",
+    "page": 37,
+    "glyphs": 614,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-08",
+    "page": 38,
+    "glyphs": 797,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-08",
+    "page": 39,
+    "glyphs": 765,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-08",
+    "page": 40,
+    "glyphs": 783,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A07-08",
+    "page": 41,
+    "glyphs": 575,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-08",
+    "page": 42,
+    "glyphs": 390,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-08",
+    "page": 42,
+    "glyphs": 65,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A07-08",
+    "page": 42,
+    "glyphs": 171,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-01",
+    "page": 43,
+    "glyphs": 545,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-01",
+    "page": 44,
+    "glyphs": 809,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "G07-01",
+    "page": 45,
+    "glyphs": 703,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G07-01",
+    "page": 46,
+    "glyphs": 940,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-01",
+    "page": 47,
+    "glyphs": 640,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-01",
+    "page": 48,
+    "glyphs": 526,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-01",
+    "page": 48,
+    "glyphs": 52,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-01",
+    "page": 48,
+    "glyphs": 104,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-02",
+    "page": 49,
+    "glyphs": 508,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G07-02",
+    "page": 50,
+    "glyphs": 824,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "G07-02",
+    "page": 51,
+    "glyphs": 1087,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-02",
+    "page": 52,
+    "glyphs": 623,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-02",
+    "page": 53,
+    "glyphs": 474,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-02",
+    "page": 53,
+    "glyphs": 56,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G07-02",
+    "page": 53,
+    "glyphs": 91,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-01",
+    "page": 2,
+    "glyphs": 636,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-01",
+    "page": 3,
+    "glyphs": 795,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-01",
+    "page": 4,
+    "glyphs": 720,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-01",
+    "page": 5,
+    "glyphs": 558,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-01",
+    "page": 6,
+    "glyphs": 305,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-01",
+    "page": 6,
+    "glyphs": 68,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-01",
+    "page": 6,
+    "glyphs": 209,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-02",
+    "page": 7,
+    "glyphs": 629,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-02",
+    "page": 8,
+    "glyphs": 684,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A08-02",
+    "page": 9,
+    "glyphs": 889,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-02",
+    "page": 10,
+    "glyphs": 554,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-02",
+    "page": 11,
+    "glyphs": 273,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-02",
+    "page": 11,
+    "glyphs": 44,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-02",
+    "page": 11,
+    "glyphs": 94,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-03",
+    "page": 12,
+    "glyphs": 724,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-03",
+    "page": 13,
+    "glyphs": 619,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A08-03",
+    "page": 14,
+    "glyphs": 843,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-03",
+    "page": 15,
+    "glyphs": 544,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-03",
+    "page": 16,
+    "glyphs": 252,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-03",
+    "page": 16,
+    "glyphs": 65,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-03",
+    "page": 16,
+    "glyphs": 134,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-04",
+    "page": 17,
+    "glyphs": 615,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-04",
+    "page": 18,
+    "glyphs": 578,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A08-04",
+    "page": 19,
+    "glyphs": 612,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-04",
+    "page": 20,
+    "glyphs": 788,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-04",
+    "page": 21,
+    "glyphs": 525,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-04",
+    "page": 22,
+    "glyphs": 312,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-04",
+    "page": 22,
+    "glyphs": 43,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-04",
+    "page": 22,
+    "glyphs": 140,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-05",
+    "page": 23,
+    "glyphs": 623,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-05",
+    "page": 24,
+    "glyphs": 588,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A08-05",
+    "page": 25,
+    "glyphs": 853,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-05",
+    "page": 26,
+    "glyphs": 551,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-05",
+    "page": 27,
+    "glyphs": 279,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-05",
+    "page": 27,
+    "glyphs": 78,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A08-05",
+    "page": 27,
+    "glyphs": 116,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-01",
+    "page": 28,
+    "glyphs": 654,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G08-01",
+    "page": 29,
+    "glyphs": 921,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-01",
+    "page": 30,
+    "glyphs": 967,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "G08-01",
+    "page": 31,
+    "glyphs": 1050,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-01",
+    "page": 32,
+    "glyphs": 644,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-01",
+    "page": 33,
+    "glyphs": 484,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-01",
+    "page": 33,
+    "glyphs": 58,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-01",
+    "page": 33,
+    "glyphs": 68,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-02",
+    "page": 34,
+    "glyphs": 537,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G08-02",
+    "page": 35,
+    "glyphs": 756,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-02",
+    "page": 36,
+    "glyphs": 910,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-02",
+    "page": 37,
+    "glyphs": 533,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-02",
+    "page": 38,
+    "glyphs": 436,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-02",
+    "page": 38,
+    "glyphs": 43,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-02",
+    "page": 38,
+    "glyphs": 92,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-03",
+    "page": 39,
+    "glyphs": 597,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G08-03",
+    "page": 40,
+    "glyphs": 1031,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-03",
+    "page": 41,
+    "glyphs": 744,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-03",
+    "page": 42,
+    "glyphs": 866,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-03",
+    "page": 43,
+    "glyphs": 642,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-03",
+    "page": 44,
+    "glyphs": 303,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-03",
+    "page": 44,
+    "glyphs": 61,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G08-03",
+    "page": 44,
+    "glyphs": 136,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-01",
+    "page": 2,
+    "glyphs": 599,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-01",
+    "page": 3,
+    "glyphs": 438,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A09-01",
+    "page": 4,
+    "glyphs": 875,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-01",
+    "page": 5,
+    "glyphs": 582,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-01",
+    "page": 6,
+    "glyphs": 331,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-01",
+    "page": 6,
+    "glyphs": 36,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-01",
+    "page": 6,
+    "glyphs": 125,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-02",
+    "page": 7,
+    "glyphs": 661,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-02",
+    "page": 8,
+    "glyphs": 576,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A09-02",
+    "page": 9,
+    "glyphs": 790,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-02",
+    "page": 10,
+    "glyphs": 663,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-02",
+    "page": 11,
+    "glyphs": 247,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-02",
+    "page": 11,
+    "glyphs": 95,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-02",
+    "page": 11,
+    "glyphs": 171,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-03",
+    "page": 12,
+    "glyphs": 635,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-03",
+    "page": 13,
+    "glyphs": 737,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-03",
+    "page": 14,
+    "glyphs": 788,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-03",
+    "page": 15,
+    "glyphs": 640,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-03",
+    "page": 16,
+    "glyphs": 328,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-03",
+    "page": 16,
+    "glyphs": 51,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-03",
+    "page": 16,
+    "glyphs": 204,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-04",
+    "page": 17,
+    "glyphs": 574,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-04",
+    "page": 18,
+    "glyphs": 707,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-04",
+    "page": 19,
+    "glyphs": 642,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-04",
+    "page": 20,
+    "glyphs": 980,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-04",
+    "page": 21,
+    "glyphs": 541,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-04",
+    "page": 22,
+    "glyphs": 316,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-04",
+    "page": 22,
+    "glyphs": 35,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-04",
+    "page": 22,
+    "glyphs": 107,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-05",
+    "page": 23,
+    "glyphs": 668,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-05",
+    "page": 24,
+    "glyphs": 780,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-05",
+    "page": 25,
+    "glyphs": 749,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-05",
+    "page": 26,
+    "glyphs": 625,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-05",
+    "page": 27,
+    "glyphs": 209,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-05",
+    "page": 27,
+    "glyphs": 51,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-05",
+    "page": 27,
+    "glyphs": 70,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-06",
+    "page": 28,
+    "glyphs": 591,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A09-06",
+    "page": 29,
+    "glyphs": 616,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A09-06",
+    "page": 30,
+    "glyphs": 767,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-06",
+    "page": 31,
+    "glyphs": 749,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-06",
+    "page": 32,
+    "glyphs": 791,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-06",
+    "page": 33,
+    "glyphs": 603,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-06",
+    "page": 34,
+    "glyphs": 346,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-06",
+    "page": 34,
+    "glyphs": 38,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A09-06",
+    "page": 34,
+    "glyphs": 135,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-01",
+    "page": 35,
+    "glyphs": 663,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-01",
+    "page": 36,
+    "glyphs": 995,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-01",
+    "page": 37,
+    "glyphs": 709,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G09-01",
+    "page": 38,
+    "glyphs": 1012,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-01",
+    "page": 39,
+    "glyphs": 674,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-01",
+    "page": 40,
+    "glyphs": 517,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-01",
+    "page": 40,
+    "glyphs": 58,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-01",
+    "page": 40,
+    "glyphs": 76,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-02",
+    "page": 41,
+    "glyphs": 519,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G09-02",
+    "page": 42,
+    "glyphs": 791,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-02",
+    "page": 43,
+    "glyphs": 785,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-02",
+    "page": 44,
+    "glyphs": 913,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-02",
+    "page": 45,
+    "glyphs": 619,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-02",
+    "page": 46,
+    "glyphs": 429,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-02",
+    "page": 46,
+    "glyphs": 57,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G09-02",
+    "page": 46,
+    "glyphs": 85,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-01",
+    "page": 2,
+    "glyphs": 602,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A10-01",
+    "page": 3,
+    "glyphs": 985,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-01",
+    "page": 4,
+    "glyphs": 810,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A10-01",
+    "page": 5,
+    "glyphs": 596,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-01",
+    "page": 6,
+    "glyphs": 290,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-01",
+    "page": 6,
+    "glyphs": 34,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-01",
+    "page": 6,
+    "glyphs": 132,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-02",
+    "page": 7,
+    "glyphs": 515,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A10-02",
+    "page": 8,
+    "glyphs": 751,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A10-02",
+    "page": 9,
+    "glyphs": 731,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A10-02",
+    "page": 10,
+    "glyphs": 576,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-02",
+    "page": 11,
+    "glyphs": 264,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-02",
+    "page": 11,
+    "glyphs": 53,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-02",
+    "page": 11,
+    "glyphs": 122,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-03",
+    "page": 12,
+    "glyphs": 579,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-03",
+    "page": 13,
+    "glyphs": 750,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A10-03",
+    "page": 14,
+    "glyphs": 917,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-03",
+    "page": 15,
+    "glyphs": 579,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-03",
+    "page": 16,
+    "glyphs": 251,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-03",
+    "page": 16,
+    "glyphs": 64,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-03",
+    "page": 16,
+    "glyphs": 74,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-04",
+    "page": 17,
+    "glyphs": 539,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-04",
+    "page": 18,
+    "glyphs": 738,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-04",
+    "page": 19,
+    "glyphs": 895,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-04",
+    "page": 20,
+    "glyphs": 746,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-04",
+    "page": 21,
+    "glyphs": 552,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-04",
+    "page": 22,
+    "glyphs": 232,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-04",
+    "page": 22,
+    "glyphs": 37,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-04",
+    "page": 22,
+    "glyphs": 135,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-05",
+    "page": 23,
+    "glyphs": 619,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-05",
+    "page": 24,
+    "glyphs": 764,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A10-05",
+    "page": 25,
+    "glyphs": 1090,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-05",
+    "page": 26,
+    "glyphs": 644,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-05",
+    "page": 27,
+    "glyphs": 395,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-05",
+    "page": 27,
+    "glyphs": 45,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-05",
+    "page": 27,
+    "glyphs": 107,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-06",
+    "page": 28,
+    "glyphs": 604,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-06",
+    "page": 29,
+    "glyphs": 584,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A10-06",
+    "page": 30,
+    "glyphs": 658,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-06",
+    "page": 31,
+    "glyphs": 833,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-06",
+    "page": 32,
+    "glyphs": 599,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-06",
+    "page": 33,
+    "glyphs": 307,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-06",
+    "page": 33,
+    "glyphs": 42,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-06",
+    "page": 33,
+    "glyphs": 107,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-07",
+    "page": 34,
+    "glyphs": 620,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-07",
+    "page": 35,
+    "glyphs": 450,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 1
+  },
+  {
+    "topic": "A10-07",
+    "page": 36,
+    "glyphs": 896,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-07",
+    "page": 37,
+    "glyphs": 870,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-07",
+    "page": 38,
+    "glyphs": 621,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-07",
+    "page": 39,
+    "glyphs": 378,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-07",
+    "page": 39,
+    "glyphs": 35,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A10-07",
+    "page": 39,
+    "glyphs": 154,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-01",
+    "page": 40,
+    "glyphs": 630,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G10-01",
+    "page": 41,
+    "glyphs": 710,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-01",
+    "page": 42,
+    "glyphs": 971,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "G10-01",
+    "page": 43,
+    "glyphs": 975,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-01",
+    "page": 44,
+    "glyphs": 769,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-01",
+    "page": 45,
+    "glyphs": 487,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-01",
+    "page": 45,
+    "glyphs": 36,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-01",
+    "page": 45,
+    "glyphs": 149,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-02",
+    "page": 46,
+    "glyphs": 646,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G10-02",
+    "page": 47,
+    "glyphs": 1005,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-02",
+    "page": 48,
+    "glyphs": 1138,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-02",
+    "page": 49,
+    "glyphs": 636,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G10-02",
+    "page": 50,
+    "glyphs": 959,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-02",
+    "page": 51,
+    "glyphs": 713,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-02",
+    "page": 52,
+    "glyphs": 491,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-02",
+    "page": 52,
+    "glyphs": 68,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G10-02",
+    "page": 52,
+    "glyphs": 118,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-01",
+    "page": 2,
+    "glyphs": 530,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A11-01",
+    "page": 3,
+    "glyphs": 630,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-01",
+    "page": 4,
+    "glyphs": 738,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-01",
+    "page": 5,
+    "glyphs": 598,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-01",
+    "page": 6,
+    "glyphs": 218,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-01",
+    "page": 6,
+    "glyphs": 31,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-01",
+    "page": 6,
+    "glyphs": 99,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-02",
+    "page": 7,
+    "glyphs": 600,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-02",
+    "page": 8,
+    "glyphs": 765,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A11-02",
+    "page": 9,
+    "glyphs": 682,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A11-02",
+    "page": 10,
+    "glyphs": 595,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-02",
+    "page": 11,
+    "glyphs": 252,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-02",
+    "page": 11,
+    "glyphs": 46,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-02",
+    "page": 11,
+    "glyphs": 70,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-03",
+    "page": 12,
+    "glyphs": 568,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-03",
+    "page": 13,
+    "glyphs": 722,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-03",
+    "page": 14,
+    "glyphs": 810,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-03",
+    "page": 15,
+    "glyphs": 632,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-03",
+    "page": 16,
+    "glyphs": 250,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-03",
+    "page": 16,
+    "glyphs": 46,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-03",
+    "page": 16,
+    "glyphs": 116,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-04",
+    "page": 17,
+    "glyphs": 627,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-04",
+    "page": 18,
+    "glyphs": 871,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "A11-04",
+    "page": 19,
+    "glyphs": 826,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-04",
+    "page": 20,
+    "glyphs": 933,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-04",
+    "page": 21,
+    "glyphs": 610,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-04",
+    "page": 22,
+    "glyphs": 244,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-04",
+    "page": 22,
+    "glyphs": 58,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-04",
+    "page": 22,
+    "glyphs": 126,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-05",
+    "page": 23,
+    "glyphs": 587,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-05",
+    "page": 24,
+    "glyphs": 849,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-05",
+    "page": 25,
+    "glyphs": 851,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-05",
+    "page": 26,
+    "glyphs": 623,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "A11-05",
+    "page": 27,
+    "glyphs": 664,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-05",
+    "page": 28,
+    "glyphs": 368,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-05",
+    "page": 28,
+    "glyphs": 41,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "A11-05",
+    "page": 28,
+    "glyphs": 135,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-01",
+    "page": 29,
+    "glyphs": 675,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-01",
+    "page": 30,
+    "glyphs": 997,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "G11-01",
+    "page": 31,
+    "glyphs": 751,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G11-01",
+    "page": 32,
+    "glyphs": 746,
+    "unassigned": 0,
+    "figures": 1,
+    "tables": 0
+  },
+  {
+    "topic": "G11-01",
+    "page": 33,
+    "glyphs": 1140,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-01",
+    "page": 34,
+    "glyphs": 637,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-01",
+    "page": 35,
+    "glyphs": 456,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-01",
+    "page": 35,
+    "glyphs": 54,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-01",
+    "page": 35,
+    "glyphs": 86,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-02",
+    "page": 36,
+    "glyphs": 651,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-02",
+    "page": 37,
+    "glyphs": 976,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-02",
+    "page": 38,
+    "glyphs": 864,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-02",
+    "page": 39,
+    "glyphs": 743,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 1
+  },
+  {
+    "topic": "G11-02",
+    "page": 40,
+    "glyphs": 964,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-02",
+    "page": 41,
+    "glyphs": 585,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-02",
+    "page": 42,
+    "glyphs": 428,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-02",
+    "page": 42,
+    "glyphs": 68,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  },
+  {
+    "topic": "G11-02",
+    "page": 42,
+    "glyphs": 119,
+    "unassigned": 0,
+    "figures": 0,
+    "tables": 0
+  }
+]

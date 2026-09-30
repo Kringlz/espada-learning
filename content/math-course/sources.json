@@ -1,0 +1,51 @@
+[
+  {
+    "grade": 5,
+    "file": "Математика_05_класс.pdf",
+    "sha256": "c60162fbc2eb26b466b47ca1856d743804231ad292b9640aaf96418a9b1d92d9",
+    "pages": 39,
+    "topics": 6
+  },
+  {
+    "grade": 6,
+    "file": "Математика_06_класс.pdf",
+    "sha256": "0a1d6aab4eae9e5b2ca443231d4286b8bb132535b68ddc54d99f1673c31984a4",
+    "pages": 48,
+    "topics": 7
+  },
+  {
+    "grade": 7,
+    "file": "Математика_07_класс.pdf",
+    "sha256": "c8a3a612a1f975ff68ee83f48081e7d21d226b983b076c00ad64dc22c5797e06",
+    "pages": 53,
+    "topics": 10
+  },
+  {
+    "grade": 8,
+    "file": "Математика_08_класс.pdf",
+    "sha256": "762ea53ebb600971cc1daa87c5a50e8c126ef3d9fb06b9d3aa50d30b49c9c502",
+    "pages": 44,
+    "topics": 8
+  },
+  {
+    "grade": 9,
+    "file": "Математика_09_класс.pdf",
+    "sha256": "f752b31f4c0f8f72628c921344434483923e9966a79fe96fcdc6cd3fe544e9d6",
+    "pages": 46,
+    "topics": 8
+  },
+  {
+    "grade": 10,
+    "file": "Математика_10_класс.pdf",
+    "sha256": "07272fa955dc4426cbabdb1369f9321d315485b6b470a6e52447c81375e8dcf8",
+    "pages": 52,
+    "topics": 9
+  },
+  {
+    "grade": 11,
+    "file": "Математика_11_класс.pdf",
+    "sha256": "a9582e41be49d5a11d9b3a1eea0a9ba99853c69a3261ba42cbf8a6c7fbe4bfa3",
+    "pages": 42,
+    "topics": 7
+  }
+]

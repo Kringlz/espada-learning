@@ -1,3 +1,5 @@
+import { CourseLibrary } from "../course/CourseLibrary";
+import { LessonLibrary } from "../lessons/LessonLibrary";
 import { MyGroups } from "../components/Groups";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
@@ -305,9 +307,51 @@ export function Home({
     </View>
   );
 }
-export const Learn = ({ openTopic }: { openTopic: (id: string) => void }) => (
-  <TopicTree openTopic={openTopic} />
-);
+export function Learn({ openTopic }: { openTopic: (id: string) => void }) {
+  const [library, setLibrary] = useState<"course" | "tests" | "legacy">(
+    "course",
+  );
+  return (
+    <View style={{ gap: 14 }}>
+      <View style={[styles.row, { flexWrap: "wrap" }]}>
+        <Button
+          secondary
+          small
+          icon="book"
+          selected={library === "course"}
+          onPress={() => setLibrary("course")}
+        >
+          Курс 5–11 классов
+        </Button>
+        <Button
+          secondary
+          small
+          icon="book-open"
+          selected={library === "tests"}
+          onPress={() => setLibrary("tests")}
+        >
+          Уроки и тесты
+        </Button>
+        <Button
+          secondary
+          small
+          icon="git-branch"
+          selected={library === "legacy"}
+          onPress={() => setLibrary("legacy")}
+        >
+          Дополнительные материалы
+        </Button>
+      </View>
+      {library === "course" ? (
+        <CourseLibrary />
+      ) : library === "tests" ? (
+        <LessonLibrary />
+      ) : (
+        <TopicTree openTopic={openTopic} />
+      )}
+    </View>
+  );
+}
 
 function ResultRadar({
   template,

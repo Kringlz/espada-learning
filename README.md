@@ -23,9 +23,19 @@ For native development, install the platform tooling and use `npm run ios` or `n
 
 No `.env` is required for the demo. Copy `.env.example` to `.env` when configuring connected accounts. The development command prints the local preview address.
 
+## Mathematics course for grades 5–11
+
+The default **Учёба / Программа → Курс 5–11 классов** now includes all seven supplied PDFs: 55 topics, 317 content pages and 458 self-check exercises. Class/subject filters, search, selectable text, responsive paragraphs, formatted tables and formulas, hidden hints/answers, reading bookmarks and personal notes work without a backend. Original formulas and diagrams are preserved. Reading and self-check marks are local to each profile/device and never award mastery. The original curriculum and server test module remain available in separate tabs. [Russian course guide and limitations](docs/MATH_COURSE_RU.md).
+
 ## Russian interface, curriculum tree and videos
 
 The app now uses Russian throughout its interface and original lesson content. The supplied PDF is represented by 108 topics in 22 expandable sections. Teachers/admins upload MP4 video lessons from **Программа → topic → Загрузить видеоурок**; students watch from **Учёба**. See [Russian usage and upgrade guide](docs/UPDATES_RU.md). Existing evidence is retained.
+
+## Persistent lessons and 10-question tests
+
+New: **Учёба → Уроки и тесты** for students; **Программа → Уроки и тесты** for administrators. Secure server-generated tests, saved attempts, results, question editing and transactional JSON imports use PostgreSQL via Supabase. This module requires a configured backend; ordinary browser demo mode shows an explicit connection-needed message.
+
+[Russian setup, local preview and content import instructions](docs/LESSONS.md) · [three demo lesson banks](content/demo-lessons.json). Demos are not embedded in the app bundle or automatically seeded on production. The local PostgreSQL preview has explicit fixture authentication and is not a hosted Supabase verification.
 
 ## Results and topic mastery
 
@@ -71,7 +81,7 @@ npm run seed:generate      # Regenerate original curriculum SQL and test fixture
 For database tests, create an **empty disposable local PostgreSQL database**, then:
 
 ```sh
-ESPADA_TEST_DATABASE_URL=postgresql://localhost/espada_test ./scripts/test-database.sh
+ESPADA_TEST_DATABASE_URL=postgresql://localhost/espada_lessons_test ./scripts/test-database.sh
 ```
 
 The test bootstrap creates minimal Auth and Storage shims. **Never run `supabase/tests/bootstrap.sql` or demo fixtures on a real hosted project.** Hosted setup uses the migration and curriculum seed only.

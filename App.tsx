@@ -1,3 +1,5 @@
+import { ScreenScroll } from "./src/components/ScreenScroll";
+import { isLessonPreview } from "./src/lessons/service";
 import { ReportDetail } from "./src/screens/Reports";
 import { errorMessage } from "./src/i18n/errors";
 import { translate } from "./src/i18n";
@@ -414,8 +416,9 @@ function Shell() {
                 }}
               >
                 <Txt size={11} color="#746749">
-                  Demo workspace · synthetic accounts · data saved only on this
-                  device
+                  {isLessonPreview
+                    ? "Локальный предпросмотр · тестовые аккаунты · новые уроки и тесты в PostgreSQL"
+                    : "Demo workspace · synthetic accounts · data saved only on this device"}
                 </Txt>
               </View>
             )}
@@ -446,104 +449,111 @@ function Shell() {
                 </Button>
               </View>
             )}
-            <ScrollView
-              ref={scroller}
-              scrollEventThrottle={16}
-              onScroll={(event) => {
-                if (!restoring.current)
-                  offsets.current[routeKey] = event.nativeEvent.contentOffset.y;
-              }}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{
-                paddingHorizontal: desktop ? 24 : 14,
-                paddingTop: 16,
-                paddingBottom: 24,
-                alignItems: "center",
-              }}
-            >
-              <View style={{ width: "100%", maxWidth: 1100 }}>
-                {actor.role === "student" ? (
-                  <View key={actor.id}>
-                    <View
-                      style={{
-                        display:
-                          !topic && !result && tab === "Home" ? "flex" : "none",
-                      }}
-                    >
-                      <Home
-                        openTopic={setTopic}
-                        navigate={(next) => {
-                          if (next === "Progress")
-                            setShowHistoryRequest((n) => n + 1);
-                          navigate(next);
+            <ScreenScroll.Provider value={scrollStaffToTop}>
+              <ScrollView
+                ref={scroller}
+                scrollEventThrottle={16}
+                onScroll={(event) => {
+                  if (!restoring.current)
+                    offsets.current[routeKey] =
+                      event.nativeEvent.contentOffset.y;
+                }}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{
+                  paddingHorizontal: desktop ? 24 : 14,
+                  paddingTop: 16,
+                  paddingBottom: 24,
+                  alignItems: "center",
+                }}
+              >
+                <View style={{ width: "100%", maxWidth: 1100 }}>
+                  {actor.role === "student" ? (
+                    <View key={actor.id}>
+                      <View
+                        style={{
+                          display:
+                            !topic && !result && tab === "Home"
+                              ? "flex"
+                              : "none",
                         }}
-                        openResult={setResult}
-                      />
-                    </View>
-                    <View
-                      style={{
-                        display:
-                          !topic && !result && tab === "Learn"
-                            ? "flex"
-                            : "none",
-                      }}
-                    >
-                      <Learn openTopic={setTopic} />
-                    </View>
-                    <View
-                      style={{
-                        display:
-                          !topic && !result && tab === "Progress"
-                            ? "flex"
-                            : "none",
-                      }}
-                    >
-                      <Progress
-                        showHistoryRequest={showHistoryRequest}
-                        openResult={setResult}
-                        openTopic={setTopic}
-                      />
-                    </View>
-                    {!topic && !result && tab === "Profile" && <Profile />}
-                    {result && (
-                      <View style={{ display: topic ? "none" : "flex" }}>
-                        <ReportDetail
-                          key={result}
-                          id={result}
-                          back={() => setResult(null)}
+                      >
+                        <Home
+                          openTopic={setTopic}
+                          navigate={(next) => {
+                            if (next === "Progress")
+                              setShowHistoryRequest((n) => n + 1);
+                            navigate(next);
+                          }}
+                          openResult={setResult}
+                        />
+                      </View>
+                      <View
+                        style={{
+                          display:
+                            !topic && !result && tab === "Learn"
+                              ? "flex"
+                              : "none",
+                        }}
+                      >
+                        <Learn openTopic={setTopic} />
+                      </View>
+                      <View
+                        style={{
+                          display:
+                            !topic && !result && tab === "Progress"
+                              ? "flex"
+                              : "none",
+                        }}
+                      >
+                        <Progress
+                          showHistoryRequest={showHistoryRequest}
+                          openResult={setResult}
                           openTopic={setTopic}
                         />
                       </View>
-                    )}
-                    {topic && (
-                      <Lesson
-                        key={`${actor.id}-${topic}`}
-                        topicId={topic}
-                        back={() => setTopic(null)}
-                        openTopic={setTopic}
-                      />
-                    )}
-                  </View>
-                ) : tab === "Profile" ? (
-                  <Profile />
-                ) : (
-                  <Staff
-                    key={`${actor.id}-${tab}`}
-                    tab={tab}
-                    onScreenChange={scrollStaffToTop}
-                  />
-                )}
-              </View>
-              <View style={{ marginTop: 20 }}>
-                <Txt size={11} color={colors.muted}>
-                  {saving
-                    ? "Saving…"
-                    : mode === "demo"
-                      ? "Your demo workspace saves on this device."
-                      : "Connected to your learning organisation."}
-                </Txt>
-              </View>
-            </ScrollView>
+                      {!topic && !result && tab === "Profile" && <Profile />}
+                      {result && (
+                        <View style={{ display: topic ? "none" : "flex" }}>
+                          <ReportDetail
+                            key={result}
+                            id={result}
+                            back={() => setResult(null)}
+                            openTopic={setTopic}
+                          />
+                        </View>
+                      )}
+                      {topic && (
+                        <Lesson
+                          key={`${actor.id}-${topic}`}
+                          topicId={topic}
+                          back={() => setTopic(null)}
+                          openTopic={setTopic}
+                        />
+                      )}
+                    </View>
+                  ) : tab === "Profile" ? (
+                    <Profile />
+                  ) : (
+                    <Staff
+                      key={`${actor.id}-${tab}`}
+                      tab={tab}
+                      onScreenChange={scrollStaffToTop}
+                    />
+                  )}
+                </View>
+                <View style={{ marginTop: 20 }}>
+                  <Txt size={11} color={colors.muted}>
+                    {saving
+                      ? "Saving…"
+                      : mode === "demo"
+                        ? isLessonPreview
+                          ? "Новые уроки и тесты сохраняются в локальной PostgreSQL."
+                          : "Your demo workspace saves on this device."
+                        : "Connected to your learning organisation."}
+                  </Txt>
+                </View>
+              </ScrollView>
+            </ScreenScroll.Provider>
             {!desktop && (
               <View
                 style={{
