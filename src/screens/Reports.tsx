@@ -1,3 +1,4 @@
+import { CourseLibrary } from "../course/CourseLibrary";
 import { LessonLibrary } from "../lessons/LessonLibrary";
 import { MyGroups } from "../components/Groups";
 import React, { useEffect, useState } from "react";
@@ -307,16 +308,27 @@ export function Home({
   );
 }
 export function Learn({ openTopic }: { openTopic: (id: string) => void }) {
-  const [library, setLibrary] = useState(true);
+  const [library, setLibrary] = useState<"course" | "tests" | "legacy">(
+    "course",
+  );
   return (
     <View style={{ gap: 14 }}>
       <View style={[styles.row, { flexWrap: "wrap" }]}>
         <Button
           secondary
           small
+          icon="book"
+          selected={library === "course"}
+          onPress={() => setLibrary("course")}
+        >
+          Курс 5–11 классов
+        </Button>
+        <Button
+          secondary
+          small
           icon="book-open"
-          selected={library}
-          onPress={() => setLibrary(true)}
+          selected={library === "tests"}
+          onPress={() => setLibrary("tests")}
         >
           Уроки и тесты
         </Button>
@@ -324,13 +336,19 @@ export function Learn({ openTopic }: { openTopic: (id: string) => void }) {
           secondary
           small
           icon="git-branch"
-          selected={!library}
-          onPress={() => setLibrary(false)}
+          selected={library === "legacy"}
+          onPress={() => setLibrary("legacy")}
         >
-          Дерево тем
+          Дополнительные материалы
         </Button>
       </View>
-      {library ? <LessonLibrary /> : <TopicTree openTopic={openTopic} />}
+      {library === "course" ? (
+        <CourseLibrary />
+      ) : library === "tests" ? (
+        <LessonLibrary />
+      ) : (
+        <TopicTree openTopic={openTopic} />
+      )}
     </View>
   );
 }

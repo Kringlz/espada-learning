@@ -23,6 +23,10 @@ For native development, install the platform tooling and use `npm run ios` or `n
 
 No `.env` is required for the demo. Copy `.env.example` to `.env` when configuring connected accounts. The development command prints the local preview address.
 
+## Mathematics course for grades 5–11
+
+The default **Учёба / Программа → Курс 5–11 классов** now includes all seven supplied PDFs: 55 topics, 317 content pages and 458 self-check exercises. Class/subject filters, search, selectable text, responsive paragraphs, formatted tables and formulas, hidden hints/answers, reading bookmarks and personal notes work without a backend. Original formulas and diagrams are preserved. Reading and self-check marks are local to each profile/device and never award mastery. The original curriculum and server test module remain available in separate tabs. [Russian course guide and limitations](docs/MATH_COURSE_RU.md).
+
 ## Russian interface, curriculum tree and videos
 
 The app now uses Russian throughout its interface and original lesson content. The supplied PDF is represented by 108 topics in 22 expandable sections. Teachers/admins upload MP4 video lessons from **Программа → topic → Загрузить видеоурок**; students watch from **Учёба**. See [Russian usage and upgrade guide](docs/UPDATES_RU.md). Existing evidence is retained.
