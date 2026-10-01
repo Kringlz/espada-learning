@@ -11,23 +11,23 @@ import {
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { translate, formatDate } from "../i18n";
-export const colors = {
-  ink: "#253D33",
-  muted: "#66736B",
-  green: "#355B46",
-  light: "#EDF2E9",
-  paper: "#FAFAF6",
-  white: "#FFFFFF",
-  line: "#E3E7DF",
-  gold: "#F0D795",
-  orange: "#A7653D",
-  red: "#A3413B",
-};
+import { MathText } from "../math/MathText";
+export { lightColors as colors } from "../theme/Theme";
+import {
+  lightColors as colors,
+  darkColors,
+  useTheme,
+  Palette,
+} from "../theme/Theme";
+export function useUITheme() {
+  const theme = useTheme();
+  return { ...theme, styles: theme.dark ? darkStyles : styles };
+}
 export const dateText = formatDate;
 export function Txt({
   children,
   size = 15,
-  color = colors.ink,
+  color,
   weight = "400",
   style,
   ...props
@@ -39,11 +39,17 @@ export function Txt({
   style?: StyleProp<TextStyle>;
   [key: string]: any;
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <Text
       {...props}
       style={[
-        { fontSize: size, color, fontWeight: weight, lineHeight: size * 1.4 },
+        {
+          fontSize: size,
+          color: color ?? colors.ink,
+          fontWeight: weight,
+          lineHeight: size * 1.4,
+        },
         style,
       ]}
     >
@@ -56,12 +62,13 @@ export function Txt({
 export function Icon({
   name,
   size = 20,
-  color = colors.ink,
+  color,
 }: {
   name: React.ComponentProps<typeof Feather>["name"];
   size?: number;
   color?: string;
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <Feather
       accessible={false}
@@ -70,7 +77,7 @@ export function Icon({
       aria-hidden
       name={name}
       size={size}
-      color={color}
+      color={color ?? colors.ink}
       selectable={false}
     />
   );
@@ -84,6 +91,7 @@ export function Button({
   icon,
   small = false,
   label,
+  math = false,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -93,7 +101,9 @@ export function Button({
   icon?: React.ComponentProps<typeof Feather>["name"];
   small?: boolean;
   label?: string;
+  math?: boolean;
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -108,27 +118,42 @@ export function Button({
         {
           backgroundColor: secondary
             ? selected
-              ? "#DDE9D8"
-              : "#F0F3EC"
-            : colors.green,
+              ? colors.selected
+              : colors.subtle
+            : colors.primary,
           borderWidth: 1,
           borderColor: selected ? colors.green : "transparent",
           opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
-          paddingVertical: small ? 8 : 10,
+          paddingVertical: small ? 10 : 14,
+          paddingHorizontal: small ? 12 : 18,
         },
       ]}
     >
       {icon && (
-        <Icon name={icon} size={17} color={secondary ? colors.green : "#fff"} />
+        <Icon
+          name={icon}
+          size={17}
+          color={secondary ? colors.green : colors.onPrimary}
+        />
       )}
-      <Txt
-        style={{ flexShrink: 1 }}
-        size={14}
-        weight="600"
-        color={secondary ? colors.green : "#fff"}
-      >
-        {children}
-      </Txt>
+      {math && typeof children === "string" ? (
+        <View style={{ flexShrink: 1, minWidth: 0 }}>
+          <MathText
+            text={children}
+            size={small ? 14 : 16}
+            color={secondary ? colors.green : colors.onPrimary}
+          />
+        </View>
+      ) : (
+        <Txt
+          style={{ flexShrink: 1 }}
+          size={small ? 14 : 16}
+          weight="600"
+          color={secondary ? colors.green : colors.onPrimary}
+        >
+          {children}
+        </Txt>
+      )}
     </Pressable>
   );
 }
@@ -139,6 +164,7 @@ export function Card({
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
+  const { colors, styles } = useUITheme();
   return <View style={[styles.card, style]}>{children}</View>;
 }
 export function Pill({
@@ -150,6 +176,7 @@ export function Pill({
   tone?: "green" | "gold" | "neutral";
   icon?: React.ComponentProps<typeof Icon>["name"];
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <View
       style={{
@@ -163,24 +190,24 @@ export function Pill({
         borderRadius: 7,
         backgroundColor:
           tone === "gold"
-            ? "#FBF1D9"
+            ? colors.warning
             : tone === "neutral"
-              ? "#F0F1EC"
-              : "#EAF0E7",
+              ? colors.subtle
+              : colors.light,
       }}
     >
       {icon && (
         <Icon
           name={icon}
           size={13}
-          color={tone === "gold" ? "#795B24" : colors.green}
+          color={tone === "gold" ? colors.orange : colors.green}
         />
       )}
       <Txt
         style={{ flexShrink: 1 }}
         size={12}
         weight="600"
-        color={tone === "gold" ? "#795B24" : colors.green}
+        color={tone === "gold" ? colors.orange : colors.green}
       >
         {children}
       </Txt>
@@ -208,13 +235,20 @@ export function Field({
   editable?: boolean;
   maxLength?: number;
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <View style={{ gap: 7 }}>
       <Txt size={13} weight="600">
         {label}
       </Txt>
       <TextInput
-        accessibilityLabel={label ? translate(label) : undefined}
+        accessibilityLabel={
+          label
+            ? translate(label)
+            : placeholder
+              ? translate(placeholder)
+              : undefined
+        }
         editable={editable}
         maxLength={maxLength}
         value={value}
@@ -244,6 +278,7 @@ export function SectionTitle({
   action?: string;
   onPress?: () => void;
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <View
       style={[
@@ -282,6 +317,7 @@ export function Choice({
   multiple?: boolean;
   onPress: () => void;
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <Pressable
       accessibilityRole={multiple ? "checkbox" : "radio"}
@@ -308,9 +344,11 @@ export function Choice({
           backgroundColor: selected ? colors.green : "transparent",
         }}
       >
-        {selected && <Icon name="check" size={13} color="#fff" />}
+        {selected && <Icon name="check" size={13} color={colors.onPrimary} />}
       </View>
-      <Txt style={{ flex: 1 }}>{label}</Txt>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <MathText text={translate(label)} size={16} />
+      </View>
     </Pressable>
   );
 }
@@ -325,13 +363,14 @@ export function Disclosure({
   icon?: React.ComponentProps<typeof Icon>["name"];
   initiallyOpen?: boolean;
 }) {
+  const { colors, styles } = useUITheme();
   const [open, setOpen] = useState(initiallyOpen);
   return (
     <View
       style={{
         borderWidth: 1,
         borderColor: colors.line,
-        borderRadius: 12,
+        borderRadius: 20,
         backgroundColor: colors.white,
       }}
     >
@@ -342,8 +381,8 @@ export function Disclosure({
         aria-expanded={open}
         onPress={() => setOpen(!open)}
         style={{
-          padding: 12,
-          minHeight: 44,
+          padding: 16,
+          minHeight: 52,
           flexDirection: "row",
           alignItems: "center",
           gap: 8,
@@ -376,6 +415,7 @@ export function Notice({
   children: React.ReactNode;
   tone?: "success" | "error" | "info";
 }) {
+  const { colors, styles } = useUITheme();
   const color = tone === "error" ? colors.red : colors.green;
   return (
     <View
@@ -387,7 +427,7 @@ export function Notice({
         gap: 9,
         padding: 12,
         borderRadius: 10,
-        backgroundColor: tone === "error" ? "#FFF0EA" : colors.light,
+        backgroundColor: tone === "error" ? colors.error : colors.light,
       }}
     >
       <Icon
@@ -415,6 +455,7 @@ export function Steps({
   labels: string[];
   current: number;
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
       {labels.map((label, i) => (
@@ -455,53 +496,58 @@ export function Steps({
   );
 }
 
-export const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: 12 },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 16,
-    gap: 10,
-  },
-  button: {
-    minHeight: 44,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    alignSelf: "flex-start",
-    maxWidth: "100%",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#CCD4CA",
-    borderRadius: 9,
-    padding: 11,
-    minHeight: 44,
-    fontSize: 15,
-    color: colors.ink,
-    backgroundColor: "#fff",
-  },
-  choice: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 11,
-    minHeight: 44,
-    borderRadius: 10,
-  },
-  divider: { height: 1, backgroundColor: colors.line, marginVertical: 8 },
-  grid: { flexDirection: "row", gap: 12, flexWrap: "wrap" },
-  label: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1.4,
-    color: colors.muted,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    row: { flexDirection: "row", alignItems: "center", gap: 12 },
+    card: {
+      backgroundColor: colors.white,
+      borderRadius: 28,
+      borderWidth: 1,
+      borderColor: colors.line,
+      padding: 20,
+      gap: 14,
+    },
+    button: {
+      minHeight: 48,
+      borderRadius: 18,
+      paddingHorizontal: 18,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      alignSelf: "flex-start",
+      maxWidth: "100%",
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.line,
+      borderRadius: 16,
+      padding: 14,
+      minHeight: 44,
+      fontSize: 15,
+      color: colors.ink,
+      backgroundColor: colors.white,
+    },
+    choice: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      borderWidth: 1,
+      borderColor: colors.line,
+      padding: 11,
+      minHeight: 48,
+      borderRadius: 16,
+    },
+    divider: { height: 1, backgroundColor: colors.line, marginVertical: 8 },
+    grid: { flexDirection: "row", gap: 12, flexWrap: "wrap" },
+    label: {
+      fontSize: 11,
+      fontWeight: "700",
+      letterSpacing: 1.4,
+      color: colors.muted,
+    },
+  });
+
+export const styles = createStyles(colors);
+
+const darkStyles = createStyles(darkColors);

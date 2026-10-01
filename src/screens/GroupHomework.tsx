@@ -1,3 +1,4 @@
+import { useUITheme } from "../components/ui";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { useLearning } from "../services/context";
@@ -17,6 +18,7 @@ import {
 } from "../components/ui";
 
 export function GroupHomework({ classId }: { classId: string }) {
+  const { colors, styles } = useUITheme();
   const { state: s, dispatch, saving } = useLearning();
   const group = s.classes.find((c) => c.id === classId)!;
   const members = groupStudents(s, classId);

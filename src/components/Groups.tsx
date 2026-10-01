@@ -1,3 +1,4 @@
+import { useUITheme } from "./ui";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { useLearning } from "../services/context";
@@ -11,6 +12,7 @@ export function GroupPicker({
   value: string;
   onChange: (id: string) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s, actor } = useLearning();
   const groups = teachingGroups(s, actor);
   const group = groups.find((c) => c.id === value);
@@ -70,6 +72,7 @@ export function StudentPicker({
   value: string;
   onChange: (id: string) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s } = useLearning();
   const [query, setQuery] = useState("");
   const students = groupStudents(s, classId);
@@ -142,6 +145,7 @@ export function StudentPicker({
 }
 
 export function MyGroups() {
+  const { colors, styles } = useUITheme();
   const { state: s, actor } = useLearning();
   const groups = s.classes.filter((c) => c.studentIds.includes(actor.id));
   return (

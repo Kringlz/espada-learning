@@ -1,3 +1,4 @@
+import { useUITheme } from "../components/ui";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
@@ -36,6 +37,7 @@ export function LessonAdmin({
   importOnly: boolean;
   close: () => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { actor, state } = useLearning(),
     api = useMemo(() => lessonService(actor.id), [actor.id]);
   const [pkg, setPkg] = useState<LessonPackage | null>(null),

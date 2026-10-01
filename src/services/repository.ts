@@ -1,3 +1,5 @@
+import { upgradeFamilyDemo } from "../data/familyDemo";
+import { upgradeVisualReportDemo } from "../data/visualReportDemo";
 import { upgradeReportDemo } from "../data/reportDemo";
 import { upgradeCurriculum } from "../data/upgrade";
 import { State, Command } from "../core/types";
@@ -46,12 +48,16 @@ export class LocalRepository {
       }
       if (repaired)
         await this.storage.setItem(STORAGE_KEY, JSON.stringify(data));
-      const upgraded = upgradeReportDemo(upgradeCurriculum(data));
+      const upgraded = upgradeFamilyDemo(
+        upgradeVisualReportDemo(upgradeReportDemo(upgradeCurriculum(data))),
+      );
       if (upgraded !== data)
         await this.storage.setItem(STORAGE_KEY, JSON.stringify(upgraded));
       return upgraded;
     }
-    const seed = upgradeReportDemo(createSeed());
+    const seed = upgradeFamilyDemo(
+      upgradeVisualReportDemo(upgradeReportDemo(createSeed())),
+    );
     await this.storage.setItem(STORAGE_KEY, JSON.stringify(seed));
     return seed;
   }

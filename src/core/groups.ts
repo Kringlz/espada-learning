@@ -1,7 +1,7 @@
 import { Profile, State } from "./types";
 
 export const teachingGroups = (s: State, actor: Profile) =>
-  actor.active && actor.role !== "student"
+  actor.active && ["teacher", "admin"].includes(actor.role)
     ? s.classes.filter(
         (c) => actor.role === "admin" || c.teacherIds.includes(actor.id),
       )

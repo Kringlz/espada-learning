@@ -1,3 +1,9 @@
+import { useUITheme } from "../components/ui";
+import { TopicCover } from "../components/TopicCover";
+import { MathText } from "../math/MathText";
+import { LessonText } from "../components/LessonText";
+import { Disclosure } from "../components/ui";
+import { lessonStorageReady } from "../lessons/service";
 import { LessonLibrary } from "../lessons/LessonLibrary";
 import { translate } from "../i18n";
 import React, { useState, useEffect } from "react";
@@ -28,6 +34,7 @@ export function Lesson({
   back: () => void;
   openTopic: (id: string) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s, actor, dispatch, saving } = useLearning();
   const t = s.topics.find((t) => t.id === topicId)!;
   const persisted = s.activities.find(
@@ -127,14 +134,22 @@ export function Lesson({
               ? `ШАГ ${stage === "lesson" ? 1 : stage === "practice" ? 2 : 3} ИЗ 3`
               : "МАТЕРИАЛЫ ТЕМЫ"}
         </Pill>
-        <Txt size={27} weight="600" style={{ marginTop: 12 }}>
-          {t.title}
-        </Txt>
+        <TopicCover
+          title={t.title}
+          subject={t.area}
+          eyebrow="МАТЕМАТИКА · УРОК"
+        />
         <Txt color={colors.muted}>{t.objective}</Txt>
       </View>
-      <Button secondary icon="book-open" onPress={() => setStoredLessons(true)}>
-        Уроки и тесты по этой теме
-      </Button>
+      {lessonStorageReady && (
+        <Button
+          secondary
+          icon="book-open"
+          onPress={() => setStoredLessons(true)}
+        >
+          Уроки и тесты по этой теме
+        </Button>
+      )}
       {activity.stage !== "lesson" && (
         <Button secondary small onPress={() => setViewLesson(!viewLesson)}>
           {viewLesson
@@ -151,7 +166,7 @@ export function Lesson({
         />
       )}
       {Boolean(error) && (
-        <Card style={{ backgroundColor: "#FFF2EF" }}>
+        <Card style={{ backgroundColor: colors.light }}>
           <Txt color={colors.red} accessibilityRole="alert">
             {error}
           </Txt>
@@ -164,10 +179,10 @@ export function Lesson({
               <Txt size={22} weight="600">
                 Let’s make it click.
               </Txt>
-              <Txt size={17}>{t.lesson}</Txt>
+              <LessonText text={t.lesson} />
               <View
                 style={{
-                  backgroundColor: "#F3F5ED",
+                  backgroundColor: colors.light,
                   padding: 22,
                   borderRadius: 12,
                   gap: 10,
@@ -176,7 +191,7 @@ export function Lesson({
                 <Txt size={12} weight="700" color={colors.green}>
                   A WORKED EXAMPLE
                 </Txt>
-                <Txt size={19}>{t.example}</Txt>
+                <LessonText text={t.example} />
               </View>
               {t.prerequisites.length > 0 && (
                 <Txt size={13} color={colors.muted}>
@@ -188,7 +203,7 @@ export function Lesson({
               )}
             </Card>
           )}
-          <VideoLessons topic={t} />
+          {t.videos?.length || t.video ? <VideoLessons topic={t} /> : null}
           {t.practice && !viewLesson && (
             <Button
               disabled={saving}
@@ -208,9 +223,7 @@ export function Lesson({
       {stage === "practice" && t.practice && (
         <Card>
           <Pill tone="gold">A SAFE PLACE TO TRY</Pill>
-          <Txt size={22} weight="600">
-            {t.practice.prompt}
-          </Txt>
+          <MathText text={t.practice.prompt} size={22} bold />
           {t.practice.choices.map((c, i) => (
             <Choice
               key={i}
@@ -233,7 +246,12 @@ export function Lesson({
               Show a hint
             </Button>
           </View>
-          {hint && <Txt color={colors.muted}>Hint: {t.practice.hint}</Txt>}
+          {hint && (
+            <MathText
+              text={`Подсказка: ${t.practice.hint}`}
+              color={colors.muted}
+            />
+          )}
           {practiceChecked && (
             <View
               style={{
@@ -248,7 +266,7 @@ export function Lesson({
                   ? "That’s it. Nicely worked out."
                   : "Let’s look at the method together."}
               </Txt>
-              <Txt>{t.practice.explanation}</Txt>
+              <MathText text={t.practice.explanation} />
               <Txt size={12} color={colors.muted}>
                 Практика с подсказками помогает разобраться. Состояние темы
                 меняют самостоятельные проверки.
@@ -283,9 +301,7 @@ export function Lesson({
               <Txt size={12} weight="600" color={colors.muted}>
                 ВОПРОС {i + 1} ИЗ {qs.length}
               </Txt>
-              <Txt size={21} weight="600">
-                {q.prompt}
-              </Txt>
+              <MathText text={q.prompt} size={21} bold />
               {q.choices.map((c, j) => (
                 <Choice
                   key={j}
@@ -319,7 +335,7 @@ export function Lesson({
       )}
       {stage === "complete" && (
         <>
-          <Card style={{ backgroundColor: "#EEF3E8" }}>
+          <Card style={{ backgroundColor: colors.light }}>
             <Icon name="check-circle" size={35} color={colors.green} />
             <Txt size={29} weight="600">
               One more step forward.
@@ -330,11 +346,13 @@ export function Lesson({
                 : "Your previous check is complete."}
             </Txt>
             <Txt>{current.status}</Txt>
-            <Txt size={13} color={colors.muted}>
-              Ответов по теме: {current.count}. Новые самостоятельные проверки
-              подтверждают состояние темы. Результаты работ учителя остаются
-              отдельными.
-            </Txt>
+            <Disclosure title="Как учитывается эта проверка">
+              <Txt size={13} color={colors.muted}>
+                Ответов по теме: {current.count}. Новые самостоятельные проверки
+                подтверждают состояние темы. Результаты работ учителя остаются
+                отдельными.
+              </Txt>
+            </Disclosure>
             <Txt size={13} color={colors.muted}>
               If this still feels confusing after practice, show the questions
               below to your teacher at your next session.
@@ -350,12 +368,12 @@ export function Lesson({
                 >
                   {q.answer === a.choice ? "Understood" : "Worth another look"}
                 </Pill>
-                <Txt weight="600">{q.prompt}</Txt>
-                <Txt size={14}>
-                  Your answer: {q.choices[a.choice]} · Correct answer:{" "}
-                  {q.choices[q.answer]}
-                </Txt>
-                <Txt color={colors.muted}>{q.explanation}</Txt>
+                <MathText text={q.prompt} bold />
+                <MathText
+                  size={16}
+                  text={`Твой ответ: ${q.choices[a.choice]} · Правильный ответ: ${q.choices[q.answer]}`}
+                />
+                <MathText text={q.explanation} color={colors.muted} />
               </Card>
             );
           })}

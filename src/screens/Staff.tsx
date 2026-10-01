@@ -1,3 +1,5 @@
+import { GroupEnrollment, ParentLinkEditor } from "./Family";
+import { useUITheme } from "../components/ui";
 import { CourseLibrary } from "../course/CourseLibrary";
 import { LessonLibrary } from "../lessons/LessonLibrary";
 import { GroupPicker, StudentPicker } from "../components/Groups";
@@ -34,6 +36,7 @@ export function Staff({
   tab: string;
   onScreenChange: () => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s, actor } = useLearning();
   const students = s.profiles.filter((p) => p.role === "student" && p.active);
   const [classId, setClassId] = useState("");
@@ -213,6 +216,7 @@ export function Staff({
           <GroupPicker value={group?.id ?? ""} onChange={changeGroup} />
           {group && (
             <>
+              <GroupEnrollment key={`enroll-${group.id}`} classId={group.id} />
               <GroupHomework key={group.id} classId={group.id} />
               <StudentPicker
                 key={group.id}
@@ -225,6 +229,10 @@ export function Staff({
               />
               {selectedStudent && (
                 <>
+                  <ParentLinkEditor
+                    key={selectedStudent.id}
+                    studentId={selectedStudent.id}
+                  />
                   <Button secondary onPress={() => setDetail(!detail)}>
                     {detail
                       ? "Скрыть прогресс ученика"
@@ -317,6 +325,7 @@ export function Staff({
   );
 }
 function ContentEditor({ topic, close }: { topic: Topic; close: () => void }) {
+  const { colors, styles } = useUITheme();
   const { dispatch, saving, state: s } = useLearning();
   const [t, setT] = useState(topic);
   const [error, setError] = useState("");
@@ -425,6 +434,7 @@ function ContentEditor({ topic, close }: { topic: Topic; close: () => void }) {
   );
 }
 function Management() {
+  const { colors, styles } = useUITheme();
   const { state: s, dispatch, saving, mode, actor } = useLearning();
   const [notice, setNotice] = useState("");
   const [profile, setProfile] = useState<Profile>({
@@ -511,8 +521,8 @@ function Management() {
             />
           </>
         )}
-        <View style={styles.row}>
-          {(["student", "teacher", "admin"] as const).map((role) => (
+        <View style={[styles.row, { flexWrap: "wrap" }]}>
+          {(["student", "parent", "teacher", "admin"] as const).map((role) => (
             <Button
               key={role}
               small

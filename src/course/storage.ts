@@ -1,5 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   CourseProgress,
   emptyProgress,
@@ -8,7 +14,7 @@ import {
   TopicProgress,
 } from "./model";
 
-export function useCourseProgress(actorId: string) {
+function useStoredCourseProgress(actorId: string) {
   const [progress, setProgress] = useState<CourseProgress>({});
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
@@ -63,13 +69,19 @@ export function useCourseProgress(actorId: string) {
         }
       });
   }
-  function update(id: string, patch: Partial<TopicProgress>) {
+  function update(
+    id: string,
+    patch:
+      | Partial<TopicProgress>
+      | ((current: TopicProgress) => Partial<TopicProgress>),
+  ) {
     if (!ready) return;
+    const current = latest.current[id] ?? emptyProgress();
     const data = {
       ...latest.current,
       [id]: {
-        ...(latest.current[id] ?? emptyProgress()),
-        ...patch,
+        ...current,
+        ...(typeof patch === "function" ? patch(current) : patch),
         updatedAt: new Date().toISOString(),
       },
     };
@@ -85,4 +97,27 @@ export function useCourseProgress(actorId: string) {
     update,
     retry: () => persist(latest.current),
   };
+}
+
+const CourseProgressContext = createContext<ReturnType<
+  typeof useStoredCourseProgress
+> | null>(null);
+export function CourseProgressProvider({
+  actorId,
+  children,
+}: {
+  actorId: string;
+  children: React.ReactNode;
+}) {
+  const storage = useStoredCourseProgress(actorId);
+  return React.createElement(
+    CourseProgressContext.Provider,
+    { value: storage },
+    children,
+  );
+}
+export function useCourseProgress(_actorId: string) {
+  const storage = useContext(CourseProgressContext);
+  if (!storage) throw new Error("CourseProgressProvider is required");
+  return storage;
 }

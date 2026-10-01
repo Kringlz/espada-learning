@@ -1,3 +1,5 @@
+import { useUITheme } from "../components/ui";
+import { sixAreaTemplate } from "../data/reportPresets";
 import { GroupPicker, StudentPicker } from "../components/Groups";
 import { groupStudents, teachingGroups } from "../core/groups";
 import { errorMessage } from "../i18n/errors";
@@ -34,6 +36,7 @@ export function TeacherReports({
   startNew?: boolean;
   back?: () => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s, actor } = useLearning();
   const group = teachingGroups(s, actor).find((c) => c.id === classId);
   const [selection, setSelection] = useState({ classId: "", studentId: "" });
@@ -323,6 +326,7 @@ function ReportEditor({
   className: string;
   close: (saved?: boolean) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s, actor, dispatch, saving } = useLearning();
   const templates = s.reportTemplates ?? [];
   const [tid, setTid] = useState(existing?.templateId ?? "");
@@ -661,6 +665,7 @@ function TemplateEditor({
   source: ReportTemplate | null;
   close: () => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s, dispatch, saving } = useLearning();
   const [id] = useState(uid());
   const [name, setName] = useState(source?.name ?? "");
@@ -731,6 +736,25 @@ function TemplateEditor({
           ))}
         </View>
       </Card>
+      {!source && areas.length === 0 && (
+        <Button
+          secondary
+          icon="pie-chart"
+          onPress={() => {
+            setName(name || sixAreaTemplate.name);
+            setAreas(
+              sixAreaTemplate.areas.map((a) => ({
+                ...a,
+                topicIds: a.topicIds.filter((id) =>
+                  s.topics.some((t) => t.id === id),
+                ),
+              })),
+            );
+          }}
+        >
+          Добавить шесть направлений математики
+        </Button>
+      )}
       {areas.map((a, i) => (
         <Card key={a.id}>
           <Txt size={20} weight="600">
@@ -810,6 +834,7 @@ function TopicPicker({
   selected: string[];
   onChange: (ids: string[]) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s } = useLearning();
   const [query, setQuery] = useState("");
   const matches = s.topics.filter((t) =>

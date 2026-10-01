@@ -1,7 +1,9 @@
+import { useUITheme } from "../components/ui";
 import React from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import { TextRun } from "./content";
-import { colors } from "../components/ui";
+import { mathRuns } from "../math/notation";
+import { Formula } from "../math/Formula";
 export type RichTextProps = {
   runs: TextRun[];
   size?: number;
@@ -30,18 +32,61 @@ function nativeScript(run: TextRun) {
 }
 export function RichText({
   runs,
-  size = 17,
+  size = 18,
   weight = "400",
-  color = colors.ink,
+  color: providedColor,
   heading,
 }: RichTextProps) {
+  const { colors, styles } = useUITheme();
+  const color = providedColor ?? colors.ink;
+  const segments = mathRuns(runs);
+  if (segments.some((r) => r.latex))
+    return (
+      <View
+        accessibilityRole={heading ? "header" : undefined}
+        style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center" }}
+      >
+        {segments.flatMap((r, i) =>
+          r.latex
+            ? [
+                <Formula
+                  key={i}
+                  latex={r.latex}
+                  source={r.text}
+                  size={size}
+                  color={color}
+                  display={r.display}
+                />,
+              ]
+            : r.text.split(/(\n|[^\S\n]+)/).map((text, j) =>
+                text === "\n" ? (
+                  <View key={`${i}:${j}`} style={{ width: "100%" }} />
+                ) : (
+                  <Text
+                    key={`${i}:${j}`}
+                    selectable
+                    style={{
+                      fontSize: size,
+                      lineHeight: size * 1.75,
+                      fontWeight: r.bold ? "700" : weight,
+                      fontStyle: r.italic ? "italic" : undefined,
+                      color,
+                    }}
+                  >
+                    {nativeScript({ ...r, text })}
+                  </Text>
+                ),
+              ),
+        )}
+      </View>
+    );
   return (
     <Text
       selectable
       accessibilityRole={heading ? "header" : undefined}
       style={{
         fontSize: size,
-        lineHeight: size * 1.7,
+        lineHeight: size * (heading ? 1.3 : 1.75),
         fontWeight: weight,
         color,
       }}

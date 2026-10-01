@@ -15,39 +15,72 @@ import { groupStudents, teachingGroups } from "./groups";
 export const canAccess = (s: State, actor: Profile, studentId: string) =>
   actor.active &&
   (actor.role === "admin" ||
-    (actor.role === "student"
-      ? actor.id === studentId
-      : s.classes.some(
-          (c) =>
-            c.teacherIds.includes(actor.id) && c.studentIds.includes(studentId),
-        )));
+    (actor.role === "student" && actor.id === studentId) ||
+    (actor.role === "parent" &&
+      s.profiles.some(
+        (p) => p.id === studentId && p.role === "student" && p.active,
+      ) &&
+      (s.parentLinks ?? []).some(
+        (l) =>
+          l.parentId === actor.id &&
+          l.studentId === studentId &&
+          Boolean(l.verifiedAt),
+      )) ||
+    (actor.role === "teacher" &&
+      s.classes.some(
+        (c) =>
+          c.teacherIds.includes(actor.id) && c.studentIds.includes(studentId),
+      )));
 export function scopedState(s: State, actor: Profile): State {
   const ids = s.profiles
     .filter((p) => p.role === "student" && canAccess(s, actor, p.id))
     .map((p) => p.id);
+  const staff = actor.role === "teacher" || actor.role === "admin";
   const visible = (x: { studentId: string }) => ids.includes(x.studentId);
+  const classes = s.classes
+    .filter(
+      (c) =>
+        actor.role === "admin" ||
+        (actor.role === "teacher"
+          ? c.teacherIds.includes(actor.id)
+          : c.studentIds.some((id) => ids.includes(id))),
+    )
+    .map((c) =>
+      staff
+        ? c
+        : { ...c, studentIds: c.studentIds.filter((id) => ids.includes(id)) },
+    );
+  const teacherIds =
+    actor.role === "student" ? [] : classes.flatMap((c) => c.teacherIds);
+  const links = (actor.role === "student" ? [] : (s.parentLinks ?? [])).filter(
+    (l) =>
+      actor.role === "admin" ||
+      (actor.role === "parent" ? l.parentId === actor.id : visible(l)),
+  );
+  const parentIds = staff ? links.map((l) => l.parentId) : [];
   return {
     ...s,
-    profiles: s.profiles.filter(
-      (p) => p.id === actor.id || ids.includes(p.id) || actor.role === "admin",
+    classes,
+    parentLinks: links,
+    teacherContacts: (s.teacherContacts ?? []).filter(
+      (c) =>
+        c.teacherId === actor.id ||
+        teacherIds.includes(c.teacherId) ||
+        actor.role === "admin",
     ),
-    classes: s.classes
-      .filter(
-        (c) =>
-          actor.role === "admin" ||
-          c.teacherIds.includes(actor.id) ||
-          c.studentIds.includes(actor.id),
-      )
-      .map((c) =>
-        actor.role === "student" ? { ...c, studentIds: [actor.id] } : c,
-      ),
+    profiles: s.profiles.filter(
+      (p) =>
+        p.id === actor.id ||
+        ids.includes(p.id) ||
+        teacherIds.includes(p.id) ||
+        parentIds.includes(p.id) ||
+        actor.role === "admin",
+    ),
     assessments: s.assessments.filter(
-      (x) =>
-        visible(x) && (actor.role !== "student" || x.status === "published"),
+      (x) => visible(x) && (staff || x.status === "published"),
     ),
     reports: (s.reports ?? []).filter(
-      (x) =>
-        visible(x) && (actor.role !== "student" || x.status === "published"),
+      (x) => visible(x) && (staff || x.status === "published"),
     ),
     reportReads: (s.reportReads ?? []).filter(visible),
     attempts: s.attempts.filter(visible),
@@ -63,7 +96,8 @@ export function scopedState(s: State, actor: Profile): State {
               ),
             )
           : [],
-    deletionRequests: s.deletionRequests.filter(visible),
+    deletionRequests:
+      actor.role === "parent" ? [] : s.deletionRequests.filter(visible),
   };
 }
 export function validateTemplate(t: Template, topics: Topic[]) {
@@ -382,7 +416,7 @@ export function applyCommand(
   if (!actor) throw Error("Your session has expired. Sign in again.");
   const requireStaff = (studentId?: string) => {
     if (
-      actor.role === "student" ||
+      !["teacher", "admin"].includes(actor.role) ||
       (studentId && !canAccess(s, actor, studentId))
     )
       throw Error("You do not have access to this student.");
@@ -413,6 +447,82 @@ export function applyCommand(
       reason,
     });
   switch (cmd.type) {
+    case "enrollStudent": {
+      requireStaff();
+      const group = s.classes.find((c) => c.id === cmd.classId);
+      if (
+        !group ||
+        (actor.role !== "admin" && !group.teacherIds.includes(actor.id))
+      )
+        throw Error("Нет доступа к этой группе.");
+      if (
+        !s.profiles.some(
+          (p) => p.id === cmd.studentId && p.role === "student" && p.active,
+        )
+      )
+        throw Error("Код ученика не найден. Проверьте его в профиле ученика.");
+      if (!group.studentIds.includes(cmd.studentId)) {
+        group.studentIds.push(cmd.studentId);
+        audit(group.id, "student.enrolled", null, { studentId: cmd.studentId });
+      }
+      break;
+    }
+    case "linkParent": {
+      requireStaff(cmd.studentId);
+      if (
+        !s.profiles.some(
+          (p) => p.id === cmd.studentId && p.role === "student" && p.active,
+        ) ||
+        !s.profiles.some(
+          (p) => p.id === cmd.parentId && p.role === "parent" && p.active,
+        )
+      )
+        throw Error("Проверьте коды действующих аккаунтов ученика и родителя.");
+      const old = (s.parentLinks ?? []).find(
+        (l) => l.parentId === cmd.parentId && l.studentId === cmd.studentId,
+      );
+      s.parentLinks = (s.parentLinks ?? []).filter((l) => l !== old);
+      if (!cmd.remove)
+        s.parentLinks.push({
+          parentId: cmd.parentId,
+          studentId: cmd.studentId,
+          verifiedAt: now,
+        });
+      audit(
+        cmd.studentId,
+        cmd.remove ? "parent.unlinked" : "parent.linked",
+        old ?? null,
+        cmd.remove
+          ? null
+          : { parentId: cmd.parentId, studentId: cmd.studentId },
+      );
+      break;
+    }
+    case "saveTeacherContact": {
+      requireStaff();
+      const c = cmd.contact;
+      if (actor.role !== "admin" && c.teacherId !== actor.id)
+        throw Error("Можно изменить только свои контакты.");
+      if (
+        !s.profiles.some(
+          (p) => p.id === c.teacherId && p.role === "teacher" && p.active,
+        )
+      )
+        throw Error("Учитель не найден.");
+      if (
+        c.email.length > 160 ||
+        (c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) ||
+        c.phone.length > 40 ||
+        (c.phone && !/^[+\d() .-]{3,40}$/.test(c.phone)) ||
+        c.hours.length > 200
+      )
+        throw Error("Проверьте email, телефон и время для связи.");
+      s.teacherContacts = [
+        ...(s.teacherContacts ?? []).filter((x) => x.teacherId !== c.teacherId),
+        c,
+      ];
+      break;
+    }
     case "saveReportTemplate": {
       requireStaff();
       validateReportTemplate(cmd.template, s.topics);
@@ -809,7 +919,10 @@ export function applyCommand(
     case "saveProfile": {
       requireAdmin();
       const p = cmd.profile;
-      if (!p.name.trim() || !["student", "teacher", "admin"].includes(p.role))
+      if (
+        !p.name.trim() ||
+        !["student", "parent", "teacher", "admin"].includes(p.role)
+      )
         throw Error("Name and valid role required.");
       if (p.id === actorId && (!p.active || p.role !== "admin"))
         throw Error("You cannot remove your own administrator access.");
@@ -868,6 +981,7 @@ export function applyCommand(
         studentIds: c.studentIds.filter((x) => x !== id),
       }));
       s.profiles = s.profiles.filter((p) => p.id !== id);
+      s.parentLinks = (s.parentLinks ?? []).filter((l) => l.studentId !== id);
       s.deletionRequests = s.deletionRequests.filter((r) => r.studentId !== id);
       break;
     }

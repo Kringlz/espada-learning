@@ -1,9 +1,17 @@
+import { useUITheme } from "../components/ui";
+import { TestProgress } from "../lessons/TestProgress";
+import { CourseProgress } from "../course/CourseProgress";
+import { course } from "../course/model";
+import { useCourseProgress } from "../course/storage";
+import { lessonStorageReady } from "../lessons/service";
+import { useScreenScroll } from "../components/ScreenScroll";
 import { CourseLibrary } from "../course/CourseLibrary";
 import { LessonLibrary } from "../lessons/LessonLibrary";
-import { MyGroups } from "../components/Groups";
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
-import Svg, { Circle, Line, Polygon, Text as SvgText } from "react-native-svg";
+import { Image, Pressable, View, useWindowDimensions } from "react-native";
+import { VisualCard } from "../components/VisualCard";
+import { ResultRadar } from "../components/ResultRadar";
+import { LatestReport } from "../components/LatestReport";
 import { useLearning } from "../services/context";
 import { TeacherReport, ReportTemplate, State } from "../core/types";
 import {
@@ -49,6 +57,7 @@ function Grade({
   report: TeacherReport;
   template: ReportTemplate;
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <View style={{ gap: 2 }}>
       <Txt size={12} color={colors.muted}>
@@ -76,6 +85,7 @@ export function Suggestions({
   report?: TeacherReport;
   openTopic: (id: string) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s } = useLearning();
   const rows = reviewSuggestions(s, studentId, report);
   return (
@@ -84,7 +94,7 @@ export function Suggestions({
         rows.map((row) => {
           const t = s.topics.find((t) => t.id === row.topicId)!;
           return (
-            <Card key={t.id} style={{ backgroundColor: "#F7F8F3" }}>
+            <Card key={t.id} style={{ backgroundColor: colors.light }}>
               <Txt weight="600">{t.title}</Txt>
               <Txt size={14} color={colors.muted}>
                 {row.reason}
@@ -113,18 +123,22 @@ export function Home({
   openTopic,
   navigate,
   openResult,
+  openCourse,
 }: {
   openTopic: (id: string) => void;
   navigate: (tab: string) => void;
   openResult: (id: string) => void;
+  openCourse: (id: string) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s, actor } = useLearning();
+  const storage = useCourseProgress(actor.id);
   const latest = reportsFor(s, actor.id)[0];
   const template = s.reportTemplates?.find((t) => t.id === latest?.templateId);
-  const homework = s.assignments.filter(
-    (a) => a.studentId === actor.id && !a.completedAt,
-  );
-  const completedHomework = s.assignments.filter(
+  const homework = s.assignments
+    .filter((a) => a.studentId === actor.id && !a.completedAt)
+    .sort((a, b) => Number(b.override) - Number(a.override));
+  const done = s.assignments.filter(
     (a) => a.studentId === actor.id && a.completedAt,
   );
   const activity = s.activities
@@ -135,337 +149,285 @@ export function Home({
         s.topics.some((t) => t.id === a.topicId && hasMaterial(t)),
     )
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+  const last = course
+    .filter((t) => storage.progress[t.id]?.updatedAt)
+    .sort((a, b) =>
+      storage.progress[b.id].updatedAt.localeCompare(
+        storage.progress[a.id].updatedAt,
+      ),
+    )[0];
+  const useCourse =
+    last &&
+    (!activity || storage.progress[last.id].updatedAt >= activity.updatedAt);
+  const first = homework[0];
+  const title = first
+    ? s.topics.find((t) => t.id === first.topicId)?.title
+    : useCourse
+      ? last.title
+      : activity
+        ? s.topics.find((t) => t.id === activity.topicId)?.title
+        : "Начнём с небольшой темы?";
+  const start = () =>
+    first
+      ? openTopic(first.topicId)
+      : useCourse
+        ? openCourse(last.id)
+        : activity
+          ? openTopic(activity.topicId)
+          : navigate("Learn");
+  const wide = useWindowDimensions().width >= 760;
   return (
-    <View style={{ gap: 16 }}>
-      <View>
-        <Txt size={26} weight="600">
-          Главная
+    <View
+      style={{ gap: 24, maxWidth: 1040, width: "100%", alignSelf: "center" }}
+    >
+      <View style={{ gap: 5 }}>
+        <Txt size={wide ? 38 : 29} weight="700" style={{ letterSpacing: -0.9 }}>
+          Привет, {actor.name.split(" ")[0]}!
         </Txt>
-        <Txt color={colors.muted}>
-          Радуемся каждому шагу, {actor.name.split(" ")[0]}.
+        <Txt size={16} color={colors.muted}>
+          Чему научимся сегодня?
         </Txt>
       </View>
-      <MyGroups />
-      <View style={styles.grid}>
-        <View style={{ flex: 1, minWidth: 260 }}>
-          <SectionTitle title="Домашнее задание" icon="clipboard" />
-          <Card
+      <View
+        style={{
+          backgroundColor: "#304D3D",
+          borderRadius: 32,
+          overflow: "hidden",
+          padding: wide ? 36 : 24,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: wide ? "row" : "column",
+            alignItems: wide ? "center" : "stretch",
+            gap: wide ? 20 : 0,
+          }}
+        >
+          <View
             style={{
-              padding: 18,
-              gap: 10,
-              borderColor: "#B5C7AD",
-              backgroundColor: "#F0F4E9",
+              flex: wide ? 1 : undefined,
+              gap: wide ? 22 : 16,
+              zIndex: 1,
             }}
           >
-            {homework.length ? (
-              <>
-                <Pill tone="gold" icon="clock">
-                  К выполнению · {homework.length}
-                </Pill>
-                {homework.map((a) => (
-                  <View key={a.id} style={{ gap: 9 }}>
-                    <Txt weight="600">
-                      {s.topics.find((t) => t.id === a.topicId)?.title}
-                    </Txt>
-                    <Txt size={13} color={colors.muted}>
-                      {a.classId
-                        ? `Для группы: ${s.classes.find((c) => c.id === a.classId)?.name ?? a.className ?? "Группа"}`
-                        : "Ранее выданное задание"}
-                    </Txt>
-                    <Txt size={14}>{a.reason}</Txt>
-                    <Button
-                      icon="arrow-right"
-                      onPress={() => openTopic(a.topicId)}
-                    >
-                      Открыть задание
-                    </Button>
-                  </View>
-                ))}
-              </>
-            ) : (
-              <View style={[styles.row, { alignItems: "flex-start" }]}>
-                <Icon
-                  name={completedHomework.length ? "check-circle" : "coffee"}
-                  color={colors.green}
-                />
-                <Txt style={{ flex: 1 }}>
-                  На сегодня заданий нет. Можно продолжить учёбу в своём темпе.
-                </Txt>
-              </View>
+            <View
+              style={{
+                alignSelf: "flex-start",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <View
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 4,
+                  backgroundColor: "#D9E5A8",
+                }}
+              />
+              <Txt
+                size={12}
+                weight="700"
+                color="#D9E5A8"
+                style={{ letterSpacing: 1 }}
+              >
+                {first ? "ЗАДАНИЕ ОТ УЧИТЕЛЯ" : "ТВОЙ СЛЕДУЮЩИЙ ШАГ"}
+              </Txt>
+            </View>
+            {!wide && (
+              <Image
+                source={require("../../assets/illustrations/learning-hero.png")}
+                accessible={false}
+                resizeMode="contain"
+                style={{ width: "100%", height: 190, marginVertical: -3 }}
+              />
             )}
-          </Card>
-        </View>
-        <View style={{ flex: 1, minWidth: 260 }}>
-          <SectionTitle
-            icon="file-text"
-            title="Последняя работа"
-            action="Все работы"
-            onPress={() => navigate("Progress")}
-          />
-          <Card>
-            {latest && template ? (
-              <>
-                <View
-                  style={[
-                    styles.row,
-                    {
-                      alignItems: "flex-start",
-                      flexWrap: "wrap",
-                      justifyContent: "space-between",
-                    },
-                  ]}
-                >
-                  <View style={{ flex: 1, minWidth: 160, gap: 8 }}>
-                    <Txt size={20} weight="600">
-                      {template.name}
-                    </Txt>
-                    <Txt size={13} color={colors.muted}>
-                      {dateText(latest.date)}
-                    </Txt>
-                    {unseen(s, latest) && (
-                      <Pill tone="gold" icon="bell">
-                        Новый результат
-                      </Pill>
-                    )}
-                    {latest.demo && (
-                      <Txt size={12} color={colors.muted}>
-                        Учебный пример
-                      </Txt>
-                    )}
-                  </View>
-                  <Grade report={latest} template={template} />
-                </View>
-                <Button
-                  icon="bar-chart-2"
-                  onPress={() => openResult(latest.id)}
-                >
-                  Посмотреть результаты
-                </Button>
-              </>
-            ) : (
-              <Txt>{empty}</Txt>
+            <Txt
+              size={wide ? 40 : 28}
+              weight="700"
+              color="#FBF8E9"
+              style={{ lineHeight: wide ? 46 : 33, letterSpacing: -0.8 }}
+            >
+              {last || activity || first
+                ? title?.split(":")[0]
+                : "Большие открытия.\nМаленькими шагами."}
+            </Txt>
+            {useCourse && !first && (
+              <Txt size={14} color="#CCD6BD">
+                Часть {(storage.progress[last.id]?.page ?? 0) + 1} из{" "}
+                {last.pages.length}
+              </Txt>
             )}
-          </Card>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                first
+                  ? "Начать задание"
+                  : last || activity
+                    ? "Продолжить урок"
+                    : "Выбрать тему"
+              }
+              onPress={start}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 24,
+                backgroundColor: colors.light,
+                borderRadius: 18,
+                paddingVertical: 17,
+                paddingHorizontal: 22,
+                alignSelf: wide ? "flex-start" : "stretch",
+                opacity: pressed ? 0.8 : 1,
+              })}
+            >
+              <Txt size={17} weight="700" color={colors.ink}>
+                {first
+                  ? "Начать задание"
+                  : last || activity
+                    ? "Продолжить"
+                    : "Начать учиться"}
+              </Txt>
+              <Icon name="arrow-right" size={20} color={colors.ink} />
+            </Pressable>
+          </View>
+          {wide && (
+            <Image
+              source={require("../../assets/illustrations/learning-hero.png")}
+              accessible={false}
+              resizeMode="contain"
+              style={{ width: "43%", height: 310 }}
+            />
+          )}
         </View>
       </View>
-      {!!completedHomework.length && (
+      <View style={{ flexDirection: "row", gap: wide ? 20 : 12 }}>
+        <VisualCard
+          title="Все темы"
+          caption="Выбери своё открытие"
+          kind="numbers"
+          compact={!wide}
+          onPress={() => navigate("Learn")}
+        />
+        <VisualCard
+          title="Мой прогресс"
+          caption={
+            latest && template
+              ? `Последняя оценка: ${latest.grade} из ${template.scale.max}${latest.demo ? " · демо" : ""}`
+              : "Твоя карта знаний"
+          }
+          kind="compass"
+          compact={!wide}
+          onPress={() => navigate("Progress")}
+        />
+      </View>
+      {(homework.length > 0 || !!done.length) && (
         <Disclosure
-          title={`Выполненные задания · ${completedHomework.length}`}
-          icon="check-circle"
+          title={`Мои задания · ${homework.length + done.length}`}
+          icon="check-square"
         >
-          {completedHomework.map((a) => (
-            <View key={a.id} style={{ gap: 6 }}>
-              <Pill icon="check-circle">
-                Выполнено · {dateText(a.completedAt!)}
-              </Pill>
+          {homework.map((a) => (
+            <View key={a.id} style={{ gap: 8 }}>
               <Txt weight="600">
                 {s.topics.find((t) => t.id === a.topicId)?.title}
               </Txt>
-              <Button
-                secondary
-                small
-                icon="book-open"
-                onPress={() => openTopic(a.topicId)}
-              >
-                Открыть выполненное задание
+              <Txt size={14} color={colors.muted}>
+                {a.reason}
+              </Txt>
+              <Button small secondary onPress={() => openTopic(a.topicId)}>
+                Открыть задание
+              </Button>
+            </View>
+          ))}
+          {done.map((a) => (
+            <View key={a.id} style={{ gap: 8 }}>
+              <Txt weight="600">
+                ✓ {s.topics.find((t) => t.id === a.topicId)?.title}
+              </Txt>
+              <Button small secondary onPress={() => openTopic(a.topicId)}>
+                Посмотреть
               </Button>
             </View>
           ))}
         </Disclosure>
       )}
-      <View>
-        <SectionTitle title="Продолжить учёбу" icon="play-circle" />
-        <Card>
-          {activity ? (
-            <>
-              <Txt weight="600">
-                {s.topics.find((t) => t.id === activity.topicId)?.title}
-              </Txt>
-              <Txt size={14} color={colors.muted}>
-                Вернитесь к уроку и продолжите с сохранённого места.
-              </Txt>
-              <Button icon="play" onPress={() => openTopic(activity.topicId)}>
-                Продолжить
-              </Button>
-            </>
-          ) : (
-            <>
-              <Txt>Выберите тему: уроки и практика доступны всем.</Txt>
-              <Button icon="book-open" onPress={() => navigate("Learn")}>
-                Уроки и практика
-              </Button>
-            </>
-          )}
-        </Card>
-      </View>
-      <Disclosure title="Что повторить · рекомендации" icon="refresh-cw">
-        <Txt size={13} color={colors.muted}>
-          По желанию · подсказки по результатам, а не домашнее задание.
-        </Txt>
+      <Disclosure title="Что повторить" icon="refresh-cw">
         <Suggestions studentId={actor.id} openTopic={openTopic} />
       </Disclosure>
     </View>
   );
 }
-export function Learn({ openTopic }: { openTopic: (id: string) => void }) {
-  const [library, setLibrary] = useState<"course" | "tests" | "legacy">(
-    "course",
-  );
+
+export function Learn({
+  openTopic,
+  courseRequest,
+}: {
+  openTopic: (id: string) => void;
+  courseRequest?: { id: string; key: number };
+}) {
+  const { colors, styles } = useUITheme();
+  const [extra, setExtra] = useState<"tests" | "practice" | null>(null);
+  useEffect(() => {
+    setExtra(null);
+  }, [courseRequest]);
+  useScreenScroll(`learn:${extra ?? "course"}`);
   return (
-    <View style={{ gap: 14 }}>
-      <View style={[styles.row, { flexWrap: "wrap" }]}>
-        <Button
-          secondary
-          small
-          icon="book"
-          selected={library === "course"}
-          onPress={() => setLibrary("course")}
-        >
-          Курс 5–11 классов
-        </Button>
-        <Button
-          secondary
-          small
-          icon="book-open"
-          selected={library === "tests"}
-          onPress={() => setLibrary("tests")}
-        >
-          Уроки и тесты
-        </Button>
-        <Button
-          secondary
-          small
-          icon="git-branch"
-          selected={library === "legacy"}
-          onPress={() => setLibrary("legacy")}
-        >
-          Дополнительные материалы
-        </Button>
+    <View style={{ gap: 20 }}>
+      <View style={{ display: extra ? "none" : "flex" }}>
+        <CourseLibrary
+          request={courseRequest}
+          extras={
+            <Disclosure title="Практика, видео и другие материалы" icon="grid">
+              <Txt color={colors.muted}>
+                Дополнительные занятия по темам школьной программы.
+              </Txt>
+              <Button
+                secondary
+                icon="play-circle"
+                onPress={() => setExtra("practice")}
+              >
+                Практика и видео
+              </Button>
+              {lessonStorageReady && (
+                <Button
+                  secondary
+                  icon="check-circle"
+                  onPress={() => setExtra("tests")}
+                >
+                  Уроки с тестами · мои попытки
+                </Button>
+              )}
+            </Disclosure>
+          }
+        />
       </View>
-      {library === "course" ? (
-        <CourseLibrary />
-      ) : library === "tests" ? (
-        <LessonLibrary />
-      ) : (
-        <TopicTree openTopic={openTopic} />
+      {extra && (
+        <View style={{ gap: 20 }}>
+          <Button
+            secondary
+            small
+            icon="arrow-left"
+            onPress={() => setExtra(null)}
+          >
+            К учебнику
+          </Button>
+          {extra === "tests" ? (
+            <LessonLibrary />
+          ) : (
+            <>
+              <Txt size={28} weight="700">
+                Практика и видео
+              </Txt>
+              <TopicTree openTopic={openTopic} />
+            </>
+          )}
+        </View>
       )}
     </View>
   );
 }
 
-function ResultRadar({
-  template,
-  report,
-  earlier,
-}: {
-  template: ReportTemplate;
-  report: TeacherReport;
-  earlier?: TeacherReport;
-}) {
-  const n = template.areas.length;
-  const point = (i: number, value: number) => {
-    const angle = (i * 2 * Math.PI) / n - Math.PI / 2;
-    return [
-      160 + Math.cos(angle) * value * 1.12,
-      150 + Math.sin(angle) * value * 1.12,
-    ];
-  };
-  const shape = (r: TeacherReport) =>
-    template.areas.map((a, i) => {
-      const value = percent(r.results.find((x) => x.areaId === a.id));
-      return value === null ? null : point(i, value);
-    });
-  const enough = report.results.filter((x) => percent(x) !== null).length >= 3;
-  if (!enough)
-    return (
-      <Txt size={14} color={colors.muted}>
-        Для диаграммы нужны результаты хотя бы по трём разделам. Все доступные
-        результаты показаны выше.
-      </Txt>
-    );
-  return (
-    <View style={{ gap: 10, alignItems: "center" }}>
-      <Svg
-        width="100%"
-        height={300}
-        viewBox="0 0 320 300"
-        accessibilityLabel="Результаты по разделам, шкала от 0 до 100 процентов. Номера соответствуют списку выше. Зелёный — выбранная работа, пунктир — предыдущая. Значения доступны текстом."
-      >
-        {[25, 50, 75, 100].map((v) => (
-          <Polygon
-            key={v}
-            points={template.areas
-              .map((_, i) => point(i, v).join(","))
-              .join(" ")}
-            stroke="#CCD5C5"
-            strokeWidth={1}
-            fill="none"
-          />
-        ))}
-        {template.areas.map((a, i) => {
-          const [x, y] = point(i, 100);
-          const [tx, ty] = point(i, 118);
-          return (
-            <React.Fragment key={a.id}>
-              <Line x1={160} y1={150} x2={x} y2={y} stroke="#DFE5DA" />
-              <SvgText
-                x={tx}
-                y={ty + 4}
-                textAnchor="middle"
-                fill={colors.ink}
-                fontSize={12}
-              >
-                {i + 1}
-              </SvgText>
-            </React.Fragment>
-          );
-        })}
-        {[...(earlier ? [earlier] : []), report].map((r, j) => {
-          const points = shape(r);
-          const current = r.id === report.id;
-          return (
-            <React.Fragment key={r.id}>
-              {points.every(Boolean) && (
-                <Polygon
-                  points={points.map((p) => p!.join(",")).join(" ")}
-                  stroke={current ? colors.green : "#A66E3D"}
-                  strokeWidth={2}
-                  strokeDasharray={current ? undefined : "5 4"}
-                  fill={current ? "#355B461A" : "none"}
-                />
-              )}
-              {points.map(
-                (p, i) =>
-                  p && (
-                    <Circle
-                      key={i}
-                      cx={p[0]}
-                      cy={p[1]}
-                      r={current ? 4 : 3}
-                      fill={current ? colors.green : "#A66E3D"}
-                    />
-                  ),
-              )}
-            </React.Fragment>
-          );
-        })}
-        <SvgText x={164} y={146} fontSize={10} fill={colors.muted}>
-          0
-        </SvgText>
-        <SvgText x={165} y={35} fontSize={10} fill={colors.muted}>
-          100%
-        </SvgText>
-      </Svg>
-      <Txt size={12} color={colors.muted}>
-        Шкала 0–100% · номера разделов — в списке выше.
-        {earlier
-          ? " Сплошная линия — эта работа, пунктир — выбранная ранняя."
-          : ""}{" "}
-        Пропуски не соединяются и не считаются нулём.
-      </Txt>
-    </View>
-  );
-}
 export function ReportDetail({
   id,
   back,
@@ -475,6 +437,7 @@ export function ReportDetail({
   back: () => void;
   openTopic: (id: string) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s, actor, dispatch } = useLearning();
   const r = s.reports?.find((r) => r.id === id);
   const storedTemplate = s.reportTemplates?.find((t) => t.id === r?.templateId);
@@ -517,7 +480,7 @@ export function ReportDetail({
               {t.name}
             </Txt>
             <Txt size={13} color={colors.muted}>
-              {dateText(r.date)} · версия {t.version}
+              {dateText(r.date)}
             </Txt>
           </View>
           <Grade report={r} template={t} />
@@ -557,10 +520,7 @@ export function ReportDetail({
           );
         })}
       </Card>
-      <Card>
-        <Txt size={22} weight="600">
-          Сравнение работ
-        </Txt>
+      <Disclosure title="Сравнить с прошлыми работами" icon="bar-chart-2">
         <ResultRadar template={t} report={r} earlier={earlier} />
         {earlierRows.length ? (
           <>
@@ -614,7 +574,7 @@ export function ReportDetail({
           Сравниваем только одинаковые разделы и шкалы. Сложность работ может
           отличаться: изменение результата не измеряет точный рост способностей.
         </Txt>
-      </Card>
+      </Disclosure>
       {history.length > 1 && (
         <Button secondary onPress={() => setShowHistory(!showHistory)}>
           {showHistory
@@ -649,7 +609,7 @@ export function ReportDetail({
                         accessibilityLabel={`${p}% из 100%`}
                         style={{
                           height: 7,
-                          backgroundColor: "#EEF1E8",
+                          backgroundColor: colors.light,
                           borderRadius: 4,
                         }}
                       >
@@ -679,24 +639,32 @@ export function ReportDetail({
 }
 export function Progress({
   studentId,
+  openCourse,
   openResult,
   openTopic = () => {},
+  active = true,
   initialView = "reports",
   showHistoryRequest = 0,
 }: {
   studentId?: string;
+  openCourse?: (id: string) => void;
   openResult?: (id: string) => void;
   openTopic?: (id: string) => void;
+  active?: boolean;
   initialView?: "reports" | "topics";
   showHistoryRequest?: number;
 }) {
+  const { colors, styles } = useUITheme();
   const { state: s, actor } = useLearning();
   const id = studentId ?? actor.id;
   const [view, setView] = useState(initialView);
+  const [testAttempt, setTestAttempt] = useState<string | null>(null);
+  useScreenScroll(`progress:${testAttempt ?? "overview"}`);
   useEffect(() => {
     if (showHistoryRequest) setView("reports");
   }, [showHistoryRequest]);
   const [query, setQuery] = useState("");
+  const [showAllReports, setShowAllReports] = useState(false);
   const [family, setFamily] = useState("");
   const [localDetail, setLocalDetail] = useState<string | null>(null);
   const [legacy, setLegacy] = useState(false);
@@ -717,6 +685,14 @@ export function Progress({
     "Получается",
     "Освоено",
   ];
+  if (testAttempt)
+    return (
+      <LessonLibrary
+        key={testAttempt}
+        initialAttemptId={testAttempt}
+        back={() => setTestAttempt(null)}
+      />
+    );
   if (localDetail)
     return (
       <ReportDetail
@@ -727,296 +703,332 @@ export function Progress({
       />
     );
   return (
-    <View style={{ gap: 16 }}>
-      <Txt size={26} weight="600">
-        Прогресс
+    <View
+      style={{ gap: 22, maxWidth: 1040, width: "100%", alignSelf: "center" }}
+    >
+      <Txt size={32} weight="700" style={{ letterSpacing: -0.8 }}>
+        {actor.role === "student" ? "Мой прогресс" : "Прогресс ученика"}
       </Txt>
-      <View style={[styles.row, { flexWrap: "wrap" }]}>
-        <Button
-          icon="bar-chart-2"
-          selected={view === "reports"}
-          secondary={view !== "reports"}
-          onPress={() => setView("reports")}
-        >
-          Результаты работ
-        </Button>
-        <Button
-          icon="git-branch"
-          selected={view === "topics"}
-          secondary={view !== "topics"}
-          onPress={() => setView("topics")}
-        >
-          Изучение тем
-        </Button>
-      </View>
-      {view === "reports" ? (
-        <>
-          <Txt color={colors.muted}>
-            Оценки учителя и правильные ответы по разделам каждой работы.
-          </Txt>
-          {rows.length > 5 && (
-            <Card>
-              <Field
-                label="Найти работу"
-                value={query}
-                onChangeText={setQuery}
-                placeholder="Название или дата ГГГГ-ММ-ДД"
-              />
-              <View style={[styles.row, { flexWrap: "wrap" }]}>
-                <Button
-                  small
-                  secondary={family !== ""}
-                  onPress={() => setFamily("")}
-                >
-                  Все шаблоны
-                </Button>
-                {[
-                  ...new Set(
-                    rows.map(
-                      (r) =>
-                        templates.find((t) => t.id === r.templateId)!.familyId,
-                    ),
-                  ),
-                ].map((fid) => (
+      <LatestReport
+        studentId={id}
+        openResult={openResult ?? setLocalDetail}
+        openTopic={openTopic}
+      />
+      {actor.role === "student" && !studentId && openCourse && (
+        <CourseProgress openCourse={openCourse} />
+      )}
+      {actor.role === "student" && !studentId && lessonStorageReady && (
+        <TestProgress active={active} open={setTestAttempt} />
+      )}
+      <Disclosure
+        key={`history-${showHistoryRequest}`}
+        title="История и проверки"
+        icon="clock"
+        initiallyOpen={!!studentId || initialView === "topics"}
+      >
+        <View style={[styles.row, { flexWrap: "wrap" }]}>
+          <Button
+            icon="bar-chart-2"
+            selected={view === "reports"}
+            secondary={view !== "reports"}
+            onPress={() => setView("reports")}
+          >
+            Оценки учителя
+          </Button>
+          <Button
+            icon="git-branch"
+            selected={view === "topics"}
+            secondary={view !== "topics"}
+            onPress={() => setView("topics")}
+          >
+            Проверки по темам
+          </Button>
+        </View>
+        {view === "reports" ? (
+          <>
+            <Txt color={colors.muted}>
+              Оценки учителя и правильные ответы по разделам каждой работы.
+            </Txt>
+            {rows.length > 5 && (
+              <Disclosure title="Найти прошлую работу" icon="search">
+                <Field
+                  label="Найти работу"
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder="Название или дата ГГГГ-ММ-ДД"
+                />
+                <View style={[styles.row, { flexWrap: "wrap" }]}>
                   <Button
                     small
-                    secondary={family !== fid}
-                    key={fid}
-                    onPress={() => setFamily(fid)}
+                    secondary={family !== ""}
+                    onPress={() => setFamily("")}
                   >
-                    {templates.find((t) => t.familyId === fid)!.name}
+                    Все шаблоны
                   </Button>
-                ))}
-              </View>
-            </Card>
-          )}
-          {!rows.length && (
-            <Card>
-              <Txt>{empty}</Txt>
-            </Card>
-          )}
-          {rows
-            .filter((r) => {
-              const t = templates.find((t) => t.id === r.templateId)!;
-              return (
-                (!family || family === t.familyId) &&
-                `${t.name} ${r.date}`
-                  .toLowerCase()
-                  .includes(query.toLowerCase())
-              );
-            })
-            .map((r) => {
-              const t = templates.find((t) => t.id === r.templateId)!;
-              return (
-                <Card key={r.id}>
-                  <View
-                    style={[
-                      styles.row,
-                      {
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        flexWrap: "wrap",
-                      },
-                    ]}
-                  >
-                    <View style={{ flex: 1, minWidth: 140, gap: 7 }}>
-                      <Txt size={16} weight="600">
-                        {t.name}
-                      </Txt>
-                      <Txt size={13} color={colors.muted}>
-                        {dateText(r.date)} · версия {t.version}
-                      </Txt>
-                      {unseen(s, r) && (
-                        <Pill tone="gold" icon="bell">
-                          Новый результат
-                        </Pill>
-                      )}
-                      {r.demo && (
-                        <Txt size={12} color={colors.muted}>
-                          Учебный пример
-                        </Txt>
-                      )}
-                    </View>
-                    <Grade report={r} template={t} />
+                  {[
+                    ...new Set(
+                      rows.map(
+                        (r) =>
+                          templates.find((t) => t.id === r.templateId)!
+                            .familyId,
+                      ),
+                    ),
+                  ].map((fid) => (
                     <Button
                       small
-                      icon="arrow-right"
-                      secondary
-                      onPress={() =>
-                        openResult ? openResult(r.id) : setLocalDetail(r.id)
-                      }
+                      secondary={family !== fid}
+                      key={fid}
+                      onPress={() => setFamily(fid)}
                     >
-                      Посмотреть результаты
+                      {templates.find((t) => t.familyId === fid)!.name}
                     </Button>
-                  </View>
-                </Card>
-              );
-            })}
-          {rows.length > 0 &&
-            !rows.some((r) => {
-              const t = templates.find((t) => t.id === r.templateId)!;
-              return (
-                (!family || family === t.familyId) &&
-                `${t.name} ${r.date}`
-                  .toLowerCase()
-                  .includes(query.toLowerCase())
-              );
-            }) && (
-              <Txt>
-                Работы не найдены. Измените поиск или выберите все шаблоны.
-              </Txt>
+                  ))}
+                </View>
+              </Disclosure>
             )}
-          {s.assessments.some(
-            (a) => a.studentId === id && a.status === "published",
-          ) && (
-            <Card>
-              <Button secondary onPress={() => setLegacy(!legacy)}>
-                {legacy ? "Скрыть архив" : "Архив прежних работ с баллами"}
+            {!rows.length && (
+              <Card>
+                <Txt>{empty}</Txt>
+              </Card>
+            )}
+            {rows
+              .filter((r) => {
+                const t = templates.find((t) => t.id === r.templateId)!;
+                return (
+                  (!family || family === t.familyId) &&
+                  `${t.name} ${r.date}`
+                    .toLowerCase()
+                    .includes(query.toLowerCase())
+                );
+              })
+              .slice(0, showAllReports || query || family ? undefined : 3)
+              .map((r) => {
+                const t = templates.find((t) => t.id === r.templateId)!;
+                return (
+                  <Card key={r.id}>
+                    <View
+                      style={[
+                        styles.row,
+                        {
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          flexWrap: "wrap",
+                        },
+                      ]}
+                    >
+                      <View style={{ flex: 1, minWidth: 140, gap: 7 }}>
+                        <Txt size={16} weight="600">
+                          {t.name}
+                        </Txt>
+                        <Txt size={13} color={colors.muted}>
+                          {dateText(r.date)}
+                        </Txt>
+                        {unseen(s, r) && (
+                          <Pill tone="gold" icon="bell">
+                            Новый результат
+                          </Pill>
+                        )}
+                        {r.demo && (
+                          <Txt size={12} color={colors.muted}>
+                            Учебный пример
+                          </Txt>
+                        )}
+                      </View>
+                      <Grade report={r} template={t} />
+                      <Button
+                        small
+                        icon="arrow-right"
+                        secondary
+                        onPress={() =>
+                          openResult ? openResult(r.id) : setLocalDetail(r.id)
+                        }
+                      >
+                        Посмотреть результаты
+                      </Button>
+                    </View>
+                  </Card>
+                );
+              })}
+            {rows.length > 3 && !query && !family && (
+              <Button
+                secondary
+                onPress={() => setShowAllReports((value) => !value)}
+              >
+                {showAllReports
+                  ? "Свернуть историю"
+                  : `Все работы · ${rows.length}`}
               </Button>
-              {legacy && (
-                <>
-                  <Txt size={13} color={colors.muted}>
-                    В старых записях сохранены баллы за задания. Оценка учителя
-                    и число правильных ответов неизвестны, поэтому эти записи не
-                    смешиваются с новыми работами.
-                  </Txt>
-                  {s.assessments
-                    .filter(
-                      (a) => a.studentId === id && a.status === "published",
-                    )
-                    .sort((a, b) => b.date.localeCompare(a.date))
-                    .map((a) => {
-                      const t = s.templates.find((t) => t.id === a.templateId)!;
-                      const score = assessmentScore(s, a);
-                      return (
-                        <View key={a.id} style={{ gap: 7 }}>
-                          <Txt weight="600">
-                            {t.name} · {dateText(a.date)}
-                          </Txt>
-                          <Txt>
-                            Баллы: {score.earned} из {score.max}
-                          </Txt>
-                          {t.questions.map((q) => {
-                            const m = a.marks.find(
-                              (m) => m.questionId === q.id,
-                            );
-                            return (
-                              <Txt size={12} color={colors.muted} key={q.id}>
-                                {q.label}:{" "}
-                                {m?.earned == null
-                                  ? "Нет данных"
-                                  : `${m.earned} из ${q.max} баллов`}
-                              </Txt>
-                            );
-                          })}
-                        </View>
-                      );
-                    })}
-                </>
+            )}
+            {rows.length > 0 &&
+              !rows.some((r) => {
+                const t = templates.find((t) => t.id === r.templateId)!;
+                return (
+                  (!family || family === t.familyId) &&
+                  `${t.name} ${r.date}`
+                    .toLowerCase()
+                    .includes(query.toLowerCase())
+                );
+              }) && (
+                <Txt>
+                  Работы не найдены. Измените поиск или выберите все шаблоны.
+                </Txt>
+              )}
+            {s.assessments.some(
+              (a) => a.studentId === id && a.status === "published",
+            ) && (
+              <Card>
+                <Button secondary onPress={() => setLegacy(!legacy)}>
+                  {legacy ? "Скрыть архив" : "Архив прежних работ с баллами"}
+                </Button>
+                {legacy && (
+                  <>
+                    <Txt size={13} color={colors.muted}>
+                      В старых записях сохранены баллы за задания. Оценка
+                      учителя и число правильных ответов неизвестны, поэтому эти
+                      записи не смешиваются с новыми работами.
+                    </Txt>
+                    {s.assessments
+                      .filter(
+                        (a) => a.studentId === id && a.status === "published",
+                      )
+                      .sort((a, b) => b.date.localeCompare(a.date))
+                      .map((a) => {
+                        const t = s.templates.find(
+                          (t) => t.id === a.templateId,
+                        )!;
+                        const score = assessmentScore(s, a);
+                        return (
+                          <View key={a.id} style={{ gap: 7 }}>
+                            <Txt weight="600">
+                              {t.name} · {dateText(a.date)}
+                            </Txt>
+                            <Txt>
+                              Баллы: {score.earned} из {score.max}
+                            </Txt>
+                            {t.questions.map((q) => {
+                              const m = a.marks.find(
+                                (m) => m.questionId === q.id,
+                              );
+                              return (
+                                <Txt size={12} color={colors.muted} key={q.id}>
+                                  {q.label}:{" "}
+                                  {m?.earned == null
+                                    ? "Нет данных"
+                                    : `${m.earned} из ${q.max} баллов`}
+                                </Txt>
+                              );
+                            })}
+                          </View>
+                        );
+                      })}
+                  </>
+                )}
+              </Card>
+            )}
+          </>
+        ) : (
+          <>
+            <Card style={{ backgroundColor: colors.light }}>
+              <Txt size={25} weight="600">
+                Освоено{" "}
+                {stats.filter((t) => t.mastery.status === "Освоено").length} из{" "}
+                {stats.length} тем
+              </Txt>
+              <Txt size={14}>
+                Это охват основной программы, а не оценка математических
+                способностей. Дополнительная практика в этот счётчик не входит.
+              </Txt>
+            </Card>
+            <Card>
+              <Txt weight="600">Как читать состояния</Txt>
+              <Txt size={14}>
+                Ещё не проверяли — нет самостоятельных ответов по теме. Изучаю —
+                ответы уже есть, но подтверждений пока мало. Получается —
+                успешно пройдена самостоятельная проверка. Освоено — успех
+                подтверждён повторно спустя время.
+              </Txt>
+              <Txt size={13} color={colors.muted}>
+                Просмотр урока — отдельная активность. Общий балл за раздел не
+                подтверждает каждую связанную тему.
+              </Txt>
+              <Button small secondary onPress={() => setShowRules(!showRules)}>
+                {showRules ? "Скрыть правила" : "Как определяем состояние темы"}
+              </Button>
+              {showRules && (
+                <Txt size={13} color={colors.muted}>
+                  Правила первой версии: минимум {masteryPolicy.minQuestions}{" "}
+                  новых самостоятельных вопросов; «Получается» — от{" "}
+                  {masteryPolicy.proficientRatio * 100}% правильных. «Освоено» —{" "}
+                  {masteryPolicy.confirmations} проверки от{" "}
+                  {masteryPolicy.masteredRatio * 100}% с интервалом от{" "}
+                  {masteryPolicy.spacingDays} дней. Последняя проверка тоже
+                  должна быть успешной. Это ориентир приложения.
+                </Txt>
               )}
             </Card>
-          )}
-        </>
-      ) : (
-        <>
-          <Card style={{ backgroundColor: colors.light }}>
-            <Txt size={25} weight="600">
-              Освоено{" "}
-              {stats.filter((t) => t.mastery.status === "Освоено").length} из{" "}
-              {stats.length} тем
-            </Txt>
-            <Txt size={14}>
-              Это охват основной программы, а не оценка математических
-              способностей. Дополнительная практика в этот счётчик не входит.
-            </Txt>
-          </Card>
-          <Card>
-            <Txt weight="600">Как читать состояния</Txt>
-            <Txt size={14}>
-              Ещё не проверяли — нет самостоятельных ответов по теме. Изучаю —
-              ответы уже есть, но подтверждений пока мало. Получается — успешно
-              пройдена самостоятельная проверка. Освоено — успех подтверждён
-              повторно спустя время.
-            </Txt>
-            <Txt size={13} color={colors.muted}>
-              Просмотр урока — отдельная активность. Общий балл за раздел не
-              подтверждает каждую связанную тему.
-            </Txt>
-            <Button small secondary onPress={() => setShowRules(!showRules)}>
-              {showRules ? "Скрыть правила" : "Как определяем состояние темы"}
-            </Button>
-            {showRules && (
-              <Txt size={13} color={colors.muted}>
-                Правила первой версии: минимум {masteryPolicy.minQuestions}{" "}
-                новых самостоятельных вопросов; «Получается» — от{" "}
-                {masteryPolicy.proficientRatio * 100}% правильных. «Освоено» —{" "}
-                {masteryPolicy.confirmations} проверки от{" "}
-                {masteryPolicy.masteredRatio * 100}% с интервалом от{" "}
-                {masteryPolicy.spacingDays} дней. Последняя проверка тоже должна
-                быть успешной. Это ориентир приложения.
-              </Txt>
-            )}
-          </Card>
-          <View style={[styles.row, { flexWrap: "wrap" }]}>
-            <Button
-              small
-              secondary={masteryFilter !== ""}
-              onPress={() => setMasteryFilter("")}
-            >
-              Все темы
-            </Button>
-            {labels.map((label) => (
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
               <Button
                 small
-                key={label}
-                secondary={masteryFilter !== label}
-                onPress={() => setMasteryFilter(label)}
+                secondary={masteryFilter !== ""}
+                onPress={() => setMasteryFilter("")}
               >
-                {label} ·{" "}
-                {stats.filter((t) => t.mastery.status === label).length}
+                Все темы
               </Button>
-            ))}
-          </View>
-          {stats
-            .filter((t) => !masteryFilter || t.mastery.status === masteryFilter)
-            .map((t) => (
-              <Card key={t.id}>
-                <Txt weight="600">
-                  {t.order}. {t.title}
-                </Txt>
-                <Pill
-                  tone={
-                    t.mastery.status === "Ещё не проверяли"
-                      ? "neutral"
-                      : "green"
-                  }
+              {labels.map((label) => (
+                <Button
+                  small
+                  key={label}
+                  secondary={masteryFilter !== label}
+                  onPress={() => setMasteryFilter(label)}
                 >
-                  {t.mastery.status}
-                </Pill>
-                <Txt size={13} color={colors.muted}>
-                  {t.mastery.count
-                    ? `Ответов по теме: ${t.mastery.count}`
-                    : t.mastery.visited
-                      ? "Урок открывали · проверку ещё не проходили"
-                      : "Самостоятельных ответов пока нет"}
-                </Txt>
-                <Button secondary small onPress={() => openTopic(t.id)}>
-                  Открыть тему
+                  {label} ·{" "}
+                  {stats.filter((t) => t.mastery.status === label).length}
                 </Button>
+              ))}
+            </View>
+            {stats
+              .filter(
+                (t) => !masteryFilter || t.mastery.status === masteryFilter,
+              )
+              .map((t) => (
+                <Card key={t.id}>
+                  <Txt weight="600">
+                    {t.order}. {t.title}
+                  </Txt>
+                  <Pill
+                    tone={
+                      t.mastery.status === "Ещё не проверяли"
+                        ? "neutral"
+                        : "green"
+                    }
+                  >
+                    {t.mastery.status}
+                  </Pill>
+                  <Txt size={13} color={colors.muted}>
+                    {t.mastery.count
+                      ? `Ответов по теме: ${t.mastery.count}`
+                      : t.mastery.visited
+                        ? "Урок открывали · проверку ещё не проходили"
+                        : "Самостоятельных ответов пока нет"}
+                  </Txt>
+                  <Button secondary small onPress={() => openTopic(t.id)}>
+                    Открыть тему
+                  </Button>
+                </Card>
+              ))}
+            {!stats.some(
+              (t) => !masteryFilter || t.mastery.status === masteryFilter,
+            ) && (
+              <Card>
+                <Txt>
+                  Тем с таким состоянием пока нет. Все темы доступны в разделе
+                  «Учёба».
+                </Txt>
               </Card>
-            ))}
-          {!stats.some(
-            (t) => !masteryFilter || t.mastery.status === masteryFilter,
-          ) && (
-            <Card>
-              <Txt>
-                Тем с таким состоянием пока нет. Все темы доступны в разделе
-                «Учёба».
-              </Txt>
-            </Card>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
+      </Disclosure>
     </View>
   );
 }

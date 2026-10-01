@@ -1,4 +1,5 @@
 import rawCatalog from "../../content/math-course/catalog.json";
+import { QuizAttempts, parseQuizAttempts } from "./quiz";
 
 export type CourseTopic = {
   id: string;
@@ -17,13 +18,15 @@ export type CourseTopic = {
 export const course = rawCatalog as CourseTopic[];
 export const grades = [5, 6, 7, 8, 9, 10, 11];
 export function subjectName(grade: number, subject: string) {
+  if (grade <= 6) return "Математика";
   return subject === "geometry"
     ? grade >= 10
       ? "Стереометрия"
       : "Геометрия"
-    : grade <= 6
-      ? "Арифметика"
-      : "Алгебра";
+    : "Алгебра";
+}
+export function courseSubject(topic: CourseTopic) {
+  return topic.grade <= 6 ? "math" : topic.subject;
 }
 export function searchCourse(
   query: string,
@@ -35,7 +38,11 @@ export function searchCourse(
   return course.filter(
     (t) =>
       (!grade || t.grade === grade) &&
-      (subject === "all" || t.subject === subject) &&
+      (subject === "all" ||
+        (grade !== null && grade <= 6) ||
+        (subject === "math"
+          ? t.grade <= 6
+          : t.grade >= 7 && t.subject === subject)) &&
       words.every((word) =>
         normalize(
           `${t.id} ${t.title} ${t.grade} класс ${subjectName(t.grade, t.subject)}`,
@@ -48,6 +55,7 @@ export type TopicProgress = {
   readPages: number[];
   notes: string;
   reviewed: Record<string, "understood" | "repeat">;
+  quiz: QuizAttempts;
   updatedAt: string;
 };
 export type CourseProgress = Record<string, TopicProgress>;
@@ -56,6 +64,7 @@ export const emptyProgress = (): TopicProgress => ({
   readPages: [],
   notes: "",
   reviewed: {},
+  quiz: {},
   updatedAt: "",
 });
 /** Treat saved browser/device data as untrusted; never replace unrelated app records. */
@@ -85,6 +94,7 @@ export function parseProgress(raw: string | null): CourseProgress {
           ]
         : [],
       notes: typeof p.notes === "string" ? p.notes.slice(0, 12000) : "",
+      quiz: parseQuizAttempts(p.quiz, topic.id, topic.practice.count),
       reviewed: Object.fromEntries(
         Object.entries(p.reviewed ?? {}).filter(
           ([key, v]) =>

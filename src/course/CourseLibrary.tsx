@@ -1,9 +1,14 @@
+import { useUITheme } from "../components/ui";
+import { CourseVideos } from "./CourseVideos";
+import { TopicCover, topicCover } from "../components/TopicCover";
+import { CoursePractice } from "./CoursePractice";
 import React, { useEffect, useState } from "react";
-import { Linking, Platform, View } from "react-native";
+import { Linking, Platform, View, useWindowDimensions } from "react-native";
 import { Asset } from "expo-asset";
 import { pdfAssets } from "./pdfAssets";
 import {
   Button,
+  Icon,
   Card,
   Disclosure,
   Field,
@@ -21,37 +26,81 @@ import {
   emptyProgress,
   grades,
   searchCourse,
-  subjectName,
+  courseSubject,
 } from "./model";
 import { useCourseProgress } from "./storage";
 import { CourseContent } from "./CourseContent";
 import { courseContent } from "./content";
+import { VisualCard } from "../components/VisualCard";
+import { topicArt } from "../components/LearningArt";
 
-export function CourseLibrary() {
+export function CourseLibrary({
+  request,
+  extras,
+}: {
+  request?: { id: string; key: number };
+  extras?: React.ReactNode;
+}) {
+  const { colors, styles } = useUITheme();
   const { actor } = useLearning();
-  return <CourseBrowser key={actor.id} actorId={actor.id} />;
+  return (
+    <CourseBrowser
+      key={actor.id}
+      actorId={actor.id}
+      request={request}
+      extras={extras}
+    />
+  );
 }
-function CourseBrowser({ actorId }: { actorId: string }) {
+function CourseBrowser({
+  actorId,
+  request,
+  extras,
+}: {
+  actorId: string;
+  request?: { id: string; key: number };
+  extras?: React.ReactNode;
+}) {
+  const { colors, styles } = useUITheme();
+  const { width } = useWindowDimensions();
+  const [gridWidth, setGridWidth] = useState(0);
+  const columns = gridWidth >= 780 ? 3 : gridWidth >= 420 ? 2 : 1;
+  const gridGap = width >= 760 ? 18 : 12;
   const [grade, setGrade] = useState<number | null>(5);
   const [subject, setSubject] = useState("all");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<CourseTopic | null>(null);
   const storage = useCourseProgress(actorId);
+  function selectTopic(topic: CourseTopic) {
+    setSelected(topic);
+    storage.update(topic.id, { page: storage.progress[topic.id]?.page ?? 0 });
+  }
+  useEffect(() => {
+    const topic = request && course.find((t) => t.id === request.id);
+    if (topic) selectTopic(topic);
+  }, [request, storage.ready]);
+  useEffect(() => {
+    if (storage.ready) {
+      const last = course
+        .filter((t) => storage.progress[t.id]?.updatedAt)
+        .sort((a, b) =>
+          storage.progress[b.id].updatedAt.localeCompare(
+            storage.progress[a.id].updatedAt,
+          ),
+        )[0];
+      if (last) setGrade(last.grade);
+    }
+  }, [storage.ready]);
   useScreenScroll(selected?.id ?? "math-course-catalog");
   const filtered = searchCourse(query, grade, subject);
-  const last = course
-    .filter((t) => storage.progress[t.id]?.updatedAt)
-    .sort((a, b) =>
-      storage.progress[b.id].updatedAt.localeCompare(
-        storage.progress[a.id].updatedAt,
-      ),
-    )[0];
-  const readCount = course.filter(
-    (t) => storage.progress[t.id]?.readPages.length === t.pages.length,
-  ).length;
   return (
     <View
-      style={{ gap: 16, maxWidth: 1000, width: "100%", alignSelf: "center" }}
+      style={{
+        gap: 22,
+        maxWidth: selected ? 760 : 1040,
+        width: "100%",
+        alignSelf: "center",
+      }}
     >
       {!!storage.error && (
         <Card>
@@ -71,89 +120,93 @@ function CourseBrowser({ actorId }: { actorId: string }) {
           topic={selected}
           storage={storage}
           back={() => setSelected(null)}
-          next={(topic) => setSelected(topic)}
+          next={selectTopic}
         />
       ) : (
         <>
-          <View style={{ gap: 8 }}>
-            <Pill icon="book-open">МАТЕМАТИКА · 5–11 КЛАССЫ</Pill>
-            <Txt size={30} weight="700">
-              Выбери тему. Разберись. Попробуй.
-            </Txt>
-            <Txt color={colors.muted}>
-              55 тем с объяснениями, примерами, чертежами и заданиями из ваших
-              конспектов.
-            </Txt>
-          </View>
-          <Card style={{ backgroundColor: colors.light }}>
-            <Txt weight="600">
-              Конспекты прочитаны: {readCount} из {course.length}
-            </Txt>
-            <Txt size={13} color={colors.muted}>
-              Закладки, записи и отметки самопроверки сохраняются для этого
-              профиля на этом устройстве. Они не являются оценкой учителя.
-            </Txt>
-            {last && (
-              <Button
-                secondary
-                icon="arrow-right"
-                onPress={() => setSelected(last)}
-              >
-                Продолжить: {last.title}
-              </Button>
-            )}
-          </Card>
-          <View style={[styles.row, { flexWrap: "wrap" }]}>
-            {grades.map((g) => (
-              <Button
-                key={g}
-                small
-                secondary
-                selected={grade === g}
-                onPress={() => setGrade(g)}
-              >
-                {g} класс
-              </Button>
-            ))}
-            <Button
-              small
-              secondary
-              selected={grade === null}
-              onPress={() => setGrade(null)}
+          <View style={{ gap: 6 }}>
+            <Txt
+              size={width >= 760 ? 38 : 30}
+              weight="700"
+              style={{ letterSpacing: -0.8 }}
             >
-              Все классы
-            </Button>
+              Мир математики
+            </Txt>
+            <Txt size={16} color={colors.muted}>
+              Выбери, что интересно.
+            </Txt>
           </View>
+          <Disclosure
+            key={`grade-${grade}`}
+            title={
+              grade ? `${grade} класс · изменить` : "Все классы · изменить"
+            }
+            icon="book-open"
+          >
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              {grades.map((g) => (
+                <Button
+                  key={g}
+                  secondary
+                  small
+                  selected={grade === g}
+                  onPress={() => {
+                    setGrade(g);
+                    setSubject("all");
+                  }}
+                >
+                  {g} класс
+                </Button>
+              ))}
+              <Button
+                secondary
+                small
+                selected={grade === null}
+                onPress={() => setGrade(null)}
+              >
+                Все классы
+              </Button>
+            </View>
+          </Disclosure>
           <Field
-            label="Поиск по темам"
-            placeholder="Например: дроби, производная, G08-03"
+            label=""
+            placeholder="Найти тему…"
             value={query}
             onChangeText={setQuery}
           />
-          <View style={[styles.row, { flexWrap: "wrap" }]}>
-            {[
-              ["all", "Все предметы"],
-              ["algebra", grade && grade <= 6 ? "Арифметика" : "Алгебра"],
-              ["geometry", grade && grade >= 10 ? "Стереометрия" : "Геометрия"],
-            ].map(([id, name]) => (
-              <Button
-                key={id}
-                small
-                secondary
-                selected={subject === id}
-                onPress={() => setSubject(id)}
-              >
-                {name}
-              </Button>
-            ))}
-          </View>
-          <Txt size={13} color={colors.muted}>
-            Найдено тем: {filtered.length}
-          </Txt>
+          {grade !== null && grade <= 6 ? (
+            <Txt size={14} weight="700" color={colors.green}>
+              Математика
+            </Txt>
+          ) : (
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              {[
+                ["all", "Все темы"],
+                ...(grade === null
+                  ? [["math", "Математика · 5–6 классы"]]
+                  : []),
+                ["algebra", "Алгебра"],
+                [
+                  "geometry",
+                  grade && grade >= 10 ? "Стереометрия" : "Геометрия",
+                ],
+              ].map(([id, title]) => (
+                <Button
+                  key={id}
+                  secondary
+                  small
+                  selected={subject === id}
+                  onPress={() => setSubject(id)}
+                >
+                  {title}
+                </Button>
+              ))}
+            </View>
+          )}
           {!filtered.length && (
             <Card>
               <Txt>
-                Темы не найдены. Измените запрос или выберите все классы.
+                Пока ничего не нашли. Попробуй другое название или другой класс.
               </Txt>
               <Button
                 secondary
@@ -163,78 +216,44 @@ function CourseBrowser({ actorId }: { actorId: string }) {
                   setQuery("");
                 }}
               >
-                Сбросить фильтры
+                Искать во всех классах
               </Button>
             </Card>
           )}
-          {grades
-            .filter((g) => filtered.some((t) => t.grade === g))
-            .map((g) => (
-              <View key={g} style={{ gap: 14 }}>
-                <Txt size={24} weight="700">
-                  {g} класс
-                </Txt>
-                {["algebra", "geometry"]
-                  .filter((s) =>
-                    filtered.some((t) => t.grade === g && t.subject === s),
-                  )
-                  .map((s) => (
-                    <View key={s} style={{ gap: 10 }}>
-                      <Txt size={18} weight="600">
-                        {subjectName(g, s)}
-                      </Txt>
-                      {filtered
-                        .filter((t) => t.grade === g && t.subject === s)
-                        .map((t) => {
-                          const p = storage.progress[t.id];
-                          const read = p?.readPages.length ?? 0;
-                          const reviewed = Object.keys(
-                            p?.reviewed ?? {},
-                          ).length;
-                          return (
-                            <Card key={t.id}>
-                              <View
-                                style={[
-                                  styles.row,
-                                  {
-                                    justifyContent: "space-between",
-                                    flexWrap: "wrap",
-                                  },
-                                ]}
-                              >
-                                <Pill tone="neutral">{t.id}</Pill>
-                                {!!read && (
-                                  <Pill>
-                                    {read === t.pages.length
-                                      ? "Конспект прочитан"
-                                      : `Прочитано ${read}/${t.pages.length}`}
-                                  </Pill>
-                                )}
-                              </View>
-                              <Txt size={19} weight="600">
-                                {t.title}
-                              </Txt>
-                              <Txt size={13} color={colors.muted}>
-                                {coursePartsLabel(t.pages.length)} конспекта ·{" "}
-                                {t.practice.count} заданий
-                                {reviewed
-                                  ? ` · разобрано ${reviewed}/${t.practice.count}`
-                                  : ""}
-                              </Txt>
-                              <Button
-                                secondary
-                                icon="arrow-right"
-                                onPress={() => setSelected(t)}
-                              >
-                                {p ? "Продолжить тему" : "Открыть тему"}
-                              </Button>
-                            </Card>
-                          );
-                        })}
-                    </View>
-                  ))}
-              </View>
-            ))}
+          <View
+            onLayout={(event) => setGridWidth(event.nativeEvent.layout.width)}
+            style={{ flexDirection: "row", flexWrap: "wrap", gap: gridGap }}
+          >
+            {filtered.map((t) => {
+              const p = storage.progress[t.id];
+              const title = courseContent[t.id].pages[0].title;
+              return (
+                <View
+                  key={t.id}
+                  style={{
+                    width: gridWidth
+                      ? (gridWidth - gridGap * (columns - 1)) / columns
+                      : "48%",
+                  }}
+                >
+                  <VisualCard
+                    title={title}
+                    kind={topicArt(t.title, t.subject)}
+                    cover={topicCover(t.title, t.subject)}
+                    compact={width < 580}
+                    horizontal={columns === 1}
+                    caption={`${coursePartsLabel(t.pages.length)}${p?.updatedAt ? " · продолжить" : ""}`}
+                    progress={
+                      (100 * (p?.readPages.length ?? 0)) / t.pages.length
+                    }
+                    label={`${p?.updatedAt ? "Продолжить" : "Начать"}: ${title}, ${t.grade} класс`}
+                    onPress={() => selectTopic(t)}
+                  />
+                </View>
+              );
+            })}
+          </View>
+          {extras}
         </>
       )}
     </View>
@@ -253,11 +272,10 @@ function CourseReader({
   back: () => void;
   next: (t: CourseTopic) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const p = storage.progress[topic.id] ?? emptyProgress();
   const [page, setPage] = useState(p.page);
   const [tab, setTab] = useState<"theory" | "practice">("theory");
-  const [answers, setAnswers] = useState(false);
-  const [hints, setHints] = useState(false);
   const [sourceError, setSourceError] = useState("");
   useEffect(() => {
     if (storage.ready) setPage(p.page);
@@ -265,7 +283,7 @@ function CourseReader({
   const content = courseContent[topic.id];
   const currentContent = content.pages[page];
   const following = course.filter(
-    (t) => t.grade === topic.grade && t.subject === topic.subject,
+    (t) => t.grade === topic.grade && courseSubject(t) === courseSubject(topic),
   );
   const nextTopic =
     following[following.findIndex((t) => t.id === topic.id) + 1];
@@ -284,15 +302,13 @@ function CourseReader({
   return (
     <>
       <Button small secondary icon="arrow-left" onPress={back}>
-        К темам курса
+        Все темы
       </Button>
-      <Pill>
-        {topic.grade} класс · {subjectName(topic.grade, topic.subject)} ·{" "}
-        {topic.id}
-      </Pill>
-      <Txt size={27} weight="700">
-        {topic.title}
-      </Txt>
+      {tab === "practice" && (
+        <Txt size={26} weight="700">
+          {content.pages[0].title}
+        </Txt>
+      )}
       <View style={[styles.row, { flexWrap: "wrap" }]}>
         <Button
           secondary
@@ -300,19 +316,79 @@ function CourseReader({
           icon="book-open"
           onPress={() => setTab("theory")}
         >
-          Конспект
+          Урок
         </Button>
         <Button
           secondary
           selected={tab === "practice"}
-          icon="edit-3"
+          icon="check-square"
           onPress={() => setTab("practice")}
         >
-          Проверь себя · {topic.practice.count} заданий
+          Тест
         </Button>
       </View>
       {tab === "theory" ? (
         <>
+          <TopicCover
+            title={currentContent.title}
+            themeTitle={topic.title}
+            subject={topic.subject}
+            eyebrow={`${topic.grade} КЛАСС · ЧАСТЬ ${page + 1} ИЗ ${topic.pages.length}`}
+          />
+          <CourseVideos
+            key={`videos-${topic.id}-${page}`}
+            topicId={topic.id}
+            page={page}
+          />
+          <Card
+            style={{
+              width: "100%",
+              maxWidth: 760,
+              alignSelf: "center",
+              padding: 22,
+              gap: 28,
+            }}
+          >
+            <View style={{ gap: 10 }}>
+              <View
+                style={{
+                  height: 5,
+                  backgroundColor: colors.light,
+                  borderRadius: 5,
+                }}
+              >
+                <View
+                  style={{
+                    height: 5,
+                    borderRadius: 5,
+                    backgroundColor: colors.green,
+                    width: `${(100 * (page + 1)) / topic.pages.length}%`,
+                  }}
+                />
+              </View>
+            </View>
+            <CourseContent
+              key={`${topic.id}-${page}`}
+              blocks={currentContent.blocks.filter(
+                (block, index) =>
+                  !(
+                    index === 0 &&
+                    block.kind === "heading" &&
+                    block.runs
+                      .map((run) => run.text)
+                      .join("")
+                      .replace(/\s+/g, " ")
+                      .trim() ===
+                      currentContent.title.replace(/\s+/g, " ").trim()
+                  ),
+              )}
+            />
+          </Card>
+          <Button disabled={!storage.ready} icon="check" onPress={markRead}>
+            {page === topic.pages.length - 1
+              ? "Всё прочитал — попробую сам"
+              : "Понятно, идём дальше"}
+          </Button>
           <Disclosure
             title={`Содержание темы · ${coursePartsLabel(topic.pages.length)}`}
             icon="list"
@@ -356,132 +432,15 @@ function CourseReader({
               Далее
             </Button>
           </View>
-          <View
-            style={{
-              width: "100%",
-              maxWidth: 820,
-              alignSelf: "center",
-              paddingVertical: 12,
-            }}
-          >
-            <CourseContent
-              key={`${topic.id}-${page}`}
-              blocks={currentContent.blocks}
-            />
-          </View>
-          <Button disabled={!storage.ready} icon="check" onPress={markRead}>
-            {page === topic.pages.length - 1
-              ? "Прочитано — к самопроверке"
-              : "Прочитано — следующая часть"}
-          </Button>
         </>
       ) : (
-        <>
-          <Card style={{ backgroundColor: colors.light }}>
-            <Txt weight="600">Сначала реши, затем сравни с ответами</Txt>
-            <Txt>
-              Выполни задания в тетради. Для доказательств и построений запиши
-              ход решения. Подсказки и ответы можно открыть отдельно.
-            </Txt>
-            <Txt size={13} color={colors.muted}>
-              Это самопроверка. Приложение не выставляет балл за собственные
-              отметки.
-            </Txt>
-          </Card>
-          <CourseContent blocks={content.practice.questions} />
-          <Button
-            secondary
-            icon="help-circle"
-            onPress={() => setHints((v) => !v)}
-          >
-            {hints ? "Скрыть подсказки" : "Показать подсказки"}
-          </Button>
-          {hints && <CourseContent blocks={content.practice.hints} />}
-          <Field
-            label="Мои записи к решению"
-            placeholder="Запишите ход решения или вопросы к учителю"
-            value={p.notes}
-            onChangeText={(notes) => storage.update(topic.id, { notes })}
-            multiline
-            maxLength={12000}
-            editable={storage.ready}
-          />
-          <Button icon="check-circle" onPress={() => setAnswers((v) => !v)}>
-            {answers ? "Скрыть ответы" : "Я попробовал — открыть ответы"}
-          </Button>
-          {answers && (
-            <>
-              <CourseContent blocks={content.practice.answers} />
-              <Card>
-                <Txt size={20} weight="600">
-                  Отметь результат самопроверки
-                </Txt>
-                <Txt color={colors.muted}>
-                  Сравни не только ответ, но и ход решения. Можно изменить любую
-                  отметку.
-                </Txt>
-                {Array.from({ length: topic.practice.count }, (_, i) =>
-                  String(i + 1),
-                ).map((n) => (
-                  <View key={n} style={[styles.row, { flexWrap: "wrap" }]}>
-                    <Txt weight="600">Задание {n}</Txt>
-                    <Button
-                      small
-                      secondary
-                      disabled={!storage.ready}
-                      selected={p.reviewed[n] === "understood"}
-                      label={`Задание ${n}: разобрался`}
-                      onPress={() =>
-                        storage.update(topic.id, {
-                          reviewed: { ...p.reviewed, [n]: "understood" },
-                        })
-                      }
-                    >
-                      Разобрался
-                    </Button>
-                    <Button
-                      small
-                      secondary
-                      disabled={!storage.ready}
-                      selected={p.reviewed[n] === "repeat"}
-                      label={`Задание ${n}: повторить`}
-                      onPress={() =>
-                        storage.update(topic.id, {
-                          reviewed: { ...p.reviewed, [n]: "repeat" },
-                        })
-                      }
-                    >
-                      Повторить
-                    </Button>
-                  </View>
-                ))}
-                <Txt>
-                  Разобрался:{" "}
-                  {
-                    Object.values(p.reviewed).filter((v) => v === "understood")
-                      .length
-                  }
-                  . Повторить:{" "}
-                  {
-                    Object.values(p.reviewed).filter((v) => v === "repeat")
-                      .length
-                  }
-                  . Без отметки:{" "}
-                  {topic.practice.count - Object.keys(p.reviewed).length}.
-                </Txt>
-              </Card>
-            </>
-          )}
-          {nextTopic && (
-            <Button
-              secondary
-              icon="arrow-right"
-              onPress={() => next(nextTopic)}
-            >
-              Следующая тема: {nextTopic.title}
-            </Button>
-          )}
-        </>
+        <CoursePractice
+          key={topic.id}
+          topic={topic}
+          storage={storage}
+          back={() => setTab("theory")}
+          next={nextTopic ? () => next(nextTopic) : undefined}
+        />
       )}
       <Txt
         size={12}
@@ -493,7 +452,7 @@ function CourseReader({
           : storage.saving
             ? "Сохраняем…"
             : storage.ready
-              ? "Отметки и записи сохраняются на этом устройстве"
+              ? "Сохранено на устройстве"
               : "Загружаем сохранённые отметки…"}
       </Txt>
       <Disclosure title="О конспекте и источниках" icon="info">

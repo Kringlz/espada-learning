@@ -1,4 +1,4 @@
-export type Role = "student" | "teacher" | "admin";
+export type Role = "student" | "parent" | "teacher" | "admin";
 export type Profile = { id: string; name: string; role: Role; active: boolean };
 export type Classroom = {
   id: string;
@@ -162,7 +162,21 @@ export type ReportRead = {
   reportId: string;
   revision: number;
 };
+export type ParentLink = {
+  parentId: string;
+  studentId: string;
+  verifiedAt: string;
+};
+export type TeacherContact = {
+  teacherId: string;
+  email: string;
+  phone: string;
+  hours: string;
+};
 export type State = {
+  parentLinks?: ParentLink[];
+  teacherContacts?: TeacherContact[];
+  familyDemoVersion?: number;
   reportTemplates?: ReportTemplate[];
   reports?: TeacherReport[];
   reportReads?: ReportRead[];
@@ -181,6 +195,14 @@ export type State = {
   deletionRequests: DeletionRequest[];
 };
 export type Command =
+  | { type: "enrollStudent"; classId: string; studentId: string }
+  | {
+      type: "linkParent";
+      parentId: string;
+      studentId: string;
+      remove?: boolean;
+    }
+  | { type: "saveTeacherContact"; contact: TeacherContact }
   | { type: "saveReportTemplate"; template: ReportTemplate }
   | {
       type: "saveReport";

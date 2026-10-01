@@ -1,3 +1,8 @@
+import { Parent } from "./src/screens/Family";
+import { useUITheme } from "./src/components/ui";
+import { ThemeProvider } from "./src/theme/Theme";
+import { Brand } from "./src/components/Brand";
+import { CourseProgressProvider } from "./src/course/storage";
 import { ScreenScroll } from "./src/components/ScreenScroll";
 import { isLessonPreview } from "./src/lessons/service";
 import { ReportDetail } from "./src/screens/Reports";
@@ -34,6 +39,9 @@ import {
 import { mode } from "./src/services/supabase";
 const navIcons: Record<string, any> = {
   Home: "home",
+  FamilyProgress: "bar-chart-2",
+  Homework: "book-open",
+  Contacts: "phone",
   Learn: "book-open",
   Progress: "bar-chart-2",
   Profile: "user",
@@ -45,12 +53,21 @@ const navIcons: Record<string, any> = {
 };
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" />
-      <LearningProvider fallback={(props) => <Welcome {...props} />}>
-        <Shell />
-      </LearningProvider>
-    </SafeAreaProvider>
+    <ThemeProvider>
+      <SafeAreaProvider>
+        <LearningProvider fallback={(props) => <Welcome {...props} />}>
+          <Workspace />
+        </LearningProvider>
+      </SafeAreaProvider>
+    </ThemeProvider>
+  );
+}
+function Workspace() {
+  const { actor } = useLearning();
+  return (
+    <CourseProgressProvider key={actor.id} actorId={actor.id}>
+      <Shell />
+    </CourseProgressProvider>
   );
 }
 function Welcome({
@@ -64,6 +81,7 @@ function Welcome({
   retry: () => void;
   login: (e: string, p: string) => Promise<void>;
 }) {
+  const { colors, styles } = useUITheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -126,28 +144,8 @@ function Welcome({
     </SafeAreaView>
   );
 }
-function Brand() {
-  return (
-    <View style={[styles.row, { gap: 10 }]}>
-      <View
-        style={{
-          width: 33,
-          height: 38,
-          backgroundColor: colors.green,
-          borderRadius: 10,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon name="feather" size={22} color="#F3E6BB" />
-      </View>
-      <Txt size={27} weight="700" style={{ letterSpacing: -1 }}>
-        espada<Txt color="#A5B496">.</Txt>
-      </Txt>
-    </View>
-  );
-}
 function Shell() {
+  const { colors, styles } = useUITheme();
   const {
     actor,
     accounts,
@@ -162,9 +160,18 @@ function Shell() {
   } = useLearning();
   const { width } = useWindowDimensions();
   const desktop = width >= 1000;
+  const student = actor.role === "student" || actor.role === "parent";
+  const { dark, setPreference } = useUITheme();
   const [tab, setTab] = useState(
-    actor.role === "student" ? "Home" : "Overview",
+    actor.role === "student"
+      ? "Home"
+      : actor.role === "parent"
+        ? "FamilyProgress"
+        : "Overview",
   );
+  const [courseRequest, setCourseRequest] = useState<
+    { id: string; key: number } | undefined
+  >();
   const [topic, setTopic] = useState<string | null>(null);
   const [showHistoryRequest, setShowHistoryRequest] = useState(0);
   const [result, setResult] = useState<string | null>(null);
@@ -179,17 +186,24 @@ function Shell() {
   }, []);
   const tabs =
     actor.role === "student"
-      ? ["Home", "Learn", "Progress", "Profile"]
-      : [
-          "Overview",
-          "Assessments",
-          "Students",
-          "Curriculum",
-          ...(actor.role === "admin" ? ["Manage"] : []),
-          "Profile",
-        ];
+      ? ["Home", "Learn", "Progress"]
+      : actor.role === "parent"
+        ? ["FamilyProgress", "Homework", "Contacts"]
+        : [
+            "Overview",
+            "Assessments",
+            "Students",
+            "Curriculum",
+            ...(actor.role === "admin" ? ["Manage"] : []),
+          ];
   useEffect(() => {
-    setTab(actor.role === "student" ? "Home" : "Overview");
+    setTab(
+      actor.role === "student"
+        ? "Home"
+        : actor.role === "parent"
+          ? "FamilyProgress"
+          : "Overview",
+    );
     setTopic(null);
     setResult(null);
   }, [actor.id, actor.role]);
@@ -229,11 +243,31 @@ function Shell() {
     setResult(null);
     setTab(next);
   }
+  const tabLabel = (name: string) =>
+    actor.role === "parent"
+      ? ({
+          FamilyProgress: "Прогресс",
+          Homework: "Задания",
+          Contacts: "Учитель",
+          Profile: "Профиль",
+        }[name] ?? name)
+      : actor.role === "student"
+        ? ({
+            Home: "Сегодня",
+            Learn: "Учиться",
+            Progress: "Мой прогресс",
+            Profile: "Профиль",
+          }[name] ?? translate(name))
+        : translate(name);
+  function openCourse(id: string) {
+    setCourseRequest({ id, key: Date.now() });
+    navigate("Learn");
+  }
   const nav = (mobile = false) => (
     <View
       style={{
         gap: mobile ? 4 : 7,
-        flexDirection: mobile ? "row" : "column",
+        flexDirection: mobile || (student && desktop) ? "row" : "column",
         justifyContent: mobile ? "space-around" : undefined,
       }}
     >
@@ -241,7 +275,7 @@ function Shell() {
         <Pressable
           key={t}
           accessibilityRole="tab"
-          accessibilityLabel={translate(t)}
+          accessibilityLabel={tabLabel(t)}
           accessibilityState={{ selected: selectedTab === t }}
           aria-selected={selectedTab === t}
           onPress={() => navigate(t)}
@@ -252,8 +286,13 @@ function Shell() {
               gap: mobile ? 3 : 10,
               paddingHorizontal: mobile ? 3 : 12,
               paddingVertical: mobile ? 8 : 10,
-              borderRadius: 10,
-              backgroundColor: selectedTab === t ? "#E8EEDF" : "transparent",
+              borderRadius: 16,
+              backgroundColor:
+                selectedTab === t
+                  ? student
+                    ? "#304D3D"
+                    : colors.light
+                  : "transparent",
               opacity: pressed ? 0.7 : 1,
             },
             mobile ? { flex: 1 } : { minHeight: 48 },
@@ -262,14 +301,26 @@ function Shell() {
           <Icon
             name={navIcons[t]}
             size={mobile ? 19 : 20}
-            color={selectedTab === t ? colors.green : "#7A8378"}
+            color={
+              selectedTab === t
+                ? student
+                  ? "#F5F3E5"
+                  : colors.green
+                : "#7A8378"
+            }
           />
           <Txt
-            size={mobile ? 11 : 14}
+            size={mobile ? (actor.role === "student" ? 13 : 11) : 16}
             weight={selectedTab === t ? "600" : "400"}
-            color={selectedTab === t ? colors.green : colors.muted}
+            color={
+              selectedTab === t
+                ? student
+                  ? "#F5F3E5"
+                  : colors.green
+                : colors.muted
+            }
           >
-            {t}
+            {tabLabel(t)}
           </Txt>
         </Pressable>
       ))}
@@ -282,15 +333,15 @@ function Shell() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={{ flex: 1, flexDirection: "row" }}>
-          {desktop && (
+          {desktop && !student && (
             <View
               style={{
-                width: 210,
+                width: 220,
                 borderRightWidth: 1,
                 borderColor: colors.line,
                 padding: 18,
                 gap: 24,
-                backgroundColor: "#F7F8F2",
+                backgroundColor: colors.white,
               }}
             >
               <Brand />
@@ -314,18 +365,25 @@ function Shell() {
           <View style={{ flex: 1, minWidth: 0 }}>
             <View
               style={{
-                paddingHorizontal: desktop ? 24 : 14,
-                paddingVertical: 10,
+                paddingHorizontal:
+                  desktop && student
+                    ? Math.max(28, (width - 1040) / 2)
+                    : desktop
+                      ? 24
+                      : 18,
+                paddingVertical: student ? 16 : 10,
                 borderBottomWidth: 1,
                 borderColor: colors.line,
-                backgroundColor: "#FCFCF9",
+                backgroundColor: student ? colors.paper : colors.white,
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: 12,
               }}
             >
-              {desktop ? (
+              {student ? (
+                <Brand />
+              ) : desktop ? (
                 <View style={styles.row}>
                   <Txt size={13} color={colors.muted}>
                     {actor.role === "student"
@@ -338,50 +396,50 @@ function Shell() {
                       ? "Уроки и практика"
                       : result
                         ? "Результаты работ"
-                        : tab}
+                        : tabLabel(tab)}
                   </Txt>
                 </View>
               ) : (
-                <View style={{ gap: 2, flexShrink: 1 }}>
-                  <Txt size={16} weight="600">
-                    {topic
-                      ? "Урок"
-                      : result
-                        ? "Результат работы"
-                        : translate(tab)}
-                  </Txt>
-                  <Txt size={11} color={colors.muted}>
-                    Espada ·{" "}
-                    {actor.role === "student"
-                      ? "Ученик"
-                      : actor.role === "admin"
-                        ? "Администратор"
-                        : "Учитель"}
-                  </Txt>
-                </View>
+                <Brand />
               )}
-              <View style={[styles.row, { gap: 12 }]}>
-                {desktop && (
+              {student && desktop && nav()}
+              <View style={[styles.row, { gap: 8 }]}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    dark ? "Включить светлую тему" : "Включить тёмную тему"
+                  }
+                  onPress={() => setPreference(dark ? "light" : "dark")}
+                  style={{
+                    padding: 10,
+                    minWidth: 44,
+                    minHeight: 44,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Icon name={dark ? "sun" : "moon"} size={20} />
+                </Pressable>
+                {student && mode === "demo" && <Pill tone="neutral">Демо</Pill>}
+                {desktop && !student && (
                   <Pill tone="neutral">
                     {mode === "demo" ? "LOCAL DEMO" : "CONNECTED"}
                   </Pill>
                 )}
+                {!student && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Обновить учебные данные"
+                    onPress={() => void refresh()}
+                    style={{ padding: 12, minWidth: 44, minHeight: 44 }}
+                  >
+                    <Icon name="refresh-cw" size={17} color={colors.muted} />
+                  </Pressable>
+                )}
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Обновить учебные данные"
-                  onPress={() => void refresh()}
-                  style={{ padding: 12, minWidth: 44, minHeight: 44 }}
-                >
-                  <Icon name="refresh-cw" size={17} color={colors.muted} />
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    mode === "demo" ? "Сменить демоаккаунт" : "Открыть профиль"
-                  }
-                  onPress={() =>
-                    mode === "demo" ? setAccountOpen(true) : navigate("Profile")
-                  }
+                  accessibilityLabel={"Открыть профиль"}
+                  onPress={() => navigate("Profile")}
                   style={styles.row}
                 >
                   <View
@@ -389,7 +447,7 @@ function Shell() {
                       width: 36,
                       height: 36,
                       borderRadius: 18,
-                      backgroundColor: "#E9DABD",
+                      backgroundColor: colors.light,
                       justifyContent: "center",
                       alignItems: "center",
                     }}
@@ -407,23 +465,25 @@ function Shell() {
                 </Pressable>
               </View>
             </View>
-            {mode === "demo" && (
+            {mode === "demo" && !student && (
               <View
                 style={{
                   paddingHorizontal: desktop ? 24 : 14,
                   paddingVertical: 8,
-                  backgroundColor: "#F4F1E8",
+                  backgroundColor: colors.light,
                 }}
               >
-                <Txt size={11} color="#746749">
+                <Txt size={11} color={colors.muted}>
                   {isLessonPreview
                     ? "Локальный предпросмотр · тестовые аккаунты · новые уроки и тесты в PostgreSQL"
-                    : "Demo workspace · synthetic accounts · data saved only on this device"}
+                    : "Демо · данные сохраняются на этом устройстве"}
                 </Txt>
               </View>
             )}
             {pendingCount > 0 && (
-              <View style={{ backgroundColor: "#FFF4D9", padding: 14, gap: 8 }}>
+              <View
+                style={{ backgroundColor: colors.light, padding: 14, gap: 8 }}
+              >
                 <Txt size={13}>
                   {pendingCount} learning change(s) are kept on this device and
                   awaiting confirmation. Reconnect and retry to update your
@@ -440,7 +500,9 @@ function Shell() {
               </View>
             )}
             {Boolean(error) && (
-              <View style={{ backgroundColor: "#FFF0EA", padding: 15, gap: 8 }}>
+              <View
+                style={{ backgroundColor: colors.light, padding: 15, gap: 8 }}
+              >
                 <Txt size={13} color={colors.red} accessibilityRole="alert">
                   {error}
                 </Txt>
@@ -460,9 +522,9 @@ function Shell() {
                 }}
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={{
-                  paddingHorizontal: desktop ? 24 : 14,
-                  paddingTop: 16,
-                  paddingBottom: 24,
+                  paddingHorizontal: desktop ? 32 : 18,
+                  paddingTop: desktop ? 36 : 22,
+                  paddingBottom: 40,
                   alignItems: "center",
                 }}
               >
@@ -478,6 +540,7 @@ function Shell() {
                         }}
                       >
                         <Home
+                          openCourse={openCourse}
                           openTopic={setTopic}
                           navigate={(next) => {
                             if (next === "Progress")
@@ -495,7 +558,10 @@ function Shell() {
                               : "none",
                         }}
                       >
-                        <Learn openTopic={setTopic} />
+                        <Learn
+                          openTopic={setTopic}
+                          courseRequest={courseRequest}
+                        />
                       </View>
                       <View
                         style={{
@@ -506,12 +572,16 @@ function Shell() {
                         }}
                       >
                         <Progress
+                          active={tab === "Progress" && !topic && !result}
+                          openCourse={openCourse}
                           showHistoryRequest={showHistoryRequest}
                           openResult={setResult}
                           openTopic={setTopic}
                         />
                       </View>
-                      {!topic && !result && tab === "Profile" && <Profile />}
+                      {!topic && !result && tab === "Profile" && (
+                        <Profile switchDemo={() => setAccountOpen(true)} />
+                      )}
                       {result && (
                         <View style={{ display: topic ? "none" : "flex" }}>
                           <ReportDetail
@@ -532,7 +602,9 @@ function Shell() {
                       )}
                     </View>
                   ) : tab === "Profile" ? (
-                    <Profile />
+                    <Profile switchDemo={() => setAccountOpen(true)} />
+                  ) : actor.role === "parent" ? (
+                    <Parent key={actor.id} tab={tab} />
                   ) : (
                     <Staff
                       key={`${actor.id}-${tab}`}
@@ -541,26 +613,29 @@ function Shell() {
                     />
                   )}
                 </View>
-                <View style={{ marginTop: 20 }}>
-                  <Txt size={11} color={colors.muted}>
-                    {saving
-                      ? "Saving…"
-                      : mode === "demo"
-                        ? isLessonPreview
-                          ? "Новые уроки и тесты сохраняются в локальной PostgreSQL."
-                          : "Your demo workspace saves on this device."
-                        : "Connected to your learning organisation."}
-                  </Txt>
-                </View>
+                {(!student || saving || isLessonPreview) && (
+                  <View style={{ marginTop: 20 }}>
+                    <Txt size={11} color={colors.muted}>
+                      {saving
+                        ? "Saving…"
+                        : mode === "demo"
+                          ? isLessonPreview
+                            ? "Новые уроки и тесты сохраняются в локальной PostgreSQL."
+                            : "Your demo workspace saves on this device."
+                          : "Connected to your learning organisation."}
+                    </Txt>
+                  </View>
+                )}
               </ScrollView>
             </ScreenScroll.Provider>
             {!desktop && (
               <View
                 style={{
-                  backgroundColor: "#FCFCF9",
+                  backgroundColor: colors.white,
                   borderTopWidth: 1,
                   borderColor: colors.line,
-                  paddingHorizontal: 5,
+                  paddingHorizontal: 10,
+                  paddingVertical: 7,
                 }}
               >
                 {nav(true)}
@@ -586,7 +661,7 @@ function Shell() {
         >
           <Card style={{ width: "100%", maxWidth: 460, maxHeight: "90%" }}>
             <Txt size={24} weight="600">
-              Explore the learning cycle
+              Выберите роль и аккаунт
             </Txt>
             <Txt size={13} color={colors.muted}>
               Demo identity switching is not authentication. These synthetic
@@ -624,7 +699,14 @@ function Shell() {
                   <View style={{ flex: 1 }}>
                     <Txt weight="600">{p.name}</Txt>
                     <Txt size={12} color={colors.muted}>
-                      {p.role}
+                      {
+                        {
+                          student: "Ученик",
+                          parent: "Родитель",
+                          teacher: "Учитель",
+                          admin: "Администратор",
+                        }[p.role]
+                      }
                     </Txt>
                   </View>
                   {p.id === actor.id && <Icon name="check" />}

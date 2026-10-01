@@ -1,3 +1,4 @@
+import { useUITheme } from "./ui";
 import React, { useRef, useEffect, useState } from "react";
 import { View } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -12,6 +13,7 @@ export function LessonVideo({
   seconds: number;
   onSave: (n: number) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const save = useRef(onSave);
   save.current = onSave;
   const initial = useRef(seconds);

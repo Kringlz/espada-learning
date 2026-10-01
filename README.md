@@ -23,9 +23,15 @@ For native development, install the platform tooling and use `npm run ios` or `n
 
 No `.env` is required for the demo. Copy `.env.example` to `.env` when configuring connected accounts. The development command prints the local preview address.
 
+## Simpler student experience
+
+Students now use **Сегодня / Учиться / Мой прогресс**. The avatar opens Profile for every role; demo account switching is inside Profile. Today shows the priority homework or the latest unfinished study activity. Learn opens the mathematics textbook directly; extra practice, videos and connected tests remain available in a disclosure beneath the topics.
+
+Lessons use readable text, distinct rules/examples, structured formulas and tables. All 458 textbook exercises are shown as multiple-choice training tests, one question at a time. Each has three authored choices and two incremental hints; the original answer is available after checking. Results separate independent correct answers, assisted correct answers and mistakes. Reading progress, selections, hint use and checked results survive reloads in the same browser. Older notes and self-check marks remain stored. They remain separate from teacher grades and topic mastery. Connected test history is available in Progress when the lesson service is configured; its storage and assessment rules are unchanged.
+
 ## Mathematics course for grades 5–11
 
-The default **Учёба / Программа → Курс 5–11 классов** now includes all seven supplied PDFs: 55 topics, 317 content pages and 458 self-check exercises. Class/subject filters, search, selectable text, responsive paragraphs, formatted tables and formulas, hidden hints/answers, reading bookmarks and personal notes work without a backend. Original formulas and diagrams are preserved. Reading and self-check marks are local to each profile/device and never award mastery. The original curriculum and server test module remain available in separate tabs. [Russian course guide and limitations](docs/MATH_COURSE_RU.md).
+The default **Учиться** for students and **Программа → Курс 5–11 классов** for staff now includes all seven supplied PDFs: 55 topics, 317 content pages and 458 self-check exercises. Class/subject filters, search, selectable text, responsive paragraphs, formatted tables and formulas, hidden hints/answers, reading bookmarks and personal notes work without a backend. Original formulas and diagrams are preserved. Reading and self-check marks are local to each profile/device and never award mastery. The original curriculum and server test module remain available in separate tabs. [Russian course guide and limitations](docs/MATH_COURSE_RU.md).
 
 ## Russian interface, curriculum tree and videos
 
@@ -33,13 +39,13 @@ The app now uses Russian throughout its interface and original lesson content. T
 
 ## Persistent lessons and 10-question tests
 
-New: **Учёба → Уроки и тесты** for students; **Программа → Уроки и тесты** for administrators. Secure server-generated tests, saved attempts, results, question editing and transactional JSON imports use PostgreSQL via Supabase. This module requires a configured backend; ordinary browser demo mode shows an explicit connection-needed message.
+New: **Учиться → Практика, видео и другие материалы → Уроки с тестами** for students; **Программа → Уроки и тесты** for administrators. Secure server-generated tests, saved attempts, results, question editing and transactional JSON imports use PostgreSQL via Supabase. This module requires a configured backend; ordinary browser demo mode shows an explicit connection-needed message.
 
 [Russian setup, local preview and content import instructions](docs/LESSONS.md) · [three demo lesson banks](content/demo-lessons.json). Demos are not embedded in the app bundle or automatically seeded on production. The local PostgreSQL preview has explicit fixture authentication and is not a hosted Supabase verification.
 
 ## Results and topic mastery
 
-Student navigation is **Главная / Учёба / Прогресс / Профиль**. Home puts assigned homework and the latest teacher grade first. Progress separates **Результаты работ** (correct/total counts and compatible assessment comparisons) from **Изучение тем** (topic-specific evidence). Broad aggregate scores and video activity never grant individual-topic mastery.
+Student navigation is **Сегодня / Учиться / Мой прогресс**, with Profile in the avatar menu. Home puts assigned homework and the latest teacher grade first. Progress separates **Результаты работ** (correct/total counts and compatible assessment comparisons) from **Изучение тем** (topic-specific evidence). Broad aggregate scores and video activity never grant individual-topic mastery.
 
 See [Russian guide](docs/REPORTS_RU.md) and [central mastery policy and limitations](docs/SCORING.md). Ten synthetic assessment examples are added only by the local demo repository. Legacy partial-credit results are retained in a separate archive.
 
@@ -48,8 +54,8 @@ See [Russian guide](docs/REPORTS_RU.md) and [central mastery policy and limitati
 1. Switch to **Мария Соколова** in the account menu.
 2. Open **Работы → group → student**. Templates are managed separately under **Настроить шаблоны тестов**.
 3. **Добавить результат теста**: choose a template, enter the date, grade and correct/total counts, then **Проверить и сохранить**. Review the summary and save a draft or publish.
-4. Switch to that student. Open the exact result from **Главная → Посмотреть результаты**, then inspect counts and compatible earlier work.
-5. Open **Учёба** or a suggested lesson. Complete a new independent check. The topic state updates separately from the teacher's results.
+4. Switch to that student. Open the exact result from **Сегодня → Посмотреть результат**, then inspect counts and compatible earlier work.
+5. Open **Учиться** or a suggested lesson. Complete a new independent check. The topic state updates separately from the teacher's results.
 6. Return as teacher and **Исправить результат** with a reason. The record is updated without duplicate evidence and the audit retains prior values.
 
 Other synthetic accounts: **Иван Орлов** is an unassigned teacher and cannot read Alexey's or Sasha's results; **Анна Белова** administers classes, accounts, content and deletion requests. A fresh **Саша Романов** account has no seeded assessment history.
@@ -106,3 +112,12 @@ The test bootstrap creates minimal Auth and Storage shims. **Never run `supabase
 - [Apple / Google release checklist](docs/RELEASE_CHECKLIST.md)
 
 This is an experienceable first version, not a store-ready or independently validated educational measurement product. Native binaries, real-device behavior and hosted authentication still require verification.
+
+### Темы оформления и роли
+
+- Тема переключается кнопкой солнца/луны в шапке и в **Профиль → Оформление**; настройка «Как на устройстве» учитывает системную тему.
+- В локальном демо кабинеты доступны через **Профиль → Сменить демоаккаунт**. Ученик — Алексей Морозов, родитель — Елена Морозова, учитель — Мария Соколова. Демо хранится на устройстве и не синхронизирует разные устройства.
+- Учитель: **Группы → выбрать группу → Добавить ученика**, ввести код из профиля уже существующего ученика. Повторное добавление не дублирует запись. Для родителя выбрать ученика, раскрыть **Доступ родителя**, проверить связь с ребёнком и ввести код родительского аккаунта. Доступ можно отозвать там же.
+- Контакты учителя заполняются в его профиле. Родитель видит их во вкладке **Учитель**. Номера и email в демо не подставляются: до заполнения показывается понятное пустое состояние.
+- Для подключённых аккаунтов применить миграции до `007_family_roles.sql` включительно. Аккаунт Auth создаётся существующим административным процессом, затем администратор создаёт профиль с нужной ролью. Связи и зачисление назначают уполномоченные сотрудники, пользователь не выбирает себе привилегии при входе. Миграция в удалённый Supabase автоматически не применяется.
+- Проверки ролей: `tests/family.test.ts` и `supabase/tests/family.sql` (включён в `scripts/test-database.sh`). Серверные проверки выполняются только в отдельной пустой локальной базе.

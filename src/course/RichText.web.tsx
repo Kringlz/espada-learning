@@ -1,6 +1,8 @@
+import { useUITheme } from "../components/ui";
 import React from "react";
 import { TextRun } from "./content";
-import { colors } from "../components/ui";
+import { mathRuns } from "../math/notation";
+import { Formula } from "../math/Formula";
 
 export type RichTextProps = {
   runs: TextRun[];
@@ -12,11 +14,13 @@ export type RichTextProps = {
 /** Real text nodes, including semantic sup/sub, support selection, copying and screen readers. */
 export function RichText({
   runs,
-  size = 17,
+  size = 18,
   weight = "400",
-  color = colors.ink,
+  color: providedColor,
   heading,
 }: RichTextProps) {
+  const { colors, styles } = useUITheme();
+  const color = providedColor ?? colors.ink;
   const Tag = heading ? "h3" : "p";
   return (
     <Tag
@@ -26,13 +30,25 @@ export function RichText({
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
         fontSize: size,
         fontWeight: weight,
-        lineHeight: 1.7,
+        lineHeight: heading ? 1.25 : 1.75,
+        whiteSpace: "pre-wrap",
         color,
         userSelect: "text",
         overflowWrap: "anywhere",
       }}
     >
-      {runs.map((r, i) => {
+      {mathRuns(runs).map((r, i) => {
+        if (r.latex)
+          return (
+            <Formula
+              key={i}
+              latex={r.latex}
+              source={r.text}
+              size={size}
+              color={color}
+              display={r.display}
+            />
+          );
         const value = (
           <span
             style={{

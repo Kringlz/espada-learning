@@ -1,3 +1,4 @@
+import { useUITheme } from "./ui";
 import { errorMessage } from "../i18n/errors";
 import React, { useState, useEffect, useRef } from "react";
 import { View } from "react-native";
@@ -16,6 +17,7 @@ function StoredPlayer({
   seconds: number;
   onSave: (seconds: number) => void;
 }) {
+  const { colors, styles } = useUITheme();
   const [source, setSource] = useState("");
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -62,8 +64,9 @@ function StoredPlayer({
   );
 }
 export function VideoLessons({ topic }: { topic: Topic }) {
+  const { colors, styles } = useUITheme();
   const { actor, state, dispatch, mode } = useLearning();
-  const staff = actor.role !== "student";
+  const staff = ["teacher", "admin"].includes(actor.role);
   const [asset, setAsset] = useState<DocumentPickerAsset | null>(null);
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
@@ -111,7 +114,7 @@ export function VideoLessons({ topic }: { topic: Topic }) {
     }
   }
   function save(videoId: string, seconds: number) {
-    if (staff) return;
+    if (actor.role !== "student") return;
     void dispatch({
       type: "saveVideoPosition",
       studentId: actor.id,
@@ -128,7 +131,9 @@ export function VideoLessons({ topic }: { topic: Topic }) {
       <Txt size={13} color={colors.muted}>
         {staff
           ? "Добавьте объяснение к этой теме. Ученики смогут смотреть его здесь."
-          : "Смотрите в своём темпе. Позиция просмотра сохраняется. Просмотр не подтверждает освоение темы."}
+          : actor.role === "parent"
+            ? "Объяснение темы для совместного повторения с ребёнком."
+            : "Смотрите в своём темпе. Позиция просмотра сохраняется. Просмотр не подтверждает освоение темы."}
       </Txt>
       {!topic.videos?.length && !topic.video && (
         <Txt color={colors.muted}>Видеоурок пока не добавлен.</Txt>

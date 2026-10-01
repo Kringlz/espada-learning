@@ -1,3 +1,5 @@
+import { TeacherContactEditor } from "./Family";
+import { useUITheme } from "../components/ui";
 import { MyGroups } from "../components/Groups";
 import React, { useState } from "react";
 import { View } from "react-native";
@@ -5,8 +7,9 @@ import { useLearning } from "../services/context";
 import { uid } from "../core/ids";
 import { Button, Card, Txt, Pill, colors, styles } from "../components/ui";
 export { Home, Learn, Progress } from "./Reports";
-export function Profile() {
-  const { actor, mode, state: s, dispatch, signOut } = useLearning();
+export function Profile({ switchDemo }: { switchDemo?: () => void }) {
+  const { colors, styles, preference, setPreference } = useUITheme();
+  const { actor, mode, state: s, dispatch, signOut, refresh } = useLearning();
   const [confirm, setConfirm] = useState(false);
   const requested = s.deletionRequests.some((r) => r.studentId === actor.id);
   return (
@@ -15,7 +18,16 @@ export function Profile() {
         Your learning space.
       </Txt>
       <Card>
-        <Pill>{actor.role.toUpperCase()}</Pill>
+        <Pill>
+          {
+            {
+              student: "Ученик",
+              parent: "Родитель",
+              teacher: "Учитель",
+              admin: "Администратор",
+            }[actor.role]
+          }
+        </Pill>
         <Txt size={25} weight="600">
           {actor.name}
         </Txt>
@@ -25,7 +37,53 @@ export function Profile() {
             : "Connected account · access controlled by your tutoring organisation"}
         </Txt>
       </Card>
+      <Card>
+        <Txt size={20} weight="600">
+          Оформление
+        </Txt>
+        <View style={[styles.row, { flexWrap: "wrap" }]}>
+          {(
+            [
+              ["light", "Светлая"],
+              ["dark", "Тёмная"],
+              ["system", "Как на устройстве"],
+            ] as const
+          ).map(([value, label]) => (
+            <Button
+              key={value}
+              small
+              secondary
+              selected={preference === value}
+              onPress={() => setPreference(value)}
+            >
+              {label}
+            </Button>
+          ))}
+        </View>
+      </Card>
+      {(actor.role === "student" || actor.role === "parent") && (
+        <Card>
+          <Txt weight="600">
+            {actor.role === "student" ? "Код ученика" : "Код родителя"}
+          </Txt>
+          <Txt color={colors.muted}>
+            Передайте этот код учителю для привязки аккаунта.
+          </Txt>
+          <Txt selectable size={13}>
+            {actor.id}
+          </Txt>
+        </Card>
+      )}
+      {actor.role === "teacher" && <TeacherContactEditor key={actor.id} />}
       {actor.role === "student" && <MyGroups />}
+      <Button secondary icon="refresh-cw" onPress={() => void refresh()}>
+        Обновить учебные данные
+      </Button>
+      {mode === "demo" && switchDemo && (
+        <Button secondary icon="users" onPress={switchDemo}>
+          Сменить демоаккаунт
+        </Button>
+      )}
       <Card>
         <Txt size={20} weight="600">
           Learning, with care

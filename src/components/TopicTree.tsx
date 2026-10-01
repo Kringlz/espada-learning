@@ -1,3 +1,4 @@
+import { useUITheme } from "./ui";
 import { translate } from "../i18n";
 import React, { useState } from "react";
 import { View, Pressable } from "react-native";
@@ -16,6 +17,7 @@ import {
   styles,
 } from "./ui";
 export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
+  const { colors, styles } = useUITheme();
   const { state, actor } = useLearning();
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<string[]>(["section-01"]);
@@ -109,7 +111,7 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
                 )
               }
               style={{
-                backgroundColor: "#EDF1E8",
+                backgroundColor: colors.light,
                 padding: 13,
                 borderRadius: 12,
                 flexDirection: "row",

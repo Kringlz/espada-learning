@@ -1,6 +1,10 @@
+import { useUITheme } from "../components/ui";
+import { TopicCover, topicCover } from "../components/TopicCover";
+import { MathText } from "../math/MathText";
+import { LessonText } from "../components/LessonText";
 import { useScreenScroll } from "../components/ScreenScroll";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Linking, View } from "react-native";
+import { Image, Linking, View } from "react-native";
 import { useLearning } from "../services/context";
 import {
   Button,
@@ -43,6 +47,7 @@ export function LessonSummary({
 }: {
   lesson: Pick<PublicLesson, "summary" | "videoUrl" | "sources" | "demo">;
 }) {
+  const { colors, styles } = useUITheme();
   return (
     <View style={{ gap: 12 }}>
       {lesson.demo && (
@@ -50,55 +55,82 @@ export function LessonSummary({
           Демонстрационный урок · материал для проверки работы приложения.
         </Notice>
       )}
-      <Card>
+      <Card
+        style={{
+          width: "100%",
+          maxWidth: 760,
+          alignSelf: "center",
+          padding: 22,
+          gap: 26,
+        }}
+      >
         {lesson.summary.map((b, i) => (
           <View
             key={i}
             style={
               b.kind === "example"
                 ? {
-                    padding: 12,
+                    padding: 20,
                     backgroundColor: colors.light,
-                    borderRadius: 10,
+                    borderRadius: 18,
+                    gap: 12,
                   }
-                : undefined
+                : { gap: 10 }
             }
           >
-            <Txt
-              weight={b.kind === "heading" ? "700" : "400"}
-              size={b.kind === "heading" ? 19 : 15}
-            >
-              {b.kind === "example" ? "Пример\n" : ""}
-              {b.text}
-            </Txt>
+            {b.kind === "example" && (
+              <Txt size={13} weight="700" color="#826018">
+                Разберём пример
+              </Txt>
+            )}
+            {b.kind === "heading" ? (
+              <Txt accessibilityRole="header" size={25} weight="700">
+                {b.text}
+              </Txt>
+            ) : b.kind === "list" ? (
+              <LessonText
+                text={b.text
+                  .split("\n")
+                  .map((line) =>
+                    /^\s*(?:[•*-]|\d+[.)])\s/.test(line) || !line.trim()
+                      ? line
+                      : `• ${line}`,
+                  )
+                  .join("\n")}
+              />
+            ) : (
+              <LessonText text={b.text} />
+            )}
           </View>
         ))}
       </Card>
-      <Disclosure title="Видеоурок" icon="video" initiallyOpen>
-        {lesson.videoUrl ? (
-          /\.(mp4|webm|m3u8)(\?|$)/i.test(lesson.videoUrl) ? (
-            <LessonVideo
-              key={lesson.videoUrl}
-              video={{
-                url: lesson.videoUrl,
-                attribution: "",
-                captioned: false,
-              }}
-              seconds={0}
-              onSave={() => {}}
-            />
+      {lesson.videoUrl && (
+        <Disclosure title="Видеоурок" icon="video" initiallyOpen>
+          {lesson.videoUrl ? (
+            /\.(mp4|webm|m3u8)(\?|$)/i.test(lesson.videoUrl) ? (
+              <LessonVideo
+                key={lesson.videoUrl}
+                video={{
+                  url: lesson.videoUrl,
+                  attribution: "",
+                  captioned: false,
+                }}
+                seconds={0}
+                onSave={() => {}}
+              />
+            ) : (
+              <Button
+                icon="external-link"
+                onPress={() => void Linking.openURL(lesson.videoUrl!)}
+              >
+                Открыть видеоурок
+              </Button>
+            )
           ) : (
-            <Button
-              icon="external-link"
-              onPress={() => void Linking.openURL(lesson.videoUrl!)}
-            >
-              Открыть видеоурок
-            </Button>
-          )
-        ) : (
-          <Txt color={colors.muted}>Видеоурок скоро появится.</Txt>
-        )}
-      </Disclosure>
+            <Txt color={colors.muted}>Видеоурок скоро появится.</Txt>
+          )}
+        </Disclosure>
+      )}
       <Disclosure title="Источники" icon="book">
         {lesson.sources.length ? (
           lesson.sources.map((s, i) => (
@@ -126,10 +158,13 @@ export function LessonSummary({
 export function LessonLibrary({
   topicId,
   back,
+  initialAttemptId,
 }: {
+  initialAttemptId?: string;
   topicId?: string;
   back?: () => void;
 }) {
+  const { colors, styles } = useUITheme();
   const { actor } = useLearning();
   const api = useMemo(() => lessonService(actor.id), [actor.id]);
   const [catalog, setCatalog] = useState<LessonCatalog | null>(null),
@@ -169,7 +204,11 @@ export function LessonLibrary({
     setHistory(h);
   }
   useEffect(() => {
-    if (lessonStorageReady) void run(load);
+    if (lessonStorageReady)
+      void run(async () => {
+        await load();
+        if (initialAttemptId) setAttempt(await api.attempt(initialAttemptId));
+      });
   }, [api]);
   async function open(id: string) {
     await run(async () => {
@@ -226,7 +265,8 @@ export function LessonLibrary({
       <TestAttempt
         key={attempt.id}
         initial={attempt}
-        back={leaveAttempt}
+        back={initialAttemptId && back ? back : leaveAttempt}
+        backLabel={initialAttemptId ? "К прогрессу" : "К урокам"}
         retry={() => {
           const id = attempt.lessonId;
           startKey.current = uid();
@@ -251,7 +291,11 @@ export function LessonLibrary({
           icon="arrow-left"
           onPress={lesson ? () => setLesson(null) : back!}
         >
-          {lesson ? "К списку уроков" : "Назад к теме"}
+          {lesson
+            ? "К списку уроков"
+            : initialAttemptId
+              ? "К прогрессу"
+              : "Назад к теме"}
         </Button>
       )}
       {!!error && <Notice tone="error">{error}</Notice>}
@@ -263,9 +307,6 @@ export function LessonLibrary({
       {lesson ? (
         <>
           <View style={styles.row}>
-            <Txt style={{ flex: 1 }} size={24} weight="700">
-              {lesson.title}
-            </Txt>
             <Pill
               tone={lesson.status === "published" ? "green" : "gold"}
               icon={lesson.status === "published" ? "check" : "edit"}
@@ -273,6 +314,7 @@ export function LessonLibrary({
               {lesson.status === "published" ? "Опубликован" : "Черновик"}
             </Pill>
           </View>
+          <TopicCover title={lesson.title} eyebrow="МАТЕМАТИКА · УРОК" />
           <LessonSummary lesson={lesson} />
           {actor.role === "admin" && (
             <Button icon="edit-2" onPress={() => setAdmin({ id: lesson.id })}>
@@ -383,6 +425,16 @@ export function LessonLibrary({
                         last = attempts.find((a) => a.status === "submitted");
                       return (
                         <Card key={l.id}>
+                          <Image
+                            source={topicCover(l.title).image}
+                            accessible={false}
+                            resizeMode="cover"
+                            style={{
+                              width: "100%",
+                              height: 150,
+                              borderRadius: 16,
+                            }}
+                          />
                           <View style={[styles.row, { flexWrap: "wrap" }]}>
                             <Txt
                               style={{ flex: 1, minWidth: 160 }}
@@ -498,16 +550,19 @@ export function LessonLibrary({
 function TestAttempt({
   initial,
   back,
+  backLabel = "К урокам",
   retry,
   retryBusy,
   retryError,
 }: {
   initial: LessonAttempt;
   back: () => void;
+  backLabel?: string;
   retry: () => void;
   retryBusy: boolean;
   retryError: string;
 }) {
+  const { colors, styles } = useUITheme();
   const { actor } = useLearning();
   const api = useMemo(() => lessonService(actor.id), [actor.id]);
   const [attempt, setAttempt] = useState(initial),
@@ -571,7 +626,7 @@ function TestAttempt({
         disabled={busy || dirty}
         onPress={back}
       >
-        К урокам
+        {backLabel}
       </Button>
       <Txt size={24} weight="700">
         {attempt.lesson.title}
@@ -582,7 +637,10 @@ function TestAttempt({
       )}
       {complete ? (
         <>
-          <Card>
+          <Card style={{ backgroundColor: colors.light, padding: 24 }}>
+            <Txt size={27} weight="700">
+              Проверка завершена!
+            </Txt>
             <Pill
               icon={
                 attempt.score! >= attempt.passScore
@@ -603,7 +661,7 @@ function TestAttempt({
               {dateText(attempt.submittedAt!)}.
             </Txt>
             <Txt size={13} color={colors.muted}>
-              Результат сохранён. Версия урока: {attempt.lesson.revision}.
+              Результат сохранён. Ниже можно разобрать каждый ответ.
             </Txt>
             <Button icon="rotate-ccw" disabled={retryBusy} onPress={retry}>
               {retryBusy ? "Подготовка…" : "Пройти ещё раз"}
@@ -632,12 +690,12 @@ function TestAttempt({
                   </Pill>
                   <Txt size={13}>{difficultyNames[item.difficulty]}</Txt>
                 </View>
-                <Txt weight="700">
-                  {item.ordinal}. {item.prompt}
-                </Txt>
-                <Txt>Ваш ответ: {labels(picked) || "Нет ответа"}</Txt>
-                <Txt weight="600">Правильный ответ: {labels(correct)}</Txt>
-                <Txt color={colors.muted}>{item.explanation}</Txt>
+                <MathText text={`${item.ordinal}. ${item.prompt}`} bold />
+                <MathText
+                  text={`Ваш ответ: ${labels(picked) || "Нет ответа"}`}
+                />
+                <MathText text={`Правильный ответ: ${labels(correct)}`} bold />
+                <MathText text={item.explanation ?? ""} color={colors.muted} />
               </Card>
             );
           })}
@@ -701,9 +759,7 @@ function TestAttempt({
           </View>
           <Card>
             <Pill tone="neutral">{difficultyNames[q.difficulty]}</Pill>
-            <Txt size={20} weight="600">
-              {q.prompt}
-            </Txt>
+            <MathText text={q.prompt} size={20} bold />
             <Txt size={13} color={colors.muted}>
               {q.type === "single"
                 ? "Выберите один ответ."
@@ -716,6 +772,7 @@ function TestAttempt({
               return (
                 <Button
                   key={o.id}
+                  math
                   secondary
                   selected={!!selected}
                   icon={selected ? "check-circle" : "circle"}

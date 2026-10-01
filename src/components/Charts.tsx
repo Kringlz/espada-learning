@@ -1,3 +1,4 @@
+import { useUITheme } from "./ui";
 import React from "react";
 import { View } from "react-native";
 import Svg, {
@@ -23,6 +24,7 @@ export function Radar({
   id: string;
   compact?: boolean;
 }) {
+  const { colors, styles } = useUITheme();
   const series = [...new Set(state.templates.map((t) => t.series))];
   const groups = series
     .map((series) => comparableAssessments(state, id, series))
@@ -66,7 +68,7 @@ export function Radar({
             <Polygon
               key={v}
               points={points(areas.map(() => v))}
-              fill={v === 100 ? "#FAFBF8" : "none"}
+              fill={v === 100 ? colors.paper : "none"}
               stroke="#E2E7DE"
               strokeWidth="1"
             />
@@ -175,6 +177,7 @@ export function Trend({
   area?: Area;
   series?: string;
 }) {
+  const { colors, styles } = useUITheme();
   const records = comparableAssessments(state, id, series);
   const rows = records
     .map((a) => ({
@@ -293,7 +296,7 @@ export function Trend({
         </Txt>
       ))}
       {estimates.map((r, i) => (
-        <Txt key={`e${i}`} size={13} color="#805F30">
+        <Txt key={`e${i}`} size={13} color={colors.orange}>
           {dateText(r.date)} · Estimated: {r.value}%
         </Txt>
       ))}
