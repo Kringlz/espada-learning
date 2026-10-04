@@ -40,52 +40,19 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
   );
   return (
     <View style={{ gap: 16 }}>
-      <View style={{ gap: 8 }}>
-        <Pill>МАТЕМАТИКА · 108 ТЕМ</Pill>
-        <Txt size={27} weight="600">
-          Темы
-        </Txt>
-        <Txt color={colors.muted}>
-          От первых чисел до уравнений и геометрии. Откройте раздел и выберите
-          следующий шаг.
-        </Txt>
-      </View>
-      <Card style={{ backgroundColor: colors.light }}>
-        <Txt weight="600">
-          {isStudent
-            ? `Освоено ${known} из ${curriculum.length} тем`
-            : `Видео добавлены: ${ready} из 108 тем`}
-        </Txt>
-        <Txt size={13} color={colors.muted}>
-          {isStudent
-            ? "Это охват программы, а не оценка способностей. Все темы открыты. Просмотр урока не заменяет проверку."
-            : "22 раздела по вашей программе. Откройте тему, чтобы добавить или посмотреть видеоурок."}
-        </Txt>
-      </Card>
+      {!isStudent && (
+        <Card style={{ backgroundColor: colors.light }}>
+          <Txt weight="600">
+            Видео добавлены: {ready} из {curriculum.length} тем
+          </Txt>
+        </Card>
+      )}
       <Field
-        label="Найти тему"
-        placeholder="Название или номер темы"
+        label=""
+        placeholder="Найти тему для практики…"
         value={query}
         onChangeText={setQuery}
       />
-      <View style={[styles.row, { flexWrap: "wrap" }]}>
-        <Button
-          icon="chevrons-down"
-          small
-          secondary
-          onPress={() => setExpanded(sections.map((s) => s.id))}
-        >
-          Развернуть всё
-        </Button>
-        <Button
-          small
-          secondary
-          icon="chevrons-up"
-          onPress={() => setExpanded([])}
-        >
-          Свернуть всё
-        </Button>
-      </View>
       {!filtered.length && (
         <Txt>Ничего не найдено. Попробуйте другое название.</Txt>
       )}
@@ -107,7 +74,9 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
                 setExpanded((x) =>
                   x.includes(section.id)
                     ? x.filter((id) => id !== section.id)
-                    : [...x, section.id],
+                    : isStudent
+                      ? [section.id]
+                      : [...x, section.id],
                 )
               }
               style={{
@@ -162,7 +131,7 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
                         accessibilityLabel={`Тема ${t.order}. ${t.title}`}
                         onPress={() => openTopic(t.id)}
                         style={{
-                          backgroundColor: "white",
+                          backgroundColor: colors.white,
                           borderWidth: 1,
                           borderColor: colors.line,
                           borderRadius: 14,
@@ -228,7 +197,7 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
                             </Pill>
                           )}
                           <Txt size={12} color={colors.muted}>
-                            {count ? `Видео: ${count}` : "Видео пока нет"}
+                            {count ? `Видео: ${count}` : ""}
                             {t.practice ? " · Есть практика" : ""}
                           </Txt>
                         </View>
@@ -241,9 +210,6 @@ export function TopicTree({ openTopic }: { openTopic: (id: string) => void }) {
         );
       })}
       <Disclosure title="Дополнительная практика" icon="book-open">
-        <Txt size={13} color={colors.muted}>
-          Материалы первой версии, сохранённые вместе с результатами.
-        </Txt>
         {state.topics
           .filter((t) => !t.sectionId)
           .map((t) => (

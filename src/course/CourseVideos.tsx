@@ -1,18 +1,20 @@
-import { useUITheme } from "../components/ui";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Linking, View } from "react-native";
 import {
   Button,
   Card,
   Disclosure,
+  Icon,
   Txt,
-  colors,
-  styles,
+  useUITheme,
 } from "../components/ui";
 import { YouTubePlayer } from "../components/YouTubePlayer";
-import { courseVideos, youtubePlaylistUrl, youtubeWatchUrl } from "./videos";
+import { MotionActiveContext } from "../components/Motion";
+import { useRewards } from "../engagement/RewardContext";
+import { courseContent } from "./content";
+import { videosForPage, youtubePlaylistUrl, youtubeWatchUrl } from "./videos";
 
-/** Keyed by topic and page in the reader: changing the article stops the old player. */
+/** A player belongs to one article part; no unrelated fallback video. */
 export function CourseVideos({
   topicId,
   page,
@@ -21,14 +23,24 @@ export function CourseVideos({
   page: number;
 }) {
   const { colors, styles } = useUITheme();
-  const collection = courseVideos[topicId];
-  const [selected, setSelected] = useState(
-    collection?.pageVideoIndices[page] ?? 0,
-  );
+  const active = useContext(MotionActiveContext);
+  const { award, earned } = useRewards();
+  const videos = videosForPage(topicId, page);
+  const [selected, setSelected] = useState(0);
   const [opened, setOpened] = useState(false);
   const [error, setError] = useState("");
-  if (!collection?.items.length) return null;
-  const video = collection.items[selected];
+  const video = videos[selected];
+  if (!video)
+    return (
+      <Card>
+        <Icon name="book-open" size={28} color={colors.green} />
+        <Txt weight="600">К этой части видео пока нет</Txt>
+        <Txt color={colors.muted}>
+          Открой «Урок» — там есть объяснение и примеры.
+        </Txt>
+      </Card>
+    );
+  const event = { kind: "video" as const, id: `youtube:${video.id}` };
   async function openLink(url: string) {
     try {
       setError("");
@@ -41,97 +53,83 @@ export function CourseVideos({
   }
   return (
     <Card style={{ gap: 16 }}>
+      <Txt size={12} color={colors.muted}>
+        К части «{courseContent[topicId].pages[page].title}»
+      </Txt>
       <View
         style={[
           styles.row,
-          { justifyContent: "space-between", flexWrap: "wrap" },
+          { justifyContent: "space-between", alignItems: "flex-start" },
         ]}
       >
-        <Txt size={22} weight="700">
-          Посмотри объяснение
+        <Txt size={22} weight="700" style={{ flex: 1 }}>
+          {video.title}
         </Txt>
         <Txt size={12} color={colors.muted}>
-          YouTube · {video.duration}
+          {video.duration}
         </Txt>
       </View>
-      <Txt size={17} weight="600">
-        {video.title}
-      </Txt>
-      {opened ? (
-        <YouTubePlayer key={video.id} id={video.id} title={video.title} />
+      {opened && active ? (
+        <YouTubePlayer
+          key={video.id}
+          id={video.id}
+          title={video.title}
+          onWatched={() => award([event])}
+        />
       ) : (
         <Button icon="play-circle" onPress={() => setOpened(true)}>
-          Смотреть здесь
+          Смотреть видео
         </Button>
       )}
-      <View style={[styles.row, { flexWrap: "wrap" }]}>
+      <Txt size={13} color={colors.green}>
+        {earned(event)
+          ? "✓ Просмотр засчитан · +10 очков"
+          : "+10 очков за просмотр здесь"}
+      </Txt>
+      {videos.length > 1 && (
+        <View style={{ gap: 8 }}>
+          <Txt size={13} color={colors.muted}>
+            Объяснения к этой части
+          </Txt>
+          {videos.map((item, i) => (
+            <Button
+              key={item.id}
+              secondary
+              small
+              selected={i === selected}
+              icon="play"
+              onPress={() => {
+                setSelected(i);
+                setOpened(true);
+              }}
+            >
+              {item.title} · {item.duration}
+            </Button>
+          ))}
+        </View>
+      )}
+      <Disclosure title="Ссылка и источник" icon="external-link">
+        <Txt size={13} color={colors.muted}>
+          {video.sourceTitle}
+        </Txt>
+        <Txt size={12} color={colors.muted}>
+          В исходном плейлисте — {video.sourceGrade} класс. Здесь видео
+          привязано по теме. Просмотр на YouTube не начисляет очки в приложении.
+        </Txt>
         <Button
           secondary
           small
-          icon="external-link"
           onPress={() => void openLink(youtubeWatchUrl(video))}
         >
           Открыть на YouTube
         </Button>
-        {opened && (
-          <Button secondary small icon="x" onPress={() => setOpened(false)}>
-            Закрыть плеер
-          </Button>
-        )}
-      </View>
-      {collection.items.length > 1 && (
-        <Disclosure
-          title={`Ещё видео по теме · ${collection.items.length - 1}`}
-          icon="film"
-        >
-          {collection.items.map((item, i) =>
-            i === selected ? null : (
-              <Button
-                key={item.id}
-                secondary
-                small
-                icon="play"
-                onPress={() => {
-                  setSelected(i);
-                  setOpened(true);
-                }}
-              >
-                {item.title} · {item.duration}
-              </Button>
-            ),
-          )}
-        </Disclosure>
-      )}
-      <Disclosure title="Источник и подборка" icon="info">
-        <Txt size={13} color={colors.muted}>
-          Видео из предоставленного плейлиста {video.sourceGrade} класса.
-          Порядок тем в плейлистах может отличаться от нашего курса.
-        </Txt>
-        {!!collection.note && (
-          <Txt size={13} color={colors.muted}>
-            {collection.note}
-          </Txt>
-        )}
         <Button
           secondary
           small
-          icon="external-link"
           onPress={() => void openLink(youtubePlaylistUrl(video.playlistId))}
         >
           Исходный плейлист
         </Button>
-        {video.playlistId !== collection.coursePlaylistId && (
-          <Button
-            secondary
-            small
-            icon="list"
-            onPress={() =>
-              void openLink(youtubePlaylistUrl(collection.coursePlaylistId))
-            }
-          >
-            Плейлист этого класса
-          </Button>
-        )}
       </Disclosure>
       {!!error && (
         <Txt accessibilityRole="alert" color={colors.red}>

@@ -1,3 +1,4 @@
+import { useSounds } from "../engagement/Sounds";
 import { useUITheme } from "./ui";
 import React from "react";
 import { Image, ImageSourcePropType, Pressable, View } from "react-native";
@@ -26,11 +27,15 @@ export function VisualCard({
   cover?: { image: ImageSourcePropType; color: string };
 }) {
   const { colors, styles, dark } = useUITheme();
+  const { play } = useSounds();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label ?? title}
-      onPress={onPress}
+      onPress={() => {
+        play("open");
+        onPress();
+      }}
       style={({ pressed }) => ({
         backgroundColor: dark
           ? colors.white

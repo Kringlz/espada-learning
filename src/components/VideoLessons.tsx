@@ -1,3 +1,4 @@
+import { useRewards } from "../engagement/RewardContext";
 import { useUITheme } from "./ui";
 import { errorMessage } from "../i18n/errors";
 import React, { useState, useEffect, useRef } from "react";
@@ -12,10 +13,12 @@ function StoredPlayer({
   video,
   seconds,
   onSave,
+  onWatched,
 }: {
   video: VideoLesson;
   seconds: number;
   onSave: (seconds: number) => void;
+  onWatched: () => void;
 }) {
   const { colors, styles } = useUITheme();
   const [source, setSource] = useState("");
@@ -60,10 +63,12 @@ function StoredPlayer({
       video={{ url: source, attribution: "", captioned: false }}
       seconds={seconds}
       onSave={onSave}
+      onWatched={onWatched}
     />
   );
 }
 export function VideoLessons({ topic }: { topic: Topic }) {
+  const { award } = useRewards();
   const { colors, styles } = useUITheme();
   const { actor, state, dispatch, mode } = useLearning();
   const staff = ["teacher", "admin"].includes(actor.role);
@@ -139,7 +144,14 @@ export function VideoLessons({ topic }: { topic: Topic }) {
         <Txt color={colors.muted}>Видеоурок пока не добавлен.</Txt>
       )}
       {topic.video && (
-        <LessonVideo video={topic.video} seconds={0} onSave={() => {}} />
+        <LessonVideo
+          video={topic.video}
+          seconds={0}
+          onSave={() => {}}
+          onWatched={() =>
+            award([{ kind: "video", id: `source:${topic.video!.url}` }])
+          }
+        />
       )}
       {topic.videos?.map((video, i) => (
         <View
@@ -169,6 +181,9 @@ export function VideoLessons({ topic }: { topic: Topic }) {
                 video={video}
                 seconds={positions[video.id] ?? 0}
                 onSave={(seconds) => save(video.id, seconds)}
+                onWatched={() =>
+                  award([{ kind: "video", id: `upload:${video.id}` }])
+                }
               />
               <Button secondary small onPress={() => setPlaying(null)}>
                 Закрыть видео

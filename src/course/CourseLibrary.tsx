@@ -1,3 +1,6 @@
+import { SectionTabs } from "../components/SectionTabs";
+import { courseVideos, videoCount } from "./videos";
+import { SoftReveal } from "../components/Motion";
 import { useUITheme } from "../components/ui";
 import { CourseVideos } from "./CourseVideos";
 import { TopicCover, topicCover } from "../components/TopicCover";
@@ -37,9 +40,13 @@ import { topicArt } from "../components/LearningArt";
 export function CourseLibrary({
   request,
   extras,
+  mode = "course",
+  onTopicChange,
 }: {
   request?: { id: string; key: number };
   extras?: React.ReactNode;
+  mode?: "course" | "videos";
+  onTopicChange?: (selected: boolean) => void;
 }) {
   const { colors, styles } = useUITheme();
   const { actor } = useLearning();
@@ -49,6 +56,8 @@ export function CourseLibrary({
       actorId={actor.id}
       request={request}
       extras={extras}
+      mode={mode}
+      onTopicChange={onTopicChange}
     />
   );
 }
@@ -56,10 +65,14 @@ function CourseBrowser({
   actorId,
   request,
   extras,
+  mode,
+  onTopicChange,
 }: {
   actorId: string;
   request?: { id: string; key: number };
   extras?: React.ReactNode;
+  mode: "course" | "videos";
+  onTopicChange?: (selected: boolean) => void;
 }) {
   const { colors, styles } = useUITheme();
   const { width } = useWindowDimensions();
@@ -71,9 +84,24 @@ function CourseBrowser({
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<CourseTopic | null>(null);
   const storage = useCourseProgress(actorId);
+  useEffect(() => {
+    onTopicChange?.(!!selected);
+  }, [selected, onTopicChange]);
+  useEffect(() => {
+    setSelected(null);
+  }, [mode]);
   function selectTopic(topic: CourseTopic) {
     setSelected(topic);
-    storage.update(topic.id, { page: storage.progress[topic.id]?.page ?? 0 });
+    let page = storage.progress[topic.id]?.page ?? 0;
+    if (mode === "videos" && !courseVideos[topic.id].pageVideos[page]?.length) {
+      page = Math.max(
+        0,
+        courseVideos[topic.id].pageVideos.findIndex(
+          (items) => items.length > 0,
+        ),
+      );
+    }
+    storage.update(topic.id, { page });
   }
   useEffect(() => {
     const topic = request && course.find((t) => t.id === request.id);
@@ -94,7 +122,8 @@ function CourseBrowser({
   useScreenScroll(selected?.id ?? "math-course-catalog");
   const filtered = searchCourse(query, grade, subject);
   return (
-    <View
+    <SoftReveal
+      changeKey={selected?.id ?? "catalog"}
       style={{
         gap: 22,
         maxWidth: selected ? 760 : 1040,
@@ -121,21 +150,10 @@ function CourseBrowser({
           storage={storage}
           back={() => setSelected(null)}
           next={selectTopic}
+          initialTab={mode === "videos" ? "video" : "theory"}
         />
       ) : (
         <>
-          <View style={{ gap: 6 }}>
-            <Txt
-              size={width >= 760 ? 38 : 30}
-              weight="700"
-              style={{ letterSpacing: -0.8 }}
-            >
-              Мир математики
-            </Txt>
-            <Txt size={16} color={colors.muted}>
-              Выбери, что интересно.
-            </Txt>
-          </View>
           <Disclosure
             key={`grade-${grade}`}
             title={
@@ -174,11 +192,7 @@ function CourseBrowser({
             value={query}
             onChangeText={setQuery}
           />
-          {grade !== null && grade <= 6 ? (
-            <Txt size={14} weight="700" color={colors.green}>
-              Математика
-            </Txt>
-          ) : (
+          {(grade === null || grade > 6) && (
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {[
                 ["all", "Все темы"],
@@ -242,11 +256,15 @@ function CourseBrowser({
                     cover={topicCover(t.title, t.subject)}
                     compact={width < 580}
                     horizontal={columns === 1}
-                    caption={`${coursePartsLabel(t.pages.length)}${p?.updatedAt ? " · продолжить" : ""}`}
+                    caption={
+                      mode === "videos"
+                        ? `${videoCount(t.id)} видео · по частям урока`
+                        : `${coursePartsLabel(t.pages.length)}${p?.updatedAt ? " · продолжить" : ""}`
+                    }
                     progress={
                       (100 * (p?.readPages.length ?? 0)) / t.pages.length
                     }
-                    label={`${p?.updatedAt ? "Продолжить" : "Начать"}: ${title}, ${t.grade} класс`}
+                    label={`${mode === "videos" ? "Видео" : p?.updatedAt ? "Продолжить" : "Начать"}: ${title}, ${t.grade} класс`}
                     onPress={() => selectTopic(t)}
                   />
                 </View>
@@ -256,7 +274,7 @@ function CourseBrowser({
           {extras}
         </>
       )}
-    </View>
+    </SoftReveal>
   );
 }
 
@@ -266,16 +284,18 @@ function CourseReader({
   storage,
   back,
   next,
+  initialTab,
 }: {
   topic: CourseTopic;
   storage: Storage;
   back: () => void;
   next: (t: CourseTopic) => void;
+  initialTab: "theory" | "video";
 }) {
   const { colors, styles } = useUITheme();
   const p = storage.progress[topic.id] ?? emptyProgress();
   const [page, setPage] = useState(p.page);
-  const [tab, setTab] = useState<"theory" | "practice">("theory");
+  const [tab, setTab] = useState<"theory" | "video" | "practice">(initialTab);
   const [sourceError, setSourceError] = useState("");
   useEffect(() => {
     if (storage.ready) setPage(p.page);
@@ -300,7 +320,7 @@ function CourseReader({
     else setPage(index);
   }
   return (
-    <>
+    <SoftReveal changeKey={`${tab}:${page}`} style={{ gap: 22 }}>
       <Button small secondary icon="arrow-left" onPress={back}>
         Все темы
       </Button>
@@ -309,24 +329,15 @@ function CourseReader({
           {content.pages[0].title}
         </Txt>
       )}
-      <View style={[styles.row, { flexWrap: "wrap" }]}>
-        <Button
-          secondary
-          selected={tab === "theory"}
-          icon="book-open"
-          onPress={() => setTab("theory")}
-        >
-          Урок
-        </Button>
-        <Button
-          secondary
-          selected={tab === "practice"}
-          icon="check-square"
-          onPress={() => setTab("practice")}
-        >
-          Тест
-        </Button>
-      </View>
+      <SectionTabs
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "theory", label: "Урок", icon: "book-open" },
+          { value: "video", label: "Видео", icon: "play-circle" },
+          { value: "practice", label: "Задания", icon: "check-square" },
+        ]}
+      />
       {tab === "theory" ? (
         <>
           <TopicCover
@@ -334,11 +345,6 @@ function CourseReader({
             themeTitle={topic.title}
             subject={topic.subject}
             eyebrow={`${topic.grade} КЛАСС · ЧАСТЬ ${page + 1} ИЗ ${topic.pages.length}`}
-          />
-          <CourseVideos
-            key={`videos-${topic.id}-${page}`}
-            topicId={topic.id}
-            page={page}
           />
           <Card
             style={{
@@ -433,6 +439,51 @@ function CourseReader({
             </Button>
           </View>
         </>
+      ) : tab === "video" ? (
+        <View style={{ gap: 16 }}>
+          <Txt size={23} weight="700">
+            {content.pages[0].title}
+          </Txt>
+          <Disclosure
+            title={`Часть ${page + 1} из ${topic.pages.length} · выбрать`}
+            icon="list"
+          >
+            {content.pages.map((part, i) => (
+              <Button
+                key={i}
+                small
+                secondary
+                selected={page === i}
+                onPress={() => turn(i)}
+              >
+                {i + 1}. {part.title}
+              </Button>
+            ))}
+          </Disclosure>
+          <CourseVideos
+            key={`${topic.id}-${page}`}
+            topicId={topic.id}
+            page={page}
+          />
+          <View style={[styles.row, { justifyContent: "space-between" }]}>
+            <Button
+              secondary
+              small
+              disabled={page === 0}
+              onPress={() => turn(page - 1)}
+            >
+              Назад
+            </Button>
+            <Button
+              secondary
+              small
+              disabled={page === topic.pages.length - 1}
+              onPress={() => turn(page + 1)}
+            >
+              Следующая часть
+            </Button>
+          </View>
+        </View>
       ) : (
         <CoursePractice
           key={topic.id}
@@ -485,6 +536,6 @@ function CourseReader({
           </Txt>
         )}
       </Disclosure>
-    </>
+    </SoftReveal>
   );
 }

@@ -40,3 +40,11 @@ At most three optional suggestions use recent reported area counts below 75%, a 
 ## Known limits
 
 Only 12 original materials have practice (9 outline topics + 3 supplementary). Most outline topics await company content. Existing checks have 6 questions, two sets of 3; after exhaustion, new evidence needs a new question bank or a properly scoped teacher assessment. Items are demonstration material, not calibrated tests. Numeric teacher grades are supported; letter-grade scales are not. Recommendations do not account for test difficulty, overlapping questions across different reports or unseen solution steps. Native bundles compile, but physical-device and real hosted Supabase integration still need pilot verification.
+
+## Local activity rewards
+
+Activity points are separate from marks and mastery. An authenticated student profile earns 10 points per unique video after 80% actual playback and 20 per unique correct exercise (including guided/hinted work). Reading, opening a player, wrong answers, repeating a completed exercise, and retaking a test do not grant extra points. Course question keys are topic + question number, connected test keys include lesson revision + question id, and uploaded/video-platform ids deduplicate videos across articles.
+
+Levels: Новичок (0), Исследователь (100), Знаток (300). The device-local ledger is namespaced by profile, serialized through a write queue, and reloaded independently from assessment records. Existing correct textbook and topic checks are backfilled once, silently. Restarting a quiz cannot revoke earned points. Failed persistence is shown in the level card with Retry; points are not server-authoritative, do not sync devices, and never determine mastery or teacher grades.
+
+Short original sound effects accompany opening content, successful answers and level advancement. The speaker button controls all effects and persists the choice on this device. It does not mute lesson audio. The radar expands from its center whenever its visible section opens; reduced-motion settings keep charts and celebrations static.

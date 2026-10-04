@@ -7,9 +7,10 @@ import {
   courseVideos,
   youtubeEmbedUrl,
   youtubeWatchUrl,
+  videosForPage,
 } from "../src/course/videos";
 
-test("every article part has a curated video from a supplied playlist", () => {
+test("every article part has explicit relevant videos or an honest gap", () => {
   assert.equal(playlists.length, 12);
   assert.deepEqual(
     Object.keys(courseVideos).sort(),
@@ -18,14 +19,16 @@ test("every article part has a curated video from a supplied playlist", () => {
   for (const topic of course) {
     const collection = courseVideos[topic.id];
     assert.equal(
-      collection.pageVideoIndices.length,
+      collection.pageVideos.length,
       courseContent[topic.id].pages.length,
       topic.id,
     );
     assert.ok(collection.items.length);
     assert.ok(
-      collection.pageVideoIndices.every(
-        (i) => Number.isInteger(i) && !!collection.items[i],
+      collection.pageVideos.every(
+        (indices) =>
+          indices.every((i) => Number.isInteger(i) && !!collection.items[i]) &&
+          new Set(indices).size === indices.length,
       ),
     );
     assert.equal(
@@ -79,4 +82,20 @@ test("junior mathematics has one sequence including geometry and keeps original 
     courseSubject(course.find((t) => t.id === "G07-01")!),
     "geometry",
   );
+});
+
+test("unrelated fallback videos are never presented as explanations for a part", () => {
+  assert.deepEqual(videosForPage("G05-02", 2), []); // Volume is not rectangle area.
+  assert.deepEqual(videosForPage("A06-06", 2), []); // Mixtures are not solving a proportion.
+  assert.deepEqual(videosForPage("A05-03", 3), []); // Pursuit is not a general formula video.
+  assert.equal(videosForPage("A06-03", 3)[0].title, "Сложение и вычитание");
+  assert.equal(videosForPage("A06-03", 4)[0].title, "Умножение");
+  assert.equal(
+    videosForPage("A06-03", 5)[0].title,
+    "Деление десятичных дробей",
+  );
+  assert.equal(videosForPage("G08-01", 2).length, 3); // Rectangle, rhombus and square.
+  assert.equal(videosForPage("G11-01", 3).length, 2); // Cylinder AND cone.
+  assert.deepEqual(videosForPage("missing", 0), []);
+  assert.deepEqual(videosForPage("G05-02", 99), []);
 });

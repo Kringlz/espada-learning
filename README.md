@@ -25,7 +25,7 @@ No `.env` is required for the demo. Copy `.env.example` to `.env` when configuri
 
 ## Simpler student experience
 
-Students now use **Сегодня / Учиться / Мой прогресс**. The avatar opens Profile for every role; demo account switching is inside Profile. Today shows the priority homework or the latest unfinished study activity. Learn opens the mathematics textbook directly; extra practice, videos and connected tests remain available in a disclosure beneath the topics.
+Students now use **Сегодня / Учиться / Мой прогресс**. The avatar opens Profile for every role; demo account switching is inside Profile. Today shows the priority homework or the latest unfinished study activity. Learn offers the textbook, a video catalog using the same topics, supplementary practice, and connected tests when available. Each topic has Lesson / Video / Exercises views. Videos are mapped explicitly to individual article parts; missing matches remain visible gaps.
 
 Lessons use readable text, distinct rules/examples, structured formulas and tables. All 458 textbook exercises are shown as multiple-choice training tests, one question at a time. Each has three authored choices and two incremental hints; the original answer is available after checking. Results separate independent correct answers, assisted correct answers and mistakes. Reading progress, selections, hint use and checked results survive reloads in the same browser. Older notes and self-check marks remain stored. They remain separate from teacher grades and topic mastery. Connected test history is available in Progress when the lesson service is configured; its storage and assessment rules are unchanged.
 
@@ -121,3 +121,7 @@ This is an experienceable first version, not a store-ready or independently vali
 - Контакты учителя заполняются в его профиле. Родитель видит их во вкладке **Учитель**. Номера и email в демо не подставляются: до заполнения показывается понятное пустое состояние.
 - Для подключённых аккаунтов применить миграции до `007_family_roles.sql` включительно. Аккаунт Auth создаётся существующим административным процессом, затем администратор создаёт профиль с нужной ролью. Связи и зачисление назначают уполномоченные сотрудники, пользователь не выбирает себе привилегии при входе. Миграция в удалённый Supabase автоматически не применяется.
 - Проверки ролей: `tests/family.test.ts` и `supabase/tests/family.sql` (включён в `scripts/test-database.sh`). Серверные проверки выполняются только в отдельной пустой локальной базе.
+
+### Activity rewards and sound
+
+Students have three local activity levels (0 / 100 / 300 points), +10 for watching 80% of a video and +20 for a unique correct exercise. Points persist by profile on this device; repeats never add points and grades/mastery remain separate. The header speaker button toggles quiet original effects. See `docs/SCORING.md` and `docs/MATH_COURSE_RU.md` for limits and video mapping rules. Native builds now include `expo-audio` with recording and background playback disabled.

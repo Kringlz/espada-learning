@@ -1,6 +1,7 @@
+import { emptyWatch, trackWatch } from "../engagement/rewards";
 import { useUITheme } from "./ui";
 import React, { useRef, useEffect, useState } from "react";
-import { View } from "react-native";
+import { AppState, View } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Topic } from "../core/types";
 import { Txt, Button, colors } from "./ui";
@@ -8,25 +9,31 @@ export function LessonVideo({
   video,
   seconds,
   onSave,
+  onWatched,
 }: {
   video: NonNullable<Topic["video"]>;
   seconds: number;
   onSave: (n: number) => void;
+  onWatched?: () => void;
 }) {
   const { colors, styles } = useUITheme();
+  const complete = useRef(onWatched);
+  complete.current = onWatched;
   const save = useRef(onSave);
   save.current = onSave;
   const initial = useRef(seconds);
   const [error, setError] = useState(false);
   const player = useVideoPlayer(video.url, (p) => {
-    p.timeUpdateEventInterval = 5;
+    p.timeUpdateEventInterval = 1;
   });
   useEffect(() => {
     let restored = false;
+    let watch = emptyWatch(),
+      rewarded = false;
     let last = -1;
     const persist = () => {
       const value = player.currentTime;
-      if (Number.isFinite(value) && value >= 0 && value !== last) {
+      if (Number.isFinite(value) && value >= 0 && Math.abs(value - last) >= 5) {
         last = value;
         save.current(value);
       }
@@ -41,7 +48,21 @@ export function LessonVideo({
       }
     };
     const a = player.addListener("timeUpdate", () => {
-      if (restored) persist();
+      if (restored) {
+        persist();
+        const result = trackWatch(
+          watch,
+          player.currentTime,
+          player.duration,
+          player.playing && AppState.currentState === "active",
+          Date.now(),
+        );
+        watch = result.state;
+        if (result.completed && !rewarded) {
+          rewarded = true;
+          complete.current?.();
+        }
+      }
     });
     const b = player.addListener("playingChange", (e) => {
       if (!e.isPlaying && restored) persist();

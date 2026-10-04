@@ -1,3 +1,5 @@
+import { useRewards } from "../engagement/RewardContext";
+import { Confetti } from "../components/Motion";
 import { useUITheme } from "../components/ui";
 import { TopicCover } from "../components/TopicCover";
 import { MathText } from "../math/MathText";
@@ -35,6 +37,7 @@ export function Lesson({
   openTopic: (id: string) => void;
 }) {
   const { colors, styles } = useUITheme();
+  const { award } = useRewards();
   const { state: s, actor, dispatch, saving } = useLearning();
   const t = s.topics.find((t) => t.id === topicId)!;
   const persisted = s.activities.find(
@@ -54,6 +57,7 @@ export function Lesson({
         updatedAt: new Date().toISOString(),
       },
   );
+  const [burst, setBurst] = useState(0);
   const [hint, setHint] = useState(false);
   const [guided, setGuided] = useState<number | null>(null);
   const [practiceChecked, setPracticeChecked] = useState(false);
@@ -107,6 +111,20 @@ export function Lesson({
           })),
         },
       });
+      if (
+        !submitted &&
+        qs.length > 0 &&
+        qs.every((q) => activity.answers[q.id] === q.answer)
+      )
+        setBurst((value) => value + 1);
+      award(
+        qs
+          .filter((q) => activity.answers[q.id] === q.answer)
+          .map((q) => ({
+            kind: "question" as const,
+            id: `topic:${topicId}:${q.id}`,
+          })),
+      );
       setActivity({ ...activity, stage: "complete" });
       setError("");
     } catch {
@@ -231,6 +249,7 @@ export function Lesson({
               selected={guided === i}
               onPress={() => {
                 setGuided(i);
+                setBurst(0);
                 setPracticeChecked(false);
               }}
             />
@@ -238,7 +257,18 @@ export function Lesson({
           <View style={[styles.row, { flexWrap: "wrap" }]}>
             <Button
               disabled={guided === null}
-              onPress={() => setPracticeChecked(true)}
+              onPress={() => {
+                if (!practiceChecked && guided === t.practice?.answer) {
+                  award([
+                    {
+                      kind: "question",
+                      id: `guided:${topicId}:${t.practice.id}`,
+                    },
+                  ]);
+                  setBurst((value) => value + 1);
+                }
+                setPracticeChecked(true);
+              }}
             >
               Check my answer
             </Button>
@@ -261,6 +291,7 @@ export function Lesson({
                 borderRadius: 12,
               }}
             >
+              <Confetti burst={burst} />
               <Txt weight="600">
                 {guided === t.practice.answer
                   ? "That’s it. Nicely worked out."
@@ -273,7 +304,10 @@ export function Lesson({
               </Txt>
               <Button
                 disabled={saving}
-                onPress={() => void save({ stage: "check" })}
+                onPress={() => {
+                  setBurst(0);
+                  void save({ stage: "check" });
+                }}
               >
                 Ready for an independent check
               </Button>
@@ -336,6 +370,7 @@ export function Lesson({
       {stage === "complete" && (
         <>
           <Card style={{ backgroundColor: colors.light }}>
+            <Confetti burst={burst} />
             <Icon name="check-circle" size={35} color={colors.green} />
             <Txt size={29} weight="600">
               One more step forward.

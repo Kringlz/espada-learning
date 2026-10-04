@@ -1,3 +1,7 @@
+import { SoundProvider, useSounds } from "./src/engagement/Sounds";
+import { RewardsProvider } from "./src/engagement/RewardContext";
+import { RewardNotice } from "./src/engagement/LevelCard";
+import { SoftReveal } from "./src/components/Motion";
 import { Parent } from "./src/screens/Family";
 import { useUITheme } from "./src/components/ui";
 import { ThemeProvider } from "./src/theme/Theme";
@@ -54,11 +58,13 @@ const navIcons: Record<string, any> = {
 export default function App() {
   return (
     <ThemeProvider>
-      <SafeAreaProvider>
-        <LearningProvider fallback={(props) => <Welcome {...props} />}>
-          <Workspace />
-        </LearningProvider>
-      </SafeAreaProvider>
+      <SoundProvider>
+        <SafeAreaProvider>
+          <LearningProvider fallback={(props) => <Welcome {...props} />}>
+            <Workspace />
+          </LearningProvider>
+        </SafeAreaProvider>
+      </SoundProvider>
     </ThemeProvider>
   );
 }
@@ -66,7 +72,9 @@ function Workspace() {
   const { actor } = useLearning();
   return (
     <CourseProgressProvider key={actor.id} actorId={actor.id}>
-      <Shell />
+      <RewardsProvider key={actor.id}>
+        <Shell />
+      </RewardsProvider>
     </CourseProgressProvider>
   );
 }
@@ -145,6 +153,7 @@ function Welcome({
   );
 }
 function Shell() {
+  const sounds = useSounds();
   const { colors, styles } = useUITheme();
   const {
     actor,
@@ -173,7 +182,6 @@ function Shell() {
     { id: string; key: number } | undefined
   >();
   const [topic, setTopic] = useState<string | null>(null);
-  const [showHistoryRequest, setShowHistoryRequest] = useState(0);
   const [result, setResult] = useState<string | null>(null);
   const offsets = useRef<Record<string, number>>({});
   const routeKey = `${actor.id}:${topic ? `topic:${topic}` : result ? `result:${result}` : tab}`;
@@ -239,6 +247,7 @@ function Shell() {
     return () => handler.remove();
   }, [topic, tab, result]);
   function navigate(next: string) {
+    sounds.play("open");
     setTopic(null);
     setResult(null);
     setTab(next);
@@ -403,7 +412,27 @@ function Shell() {
                 <Brand />
               )}
               {student && desktop && nav()}
-              <View style={[styles.row, { gap: 8 }]}>
+              <View style={[styles.row, { gap: 4 }]}>
+                {student && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      sounds.enabled ? "Выключить звуки" : "Включить звуки"
+                    }
+                    onPress={sounds.toggle}
+                    style={{
+                      minWidth: 44,
+                      minHeight: 44,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon
+                      name={sounds.enabled ? "volume-2" : "volume-x"}
+                      size={19}
+                    />
+                  </Pressable>
+                )}
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={
@@ -420,7 +449,9 @@ function Shell() {
                 >
                   <Icon name={dark ? "sun" : "moon"} size={20} />
                 </Pressable>
-                {student && mode === "demo" && <Pill tone="neutral">Демо</Pill>}
+                {student && mode === "demo" && width >= 440 && (
+                  <Pill tone="neutral">Демо</Pill>
+                )}
                 {desktop && !student && (
                   <Pill tone="neutral">
                     {mode === "demo" ? "LOCAL DEMO" : "CONNECTED"}
@@ -530,7 +561,11 @@ function Shell() {
               >
                 <View style={{ width: "100%", maxWidth: 1100 }}>
                   {actor.role === "student" ? (
-                    <View key={actor.id}>
+                    <SoftReveal
+                      key={actor.id}
+                      changeKey={routeKey}
+                      testID="student-screen-transition"
+                    >
                       <View
                         style={{
                           display:
@@ -542,11 +577,7 @@ function Shell() {
                         <Home
                           openCourse={openCourse}
                           openTopic={setTopic}
-                          navigate={(next) => {
-                            if (next === "Progress")
-                              setShowHistoryRequest((n) => n + 1);
-                            navigate(next);
-                          }}
+                          navigate={navigate}
                           openResult={setResult}
                         />
                       </View>
@@ -559,6 +590,7 @@ function Shell() {
                         }}
                       >
                         <Learn
+                          active={tab === "Learn" && !topic && !result}
                           openTopic={setTopic}
                           courseRequest={courseRequest}
                         />
@@ -574,7 +606,6 @@ function Shell() {
                         <Progress
                           active={tab === "Progress" && !topic && !result}
                           openCourse={openCourse}
-                          showHistoryRequest={showHistoryRequest}
                           openResult={setResult}
                           openTopic={setTopic}
                         />
@@ -600,7 +631,7 @@ function Shell() {
                           openTopic={setTopic}
                         />
                       )}
-                    </View>
+                    </SoftReveal>
                   ) : tab === "Profile" ? (
                     <Profile switchDemo={() => setAccountOpen(true)} />
                   ) : actor.role === "parent" ? (
@@ -628,6 +659,7 @@ function Shell() {
                 )}
               </ScrollView>
             </ScreenScroll.Provider>
+            {student && <RewardNotice />}
             {!desktop && (
               <View
                 style={{

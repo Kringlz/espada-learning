@@ -1,3 +1,4 @@
+import { emptyWatch, trackWatch } from "../engagement/rewards";
 import { useUITheme } from "./ui";
 import React, { useRef, useState, useEffect } from "react";
 import { View } from "react-native";
@@ -8,13 +9,17 @@ export function LessonVideo({
   video,
   seconds,
   onSave,
+  onWatched,
 }: {
   video: NonNullable<Topic["video"]>;
   seconds: number;
   onSave: (n: number) => void;
+  onWatched?: () => void;
 }) {
   const { colors, styles } = useUITheme();
   const element = useRef<HTMLVideoElement>(null);
+  const watch = useRef(emptyWatch());
+  const rewarded = useRef(false);
   const initial = useRef(seconds);
   const save = useRef(onSave);
   save.current = onSave;
@@ -81,7 +86,23 @@ export function LessonVideo({
           setPlaying(false);
           persist(true);
         }}
-        onTimeUpdate={() => persist()}
+        onTimeUpdate={() => {
+          persist();
+          const v = element.current;
+          if (!v || rewarded.current) return;
+          const result = trackWatch(
+            watch.current,
+            v.currentTime,
+            v.duration,
+            !v.paused && !v.seeking && !document.hidden,
+            Date.now(),
+          );
+          watch.current = result.state;
+          if (result.completed) {
+            rewarded.current = true;
+            onWatched?.();
+          }
+        }}
         onSeeked={() => persist(true)}
         onEnded={() => {
           setPlaying(false);

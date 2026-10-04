@@ -1,3 +1,5 @@
+import { useRewards } from "../engagement/RewardContext";
+import { Confetti, SoftReveal } from "../components/Motion";
 import React, { useState } from "react";
 import { Pressable, View } from "react-native";
 import {
@@ -37,6 +39,7 @@ export function CoursePractice({
   back: () => void;
 }) {
   const { colors, styles } = useUITheme();
+  const { award } = useRewards();
   const p = storage.progress[topic.id] ?? emptyProgress();
   const content = courseContent[topic.id].practice;
   const questions = splitPractice(content.questions).items;
@@ -47,6 +50,7 @@ export function CoursePractice({
       questions.findIndex((q) => !p.quiz[q.number]?.submitted),
     ),
   );
+  const [burst, setBurst] = useState(0);
   const [summary, setSummary] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
   const question = questions[index];
@@ -56,6 +60,17 @@ export function CoursePractice({
   const correct = attempt.selected === 0;
   useScreenScroll(`${topic.id}:test:${index}:${summary}`);
   function act(action: QuizAction) {
+    if (
+      storage.ready &&
+      action.type === "submit" &&
+      !attempt.submitted &&
+      attempt.selected === 0
+    ) {
+      award([
+        { kind: "question", id: `course:${topic.id}:${question.number}` },
+      ]);
+      setBurst((value) => value + 1);
+    }
     storage.update(topic.id, (current) => ({
       quiz: {
         ...current.quiz,
@@ -68,6 +83,7 @@ export function CoursePractice({
     }));
   }
   function turn(n: number) {
+    setBurst(0);
     setIndex(n);
     setSummary(false);
     setConfirmRestart(false);
@@ -195,7 +211,7 @@ export function CoursePractice({
       </Card>
     );
   return (
-    <View style={{ gap: 18 }}>
+    <SoftReveal changeKey={`${index}`} style={{ gap: 18 }}>
       <Card style={{ gap: 20 }}>
         <View
           style={[
@@ -206,9 +222,6 @@ export function CoursePractice({
           <Pill icon="check-square">
             Задание {index + 1} из {questions.length}
           </Pill>
-          <Txt size={12} color={colors.muted}>
-            Проверено {stats.answered}/{questions.length}
-          </Txt>
         </View>
         <View
           style={{ height: 5, backgroundColor: colors.light, borderRadius: 4 }}
@@ -332,36 +345,39 @@ export function CoursePractice({
             </Button>
           </View>
         ) : (
-          <View style={{ gap: 12 }} accessibilityLiveRegion="polite">
-            <Txt
-              size={20}
-              weight="700"
-              color={correct ? colors.green : colors.red}
-            >
-              {correct
-                ? attempt.hintsShown
-                  ? "Верно, с подсказкой"
-                  : "Верно! Самостоятельно"
-                : "Пока неверно — давай разберём"}
-            </Txt>
-            {!correct && (
-              <Txt size={13} color={colors.muted}>
-                Правильный вариант отмечен галочкой.
+          <SoftReveal>
+            <View style={{ gap: 12 }} accessibilityLiveRegion="polite">
+              <Confetti burst={burst} />
+              <Txt
+                size={20}
+                weight="700"
+                color={correct ? colors.green : colors.red}
+              >
+                {correct
+                  ? attempt.hintsShown
+                    ? "Верно, с подсказкой"
+                    : "Верно! Отличная работа"
+                  : "Пока неверно — давай разберём"}
               </Txt>
-            )}
-            <Disclosure
-              key={`${question.number}-solution`}
-              title="Ответ и разбор"
-              icon="book-open"
-            >
-              <CourseContent
-                blocks={
-                  answers.find((a) => a.number === question.number)?.blocks ??
-                  []
-                }
-              />
-            </Disclosure>
-          </View>
+              {!correct && (
+                <Txt size={13} color={colors.muted}>
+                  Правильный вариант отмечен галочкой.
+                </Txt>
+              )}
+              <Disclosure
+                key={`${question.number}-solution`}
+                title="Ответ и разбор"
+                icon="book-open"
+              >
+                <CourseContent
+                  blocks={
+                    answers.find((a) => a.number === question.number)?.blocks ??
+                    []
+                  }
+                />
+              </Disclosure>
+            </View>
+          </SoftReveal>
         )}
         <Disclosure title="Мои записи" icon="edit-3">
           <Field
@@ -425,6 +441,6 @@ export function CoursePractice({
           Посмотреть результат
         </Button>
       </Disclosure>
-    </View>
+    </SoftReveal>
   );
 }

@@ -1,3 +1,5 @@
+import { useRewards } from "../engagement/RewardContext";
+import { Confetti } from "../components/Motion";
 import { useUITheme } from "../components/ui";
 import { TopicCover, topicCover } from "../components/TopicCover";
 import { MathText } from "../math/MathText";
@@ -48,6 +50,7 @@ export function LessonSummary({
   lesson: Pick<PublicLesson, "summary" | "videoUrl" | "sources" | "demo">;
 }) {
   const { colors, styles } = useUITheme();
+  const { award } = useRewards();
   return (
     <View style={{ gap: 12 }}>
       {lesson.demo && (
@@ -117,6 +120,9 @@ export function LessonSummary({
                 }}
                 seconds={0}
                 onSave={() => {}}
+                onWatched={() =>
+                  award([{ kind: "video", id: `source:${lesson.videoUrl}` }])
+                }
               />
             ) : (
               <Button
@@ -565,6 +571,8 @@ function TestAttempt({
   const { colors, styles } = useUITheme();
   const { actor } = useLearning();
   const api = useMemo(() => lessonService(actor.id), [actor.id]);
+  const { award } = useRewards();
+  const [burst, setBurst] = useState(0);
   const [attempt, setAttempt] = useState(initial),
     [answers, setAnswers] = useState(initial.answers),
     [index, setIndex] = useState(0),
@@ -609,6 +617,30 @@ function TestAttempt({
     setError("");
     try {
       const a = await api.submit(attempt);
+      if (a.status === "submitted")
+        award(
+          a.questions
+            .filter((q) => {
+              const picked =
+                a.answers.find((answer) => answer.ordinal === q.ordinal)
+                  ?.optionIds ?? [];
+              return (
+                !!q.correctOptionIds?.length &&
+                picked.length === q.correctOptionIds.length &&
+                picked.every((id) => q.correctOptionIds!.includes(id))
+              );
+            })
+            .map((q) => ({
+              kind: "question" as const,
+              id: `lesson:${a.lessonId}:${a.lesson.revision}:${q.id}`,
+            })),
+        );
+      if (
+        a.status === "submitted" &&
+        a.score !== null &&
+        a.score >= a.passScore
+      )
+        setBurst((value) => value + 1);
       setAttempt(a);
       setAnswers(a.answers);
     } catch (e) {
@@ -619,6 +651,7 @@ function TestAttempt({
   }
   return (
     <View style={{ gap: 14 }}>
+      <Confetti burst={burst} />
       <Button
         secondary
         small

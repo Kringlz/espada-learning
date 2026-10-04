@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import { useSounds } from "../engagement/Sounds";
+import { MotionActiveContext } from "./Motion";
+import React, { useContext, useState } from "react";
 import {
   Text,
   View,
@@ -104,6 +106,7 @@ export function Button({
   math?: boolean;
 }) {
   const { colors, styles } = useUITheme();
+  const { play } = useSounds();
   return (
     <Pressable
       accessibilityRole="button"
@@ -112,7 +115,10 @@ export function Button({
       aria-pressed={selected}
       aria-disabled={disabled}
       disabled={disabled}
-      onPress={onPress}
+      onPress={() => {
+        play("open");
+        onPress();
+      }}
       style={({ pressed }) => [
         styles.button,
         {
@@ -238,9 +244,11 @@ export function Field({
   const { colors, styles } = useUITheme();
   return (
     <View style={{ gap: 7 }}>
-      <Txt size={13} weight="600">
-        {label}
-      </Txt>
+      {!!label && (
+        <Txt size={13} weight="600">
+          {label}
+        </Txt>
+      )}
       <TextInput
         accessibilityLabel={
           label
@@ -364,6 +372,8 @@ export function Disclosure({
   initiallyOpen?: boolean;
 }) {
   const { colors, styles } = useUITheme();
+  const { play } = useSounds();
+  const parentActive = useContext(MotionActiveContext);
   const [open, setOpen] = useState(initiallyOpen);
   return (
     <View
@@ -379,7 +389,10 @@ export function Disclosure({
         accessibilityLabel={title}
         accessibilityState={{ expanded: open }}
         aria-expanded={open}
-        onPress={() => setOpen(!open)}
+        onPress={() => {
+          if (!open) play("open");
+          setOpen(!open);
+        }}
         style={{
           padding: 16,
           minHeight: 52,
@@ -402,7 +415,9 @@ export function Disclosure({
           gap: 10,
         }}
       >
-        {children}
+        <MotionActiveContext.Provider value={parentActive && open}>
+          {children}
+        </MotionActiveContext.Provider>
       </View>
     </View>
   );

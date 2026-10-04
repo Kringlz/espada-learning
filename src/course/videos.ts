@@ -10,7 +10,7 @@ export type CourseVideo = {
 };
 export type CourseVideoCollection = {
   items: CourseVideo[];
-  pageVideoIndices: number[];
+  pageVideos: number[][];
   coursePlaylistId: string;
   note?: string;
 };
@@ -24,4 +24,17 @@ export function youtubeWatchUrl(video: CourseVideo) {
 }
 export function youtubePlaylistUrl(id: string) {
   return `https://www.youtube.com/playlist?list=${id}`;
+}
+
+export function videosForPage(topicId: string, page: number): CourseVideo[] {
+  const collection = courseVideos[topicId];
+  return (collection?.pageVideos[page] ?? [])
+    .map((index) => collection.items[index])
+    .filter(Boolean);
+}
+export function videoCount(topicId: string) {
+  const collection = courseVideos[topicId];
+  return new Set(
+    collection?.pageVideos.flat().map((i) => collection.items[i].id) ?? [],
+  ).size;
 }

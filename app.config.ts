@@ -13,6 +13,14 @@ export default {
     plugins: [
       "expo-secure-store",
       "expo-video",
+      [
+        "expo-audio",
+        {
+          microphonePermission: false,
+          recordAudioAndroid: false,
+          enableBackgroundPlayback: false,
+        },
+      ],
       "expo-font",
       "expo-document-picker",
     ],

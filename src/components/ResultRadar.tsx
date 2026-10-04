@@ -1,6 +1,7 @@
 import { useUITheme } from "./ui";
-import React from "react";
-import { View } from "react-native";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { MotionActiveContext, useReducedMotion } from "./Motion";
+import { Animated, Easing, View } from "react-native";
 import Svg, { Circle, Line, Polygon, Text as SvgText } from "react-native-svg";
 import { ReportTemplate, TeacherReport } from "../core/types";
 import { percent } from "../core/reports";
@@ -35,6 +36,39 @@ export function ResultRadar({
   earlier?: TeacherReport;
 }) {
   const { colors, styles } = useUITheme();
+  const active = useContext(MotionActiveContext);
+  const reduced = useReducedMotion();
+  const motion = useRef(new Animated.Value(1)).current;
+  const [growth, setGrowth] = useState(1);
+  useEffect(() => {
+    if (reduced || !active) {
+      motion.setValue(1);
+      setGrowth(1);
+      return;
+    }
+    setGrowth(0);
+    motion.setValue(0);
+    const listener = motion.addListener(({ value }) => setGrowth(value));
+    const animation = Animated.timing(motion, {
+      toValue: 1,
+      duration: 900,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    });
+    animation.start();
+    return () => {
+      animation.stop();
+      motion.removeListener(listener);
+    };
+  }, [
+    active,
+    reduced,
+    report.id,
+    report.revision,
+    earlier?.id,
+    earlier?.revision,
+    motion,
+  ]);
   const n = template.areas.length;
   const point = (i: number, value: number) => {
     const angle = (i * 2 * Math.PI) / n - Math.PI / 2;
@@ -48,7 +82,7 @@ export function ResultRadar({
   );
   const enough = n >= 3 && values.filter((v) => v !== null).length >= 3;
   return (
-    <View style={{ gap: 12, width: "100%" }}>
+    <View testID="result-radar" style={{ gap: 12, width: "100%" }}>
       {enough ? (
         <Svg
           width="100%"
@@ -109,7 +143,7 @@ export function ResultRadar({
             const current = r.id === report.id;
             const points = template.areas.map((a, i) => {
               const v = percent(r.results.find((x) => x.areaId === a.id));
-              return v === null ? null : point(i, v);
+              return v === null ? null : point(i, v * growth);
             });
             return (
               <React.Fragment key={r.id}>
