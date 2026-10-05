@@ -1,3 +1,4 @@
+import { StreakCard } from "../engagement/StreakCard";
 import { courseContent } from "../course/content";
 import { LevelCard } from "../engagement/LevelCard";
 import { SectionTabs } from "../components/SectionTabs";
@@ -192,6 +193,7 @@ export function Home({
           Чему научимся сегодня?
         </Txt>
       </View>
+      <StreakCard />
       <View
         style={{
           backgroundColor: "#304D3D",
@@ -754,6 +756,7 @@ export function Progress({
         <View style={{ gap: 20 }}>
           {view === "activity" && (
             <>
+              <StreakCard />
               <LevelCard />
               {openCourse && <CourseProgress openCourse={openCourse} />}
               {lessonStorageReady && (

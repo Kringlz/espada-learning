@@ -1,3 +1,4 @@
+import { SoundSettings } from "../engagement/SoundSettings";
 import { TeacherContactEditor } from "./Family";
 import { useUITheme } from "../components/ui";
 import { MyGroups } from "../components/Groups";
@@ -61,6 +62,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           ))}
         </View>
       </Card>
+      <SoundSettings />
       {(actor.role === "student" || actor.role === "parent") && (
         <Card>
           <Txt weight="600">

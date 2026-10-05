@@ -1,3 +1,5 @@
+import { useSounds } from "../engagement/Sounds";
+import { Button } from "./ui";
 import { useUITheme } from "./ui";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { MotionActiveContext, useReducedMotion } from "./Motion";
@@ -36,6 +38,8 @@ export function ResultRadar({
   earlier?: TeacherReport;
 }) {
   const { colors, styles } = useUITheme();
+  const { play } = useSounds();
+  const [replay, setReplay] = useState(0);
   const active = useContext(MotionActiveContext);
   const reduced = useReducedMotion();
   const motion = useRef(new Animated.Value(1)).current;
@@ -61,6 +65,7 @@ export function ResultRadar({
       motion.removeListener(listener);
     };
   }, [
+    replay,
     active,
     reduced,
     report.id,
@@ -193,6 +198,20 @@ export function ResultRadar({
             проверки.
           </Txt>
         </View>
+      )}
+      {enough && (
+        <Button
+          small
+          secondary
+          icon="activity"
+          label="Оживить карту результатов"
+          onPress={() => {
+            play("radar");
+            setReplay((value) => value + 1);
+          }}
+        >
+          Оживить карту
+        </Button>
       )}
       {enough && (
         <View

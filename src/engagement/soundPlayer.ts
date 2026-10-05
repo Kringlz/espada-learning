@@ -8,24 +8,31 @@ export function createSoundPlayer() {
     shouldPlayInBackground: false,
     interruptionMode: "mixWithOthers",
   }).catch(() => {});
+  let generation = 0;
   return {
-    play(name: SoundName) {
+    play(name: SoundName, volume: number) {
+      const ticket = ++generation;
       let player = players.get(name);
       if (!player) {
         player = createAudioPlayer(soundAssets[name]);
-        player.volume = 0.45;
+
         players.set(name, player);
       }
+      player.volume = volume;
       for (const item of players.values()) item.pause();
       void player
         .seekTo(0)
-        .then(() => player.play())
+        .then(() => {
+          if (ticket === generation) player.play();
+        })
         .catch(() => {});
     },
     stop() {
+      generation++;
       for (const player of players.values()) player.pause();
     },
     dispose() {
+      generation++;
       for (const player of players.values()) player.remove();
       players.clear();
     },

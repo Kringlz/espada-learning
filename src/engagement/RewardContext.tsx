@@ -6,15 +6,21 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { AppState } from "react-native";
+import {
+  Engagement,
+  engagementStorageKey,
+  parseEngagement,
+  recordEngagement,
+  streakSummary,
+} from "./streaks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLearning } from "../services/context";
 import { useCourseProgress } from "../course/storage";
 import { useSounds } from "./Sounds";
 import {
-  addRewards,
   levelFor,
   levels,
-  parseRewards,
   RewardEvent,
   RewardLedger,
   rewardKey,
@@ -24,6 +30,8 @@ import {
 
 const Context = createContext({
   points: 0,
+  streak: { current: 0, best: 0, today: false, day: "" },
+  timeZone: "",
   ready: false,
   error: "",
   notice: "",
@@ -38,6 +46,9 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
   const { play } = useSounds();
   const [ledger, setLedger] = useState<RewardLedger>({});
   const latest = useRef<RewardLedger>({});
+  const engagement = useRef<Engagement | null>(null);
+  const pending = useRef<{ events: RewardEvent[]; at: Date }[]>([]);
+  const [clock, setClock] = useState(() => new Date());
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -45,20 +56,36 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
   const queue = useRef(Promise.resolve());
   const backfilled = useRef(false);
   const mounted = useRef(true);
-  const key = rewardsStorageKey(actor.id);
+  const key = engagementStorageKey(actor.id);
+  useEffect(() => {
+    const tick = () => setClock(new Date());
+    const timer = setInterval(tick, 30000);
+    const listener = AppState.addEventListener("change", (state) => {
+      if (state === "active") tick();
+    });
+    return () => {
+      clearInterval(timer);
+      listener.remove();
+    };
+  }, []);
   useEffect(() => {
     let live = true;
     mounted.current = true;
-    void AsyncStorage.getItem(key)
-      .then((raw) => {
+    void Promise.all([
+      AsyncStorage.getItem(key),
+      AsyncStorage.getItem(rewardsStorageKey(actor.id)),
+    ])
+      .then(([raw, legacy]) => {
         if (!live) return;
-        latest.current = parseRewards(raw);
+        engagement.current = parseEngagement(raw, legacy);
+        latest.current = engagement.current.rewards;
         setLedger(latest.current);
         setReady(true);
         setError("");
       })
       .catch(() => {
-        if (live) setError("Не удалось загрузить очки. Попробуй ещё раз.");
+        if (live)
+          setError("Не удалось загрузить очки и серию. Попробуй ещё раз.");
       });
     return () => {
       live = false;
@@ -66,7 +93,7 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
     };
   }, [key, reload]);
   const persist = useCallback(
-    (data: RewardLedger) => {
+    (data: Engagement) => {
       const value = JSON.stringify(data);
       const job = queue.current
         .catch(() => {})
@@ -78,31 +105,47 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
         })
         .catch(() => {
           if (mounted.current)
-            setError("Очки ещё не сохранены. Повтори сохранение.");
+            setError("Очки и серия ещё не сохранены. Повтори сохранение.");
         });
     },
     [key],
   );
   const record = useCallback(
-    (events: RewardEvent[], celebrate: boolean) => {
-      if (!ready || actor.role !== "student") return;
+    (events: RewardEvent[], celebrate: boolean, at = new Date()) => {
+      if (actor.role !== "student") return;
+      if (!ready || !engagement.current) {
+        if (celebrate) pending.current.push({ events, at });
+        return;
+      }
       const before = totalPoints(latest.current);
-      const result = addRewards(latest.current, events);
+      const result = recordEngagement(
+        engagement.current,
+        events,
+        celebrate,
+        at,
+      );
       if (!result.gained) return;
-      latest.current = result.ledger;
-      setLedger(result.ledger);
-      persist(result.ledger);
+      engagement.current = result.data;
+      latest.current = result.data.rewards;
+      setLedger(result.data.rewards);
+      setClock(new Date());
+      persist(result.data);
       if (celebrate) {
         const level = levelFor(before + result.gained);
         const promoted = level > levelFor(before);
         setNotice(
-          `+${result.gained} очков${promoted ? ` · Уровень ${level + 1}: ${levels[level].name}!` : " · Так держать!"}`,
+          `+${result.gained} очков${promoted ? ` · Уровень ${level + 1}: ${levels[level].name}!` : result.newDay ? " · День в серии!" : " · Так держать!"}`,
         );
-        play(promoted ? "level" : "success");
+        play(promoted ? "level" : result.newDay ? "streak" : "points");
       }
     },
     [ready, actor.role, persist, play],
   );
+  useEffect(() => {
+    if (!ready) return;
+    for (const item of pending.current.splice(0))
+      record(item.events, true, item.at);
+  }, [ready, record]);
   // Backfill existing correct work quietly. A restart of a quiz never removes earned points.
   useEffect(() => {
     if (!ready || !course.ready || backfilled.current) return;
@@ -147,13 +190,19 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
     <Context.Provider
       value={{
         points: totalPoints(ledger),
+        streak: engagement.current
+          ? streakSummary(engagement.current, clock)
+          : { current: 0, best: 0, today: false, day: "" },
+        timeZone: engagement.current?.timeZone ?? "",
         ready,
         error,
         notice,
         award: (events) => record(events, true),
         earned: (event) => !!ledger[rewardKey(event)],
         retry: () =>
-          ready ? persist(latest.current) : setReload((n) => n + 1),
+          ready && engagement.current
+            ? persist(engagement.current)
+            : setReload((n) => n + 1),
       }}
     >
       {children}
