@@ -22,12 +22,12 @@ jobs:
       CI: "1"
       EXPO_NO_TELEMETRY: "1"
       EXPO_NO_DOTENV: "1"
-      # Settings → Secrets and variables → Actions → repository Variables (or
-      # Secrets): EXPO_PUBLIC_DATA_MODE=supabase, EXPO_PUBLIC_SUPABASE_URL,
-      # EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY. Without them the site stays a demo.
-      EXPO_PUBLIC_DATA_MODE: ${{ vars.EXPO_PUBLIC_DATA_MODE || secrets.EXPO_PUBLIC_DATA_MODE || 'demo' }}
-      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || secrets.EXPO_PUBLIC_SUPABASE_URL }}
-      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || secrets.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      # Public client values only (they ship in the site bundle anyway; RLS
+      # protects data). Never put service-role keys or SMTP passwords here.
+      # Repository variables, if set, override these defaults.
+      EXPO_PUBLIC_DATA_MODE: ${{ vars.EXPO_PUBLIC_DATA_MODE || 'supabase' }}
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://anugktopawgukdxhqvze.supabase.co' }}
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_JePCMPnuVbjTg6ZmGmVfLg_6Hq7SjO1' }}
       APP_ENV: github-pages
     steps:
       - uses: actions/checkout@v6
