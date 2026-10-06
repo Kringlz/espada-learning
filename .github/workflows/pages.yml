@@ -22,12 +22,12 @@ jobs:
       CI: "1"
       EXPO_NO_TELEMETRY: "1"
       EXPO_NO_DOTENV: "1"
-      # Settings → Secrets and variables → Actions → Variables:
-      # EXPO_PUBLIC_DATA_MODE=supabase, EXPO_PUBLIC_SUPABASE_URL,
+      # Settings → Secrets and variables → Actions → repository Variables (or
+      # Secrets): EXPO_PUBLIC_DATA_MODE=supabase, EXPO_PUBLIC_SUPABASE_URL,
       # EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY. Without them the site stays a demo.
-      EXPO_PUBLIC_DATA_MODE: ${{ vars.EXPO_PUBLIC_DATA_MODE || 'demo' }}
-      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
-      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      EXPO_PUBLIC_DATA_MODE: ${{ vars.EXPO_PUBLIC_DATA_MODE || secrets.EXPO_PUBLIC_DATA_MODE || 'demo' }}
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || secrets.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || secrets.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       APP_ENV: github-pages
     steps:
       - uses: actions/checkout@v6
@@ -47,7 +47,13 @@ jobs:
           else
             echo "GITHUB_PAGES_BASE_PATH=/$repository_name" >> "$GITHUB_ENV"
           fi
-      - name: Export the public demo
+      - name: Show backend configuration
+        shell: bash
+        run: |
+          echo "Data mode: $EXPO_PUBLIC_DATA_MODE"
+          echo "Supabase URL set: $([ -n "$EXPO_PUBLIC_SUPABASE_URL" ] && echo yes || echo no)"
+          echo "Supabase key set: $([ -n "$EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY" ] && echo yes || echo no)"
+      - name: Export the site
         run: npm run build:pages
       - name: Upload site artifact
         if: github.event_name != 'pull_request'
