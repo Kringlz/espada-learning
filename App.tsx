@@ -196,7 +196,9 @@ function Welcome({
         <View style={{ maxWidth: 480, width: "100%", gap: 24 }}>
           <View style={[styles.row, { justifyContent: "space-between" }]}>
             <Brand />
-            <ClarityControls />
+            <View style={[styles.row, { gap: 8 }]}>
+              <ClarityControls />
+            </View>
           </View>
           <Card style={{ gap: 20, marginTop: 16 }}>
             <Txt size={30} weight="600">
