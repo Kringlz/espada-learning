@@ -515,7 +515,7 @@ function Management() {
               }
             />
           ))}
-        <Txt weight="600">Students</Txt>
+        <Txt weight="600">Ученики</Txt>
         {s.profiles
           .filter((p) => p.role === "student")
           .map((p) => (
