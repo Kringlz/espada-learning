@@ -1,0 +1,7 @@
+Illustrations by Streamline — https://www.streamlinehq.com
+Collection: Ultimate Colors
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+Source: https://github.com/webalys-hq/streamline-vectors
+Changes: recolored, padded, exported to PNG for Espada.
+See sources.json for individual source URLs.

@@ -1,3 +1,5 @@
+import { topicCover } from "../components/TopicCover";
+import { sectionIllustrations } from "../components/SectionIllustrations";
 import { courseContent } from "../course/content";
 import { LevelCard } from "../engagement/LevelCard";
 import { SectionTabs } from "../components/SectionTabs";
@@ -241,10 +243,20 @@ export function Home({
             </View>
             {!wide && (
               <Image
-                source={require("../../assets/illustrations/learning-hero.png")}
+                source={
+                  title
+                    ? topicCover(title).image
+                    : sectionIllustrations.learning.image
+                }
                 accessible={false}
                 resizeMode="contain"
-                style={{ width: "100%", height: 190, marginVertical: -3 }}
+                style={{
+                  width: "100%",
+                  height: 190,
+                  backgroundColor: "#F7F4E9",
+                  marginVertical: -3,
+                  borderRadius: 20,
+                }}
               />
             )}
             <Txt
@@ -298,10 +310,19 @@ export function Home({
           </View>
           {wide && (
             <Image
-              source={require("../../assets/illustrations/learning-hero.png")}
+              source={
+                title
+                  ? topicCover(title).image
+                  : sectionIllustrations.learning.image
+              }
               accessible={false}
               resizeMode="contain"
-              style={{ width: "43%", height: 310 }}
+              style={{
+                width: "43%",
+                height: 310,
+                borderRadius: 24,
+                backgroundColor: "#F7F4E9",
+              }}
             />
           )}
         </View>
@@ -730,9 +751,17 @@ export function Progress({
     <View
       style={{ gap: 22, maxWidth: 1040, width: "100%", alignSelf: "center" }}
     >
-      <Txt size={32} weight="700" style={{ letterSpacing: -0.8 }}>
-        {actor.role === "student" ? "Мой прогресс" : "Прогресс ученика"}
-      </Txt>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+        <Txt size={32} weight="700" style={{ letterSpacing: -0.8, flex: 1 }}>
+          {actor.role === "student" ? "Мой прогресс" : "Прогресс ученика"}
+        </Txt>
+        <Image
+          source={sectionIllustrations.progress.image}
+          accessible={false}
+          resizeMode="contain"
+          style={{ width: 88, height: 88, borderRadius: 16 }}
+        />
+      </View>
       <SectionTabs
         value={view}
         onChange={setView}

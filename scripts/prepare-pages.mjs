@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, cpSync } from "node:fs";
 import { resolve } from "node:path";
 
 const base = (process.env.GITHUB_PAGES_BASE_PATH ?? "").replace(/\/$/, "");
@@ -18,6 +18,12 @@ if (!assets.some((asset) => asset.endsWith(".js")))
 writeFileSync("dist/.nojekyll", "");
 // The app currently uses in-memory navigation. Preserve entry loading if a URL path is shared.
 writeFileSync("dist/404.html", html);
+// Publish the standalone design preview with the same locally bundled artwork.
+cpSync("design-lab", "dist/design-lab", {
+  recursive: true,
+  filter: (source) =>
+    !/\/(?:README\.md|section-illustrations-preview\.png|clarity-garden-prompt\.txt)$/.test(source),
+});
 console.log(
   `Verified ${assets.length} root assets for ${base || "/"}; GitHub Pages files ready.`,
 );

@@ -758,7 +758,7 @@ function Shell() {
                     </Txt>
                   </View>
                   {desktop && <Txt size={13}>{actor.name.split(" ")[0]}</Txt>}
-                  <Icon name="chevron-down" size={15} />
+                  {width >= 360 && <Icon name="chevron-down" size={15} />}
                 </Pressable>
               </View>
             </View>

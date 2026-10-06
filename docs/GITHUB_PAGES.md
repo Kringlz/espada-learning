@@ -2,6 +2,8 @@
 
 - Repository: [Kringlz/espada-learning](https://github.com/Kringlz/espada-learning)
 - Website: [Espada Learning](https://kringlz.github.io/espada-learning/)
+- Design preview: [Espada · Линия](https://kringlz.github.io/espada-learning/design-lab/preview.html?v=m)
+- [Section illustrations](https://kringlz.github.io/espada-learning/design-lab/illustrations.html)
 
 The public repository contains the app source, tests, migrations and documentation. Build output,
 local records, uploaded videos, credentials and the original private brief are not committed.

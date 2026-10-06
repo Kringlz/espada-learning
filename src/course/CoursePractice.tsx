@@ -1,7 +1,8 @@
+import { sectionIllustrations } from "../components/SectionIllustrations";
 import { useRewards } from "../engagement/RewardContext";
 import { Confetti, SoftReveal } from "../components/Motion";
 import React, { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 import {
   Button,
   Card,
@@ -97,10 +98,11 @@ export function CoursePractice({
   if (summary)
     return (
       <Card style={{ gap: 22 }}>
-        <Icon
-          name={stats.incorrect ? "book-open" : "check-circle"}
-          size={36}
-          color={colors.green}
+        <Image
+          source={sectionIllustrations.practice.image}
+          accessible={false}
+          resizeMode="contain"
+          style={{ width: 120, height: 120, borderRadius: 20 }}
         />
         <Txt size={28} weight="700">
           {stats.answered === questions.length

@@ -1,5 +1,6 @@
+import { sectionIllustrations } from "../components/SectionIllustrations";
 import React from "react";
-import { View } from "react-native";
+import { Image, View } from "react-native";
 import {
   Button,
   Card,
@@ -37,7 +38,12 @@ export function LevelCard() {
             alignItems: "center",
           }}
         >
-          <Icon name={level.icon} color={colors.green} size={27} />
+          <Image
+            source={sectionIllustrations.league.image}
+            accessible={false}
+            resizeMode="contain"
+            style={{ width: 56, height: 56, borderRadius: 14 }}
+          />
         </View>
         <View style={{ flex: 1, gap: 3 }}>
           <Txt size={12} color={colors.muted}>

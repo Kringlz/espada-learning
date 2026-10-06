@@ -2,7 +2,7 @@ import { TeacherContactEditor } from "./Family";
 import { useUITheme } from "../components/ui";
 import { MyGroups } from "../components/Groups";
 import React, { useState } from "react";
-import { View } from "react-native";
+import { Linking, View } from "react-native";
 import { useLearning } from "../services/context";
 import { uid } from "../core/ids";
 import { Button, Card, Txt, Pill, colors, styles } from "../components/ui";
@@ -103,6 +103,26 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           teacher can see completed checks and choose a useful next step.
         </Txt>
       </Card>
+      <View style={{ gap: 4 }}>
+        <Txt
+          size={12}
+          color={colors.muted}
+          accessibilityRole="link"
+          onPress={() => void Linking.openURL("https://www.streamlinehq.com")}
+        >
+          Иллюстрации: Streamline · цвета адаптированы для Espada
+        </Txt>
+        <Txt
+          size={12}
+          color={colors.muted}
+          accessibilityRole="link"
+          onPress={() =>
+            void Linking.openURL("https://creativecommons.org/licenses/by/4.0/")
+          }
+        >
+          Лицензия CC BY 4.0
+        </Txt>
+      </View>
       <Card>
         <Txt size={20} weight="600">
           Your data

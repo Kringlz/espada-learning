@@ -70,7 +70,7 @@ export function VisualCard({
             <Image
               source={cover.image}
               accessible={false}
-              resizeMode="cover"
+              resizeMode="contain"
               style={{
                 width: horizontal ? 108 : "100%",
                 height: horizontal ? 108 : compact ? 140 : 175,

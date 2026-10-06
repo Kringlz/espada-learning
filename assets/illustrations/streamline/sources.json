@@ -1,0 +1,22 @@
+{
+  "author": "Streamline",
+  "collection": "Ultimate Colors",
+  "website": "https://www.streamlinehq.com",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "sourceRepository": "https://github.com/webalys-hq/streamline-vectors",
+  "retrieved": "2026-10-07",
+  "modifications": "Recolored to Espada palette; added uniform padding; PNG exports for native apps. Original vector paths preserved.",
+  "assets": {
+    "numbers": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/money-payments-finance/accounting-calculator-1.svg",
+    "algebra": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/interface-essential/study-exam-math.svg",
+    "geometry": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/design/design-tool-compass.svg",
+    "fractions": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/business-products/analytics-pie-2.svg",
+    "graphs": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/business-products/analytics-board-graph-line.svg",
+    "probability": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/interface-essential/graph-stats-circle.svg",
+    "learning": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/content/book-open-bookmark.svg",
+    "practice": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/design/design-tool-pencil-ruler.svg",
+    "league": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/social-medias-rewards-rating/award-trophy-1.svg",
+    "ratio": "https://github.com/webalys-hq/streamline-vectors/blob/main/ultimate/colors/shopping-ecommerce/discount.svg"
+  }
+}
