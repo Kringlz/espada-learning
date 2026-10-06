@@ -8,19 +8,22 @@ insert into public.assessments select '00000000-0000-4000-8000-000000000452',stu
 insert into public.report_templates values('00000000-0000-4000-8000-000000000453','00000000-0000-4000-8000-000000000453',1,'{}');
 insert into public.teacher_reports values('00000000-0000-4000-8000-000000000454','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000453','draft',1,'{"id":"00000000-0000-4000-8000-000000000454","studentId":"00000000-0000-4000-8000-000000000001","status":"draft"}');
 insert into public.teacher_reports values('00000000-0000-4000-8000-000000000455','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000453','published',1,'{"id":"00000000-0000-4000-8000-000000000455","studentId":"00000000-0000-4000-8000-000000000001","status":"published"}');
+-- Codes are handed over in person; staff cannot read other accounts' codes under RLS.
+select set_config('test.parent_code',(select code from public.profiles where id='00000000-0000-4000-8000-000000000450'),true);
+select set_config('test.student_code',(select code from public.profiles where id='00000000-0000-4000-8000-000000000451'),true);
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000450',true);
 select pg_temp.assert_true((public.load_learning_state()->'profiles')=jsonb_build_array(jsonb_build_object('id',auth.uid(),'name','Родитель','role','parent','active',true,'code',(select code from public.profiles where id=auth.uid()))),'unlinked parent only sees self');
-select pg_temp.assert_denied($q$select public.learning_command(jsonb_build_object('type','linkParent','parentCode',(select code from public.profiles where id='00000000-0000-4000-8000-000000000450'),'studentId','00000000-0000-4000-8000-000000000001'))$q$);
+select pg_temp.assert_denied($q$select public.learning_command(jsonb_build_object('type','linkParent','parentCode',current_setting('test.parent_code'),'studentId','00000000-0000-4000-8000-000000000001'))$q$);
 select pg_temp.assert_denied($q$select public.learning_command_v6('{"type":"saveReport"}')$q$);
 select pg_temp.assert_denied($q$select public.load_learning_state_v6()$q$);
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000005',true);
-select pg_temp.assert_denied($q$select public.learning_command(jsonb_build_object('type','linkParent','parentCode',(select code from public.profiles where id='00000000-0000-4000-8000-000000000450'),'studentId','00000000-0000-4000-8000-000000000001'))$q$);
-select pg_temp.assert_denied($q$select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000006','studentCode',(select code from public.profiles where id='00000000-0000-4000-8000-000000000451')))$q$);
+select pg_temp.assert_denied($q$select public.learning_command(jsonb_build_object('type','linkParent','parentCode',current_setting('test.parent_code'),'studentId','00000000-0000-4000-8000-000000000001'))$q$);
+select pg_temp.assert_denied($q$select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000006','studentCode',current_setting('test.student_code')))$q$);
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
-select public.learning_command(jsonb_build_object('type','linkParent','parentCode',(select code from public.profiles where id='00000000-0000-4000-8000-000000000450'),'studentId','00000000-0000-4000-8000-000000000001'));
-select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000006','studentCode',(select code from public.profiles where id='00000000-0000-4000-8000-000000000451')));
-select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000006','studentCode',(select code from public.profiles where id='00000000-0000-4000-8000-000000000451')));
+select public.learning_command(jsonb_build_object('type','linkParent','parentCode',current_setting('test.parent_code'),'studentId','00000000-0000-4000-8000-000000000001'));
+select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000006','studentCode',current_setting('test.student_code')));
+select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000006','studentCode',current_setting('test.student_code')));
 select pg_temp.assert_true((select count(*)=1 from public.class_memberships where profile_id='00000000-0000-4000-8000-000000000451'),'enrollment is idempotent');
 select public.learning_command('{"type":"saveTeacherContact","contact":{"teacherId":"00000000-0000-4000-8000-000000000003","email":"teacher@example.com","phone":"","hours":"По будням"}}');
 select pg_temp.assert_denied($q$select public.learning_command('{"type":"saveTeacherContact","contact":{"teacherId":"00000000-0000-4000-8000-000000000005","email":"teacher@example.com","phone":"","hours":""}}')$q$);
@@ -39,7 +42,7 @@ select pg_temp.assert_denied($q$select public.learning_command('{"type":"assignG
 select pg_temp.assert_denied($q$select public.learning_command('{"type":"saveActivity"}')$q$);
 select pg_temp.assert_denied($q$update public.parent_links set verified_at=now()$q$);
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
-select public.learning_command(jsonb_build_object('type','linkParent','parentCode',(select code from public.profiles where id='00000000-0000-4000-8000-000000000450'),'studentId','00000000-0000-4000-8000-000000000001','remove',true));
+select public.learning_command(jsonb_build_object('type','linkParent','parentCode',current_setting('test.parent_code'),'studentId','00000000-0000-4000-8000-000000000001','remove',true));
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000450',true);
 select pg_temp.assert_true((select count(*)=0 from public.teacher_reports),'revocation removes access');
 select pg_temp.assert_true(jsonb_array_length(public.load_learning_state()->'classes')=0,'revocation removes group access');

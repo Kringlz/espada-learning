@@ -9,6 +9,9 @@ insert into auth.users values
  ('00000000-0000-4000-8000-000000000903'),
  ('00000000-0000-4000-8000-000000000904'),
  ('00000000-0000-4000-8000-000000000905');
+-- Codes are handed over in person; a new account cannot read them under RLS.
+select set_config('test.group_code',(select join_code from public.classes where id='00000000-0000-4000-8000-000000000006'),true);
+select set_config('test.student_code',(select code from public.profiles where id='00000000-0000-4000-8000-000000000001'),true);
 set local role authenticated;
 
 -- A session with no profile yet cannot read learning state.
@@ -28,13 +31,13 @@ select pg_temp.assert_true((select count(*)=0 from public.profiles where id='000
 -- Student self-registration by a bad group code is rejected; a good one enrolls them.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000901',true);
 select pg_temp.assert_denied($q$select public.register_profile('Новый ученик','student','ZZZZZZZ')$q$);
-select public.register_profile('Новый ученик','student',(select join_code from public.classes where id='00000000-0000-4000-8000-000000000006'));
+select public.register_profile('Новый ученик','student',current_setting('test.group_code'));
 select pg_temp.assert_true((select count(*)=1 from public.class_memberships where class_id='00000000-0000-4000-8000-000000000006' and profile_id='00000000-0000-4000-8000-000000000901'),'student joins group by code');
 
 -- Parent self-registration by a bad student code is rejected; a good one links them.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000902',true);
 select pg_temp.assert_denied($q$select public.register_profile('Новый родитель','parent','ZZZZZZZ')$q$);
-select public.register_profile('Новый родитель','parent',(select code from public.profiles where id='00000000-0000-4000-8000-000000000001'));
+select public.register_profile('Новый родитель','parent',current_setting('test.student_code'));
 select pg_temp.assert_true((select count(*)=1 from public.parent_links where parent_id='00000000-0000-4000-8000-000000000902' and student_id='00000000-0000-4000-8000-000000000001' and verified_at is not null),'parent links by student code');
 
 -- A teacher creates their own group and receives a join code.
