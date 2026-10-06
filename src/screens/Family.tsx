@@ -1,3 +1,4 @@
+import { LearnerSnapshot } from "../components/ClarityWorkspace";
 import React, { useState, useEffect } from "react";
 import { Linking, View } from "react-native";
 import { useLearning } from "../services/context";
@@ -43,8 +44,8 @@ export function Parent({ tab }: { tab: string }) {
         </Txt>
         <Txt color={colors.muted}>
           Чтобы увидеть прогресс ребёнка, укажите код его профиля при
-          регистрации нового аккаунта, или попросите учителя привязать
-          аккаунт по этому коду вручную.
+          регистрации нового аккаунта, или попросите учителя привязать аккаунт
+          по этому коду вручную.
         </Txt>
       </Card>
     );
@@ -77,7 +78,6 @@ export function Parent({ tab }: { tab: string }) {
   return (
     <View style={{ gap: 22 }}>
       <View style={{ gap: 8 }}>
-        <Pill>Кабинет родителя</Pill>
         <Txt size={30} weight="700">
           {child.name}
         </Txt>
@@ -106,7 +106,11 @@ export function Parent({ tab }: { tab: string }) {
         </Txt>
       </View>
       {tab === "FamilyProgress" && (
-        <Progress key={child.id} studentId={child.id} openTopic={setTopicId} />
+        <LearnerSnapshot
+          key={child.id}
+          studentId={child.id}
+          details={<Progress studentId={child.id} openTopic={setTopicId} />}
+        />
       )}
       {tab === "Homework" && (
         <>
@@ -221,8 +225,8 @@ export function GroupEnrollment({ classId }: { classId: string }) {
   return (
     <Disclosure title="Добавить ученика" icon="user-plus">
       <Txt color={colors.muted}>
-        Попросите ученика передать код из его профиля (или он может сам
-        вступить в группу по коду группы при регистрации).
+        Попросите ученика передать код из его профиля (или он может сам вступить
+        в группу по коду группы при регистрации).
       </Txt>
       <Field
         label="Код ученика"
@@ -339,10 +343,7 @@ export function TeacherContactEditor() {
   const [message, setMessage] = useState("");
   const [failed, setFailed] = useState(false);
   return (
-    <Card>
-      <Txt size={22} weight="600">
-        Контакты для родителей
-      </Txt>
+    <Disclosure title="Контакты для родителей" icon="phone">
       <Txt color={colors.muted}>Их увидят семьи учеников ваших групп.</Txt>
       <Field
         label="Email для связи"
@@ -390,6 +391,6 @@ export function TeacherContactEditor() {
       {!!message && (
         <Notice tone={failed ? "error" : "success"}>{message}</Notice>
       )}
-    </Card>
+    </Disclosure>
   );
 }

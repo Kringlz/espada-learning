@@ -19,9 +19,9 @@ function topicIllustration(title, subject = "") {
 }
 
 const sectionArtKeys = {decimals:'fractions',percent:'ratio',motion:'algebra',powers:'algebra',sequences:'algebra',trigonometry:'algebra',calculus:'graphs',stereometry:'geometry',progress:'probability',graph:'graphs',equations:'algebra',decimal:'fractions'};
-function sectionArtPath(kind) { return `assets/streamline/${sectionArtKeys[kind] || kind}.svg`; }
+function sectionArtPath(kind) { return `assets/atlas/${["league","learning"].includes(kind) ? "ratio" : (sectionArtKeys[kind] || kind)}.jpg`; }
 function flatArt(kind, className = 'm-flat-art') {
-  return `<img class="${className}" src="${sectionArtPath(kind)}" alt="" width="680" height="680" loading="lazy" decoding="async">`;
+  return `<span class="${className} m-atlas-art atlas-${sectionArtKeys[kind] || kind}" aria-hidden="true"><img src="${sectionArtPath(kind)}" alt="" loading="lazy" decoding="async"></span>`;
 }
 function flatTopicRow(t, index) {
   const art = flatArt(topicIllustration(t.title), 'm-catalog-art');

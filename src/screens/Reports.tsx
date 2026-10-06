@@ -1,3 +1,6 @@
+import { AtlasImage } from "../components/AtlasImage";
+import { ClarityProgress } from "../components/ClarityProgress";
+import { KnowledgePreview } from "../components/ClarityCards";
 import { topicCover } from "../components/TopicCover";
 import { sectionIllustrations } from "../components/SectionIllustrations";
 import { courseContent } from "../course/content";
@@ -15,7 +18,6 @@ import { CourseLibrary } from "../course/CourseLibrary";
 import { LessonLibrary } from "../lessons/LessonLibrary";
 import React, { useEffect, useState } from "react";
 import { Image, Pressable, View, useWindowDimensions } from "react-native";
-import { VisualCard } from "../components/VisualCard";
 import { ResultRadar } from "../components/ResultRadar";
 import { LatestReport } from "../components/LatestReport";
 import { useLearning } from "../services/context";
@@ -139,8 +141,6 @@ export function Home({
   const { colors, styles } = useUITheme();
   const { state: s, actor } = useLearning();
   const storage = useCourseProgress(actor.id);
-  const latest = reportsFor(s, actor.id)[0];
-  const template = s.reportTemplates?.find((t) => t.id === latest?.templateId);
   const homework = s.assignments
     .filter((a) => a.studentId === actor.id && !a.completedAt)
     .sort((a, b) => Number(b.override) - Number(a.override));
@@ -186,167 +186,110 @@ export function Home({
     <View
       style={{ gap: 24, maxWidth: 1040, width: "100%", alignSelf: "center" }}
     >
-      <View style={{ gap: 5 }}>
-        <Txt size={wide ? 38 : 29} weight="700" style={{ letterSpacing: -0.9 }}>
-          Привет, {actor.name.split(" ")[0]}!
-        </Txt>
-        <Txt size={16} color={colors.muted}>
-          Чему научимся сегодня?
-        </Txt>
+      <View
+        style={{
+          flexDirection: wide ? "row" : "column",
+          alignItems: wide ? "center" : "flex-start",
+          justifyContent: "space-between",
+          gap: 20,
+        }}
+      >
+        <View style={{ gap: 12, flex: wide ? 1 : undefined }}>
+          <Txt size={15} weight="600" color={colors.muted}>
+            ✦ Сегодня будет интересно
+          </Txt>
+          <Txt
+            accessibilityRole="header"
+            size={wide ? 44 : 33}
+            weight="700"
+            style={{ letterSpacing: -1 }}
+          >
+            Привет, {actor.name.split(" ")[0]}!
+          </Txt>
+        </View>
       </View>
       <View
         style={{
-          backgroundColor: "#304D3D",
-          borderRadius: 32,
-          overflow: "hidden",
+          backgroundColor: colors.light,
+          borderWidth: 1,
+          borderColor: colors.line,
+          borderRadius: 28,
           padding: wide ? 36 : 24,
+          flexDirection: wide ? "row" : "column",
+          gap: 24,
+          alignItems: "center",
         }}
       >
         <View
           style={{
-            flexDirection: wide ? "row" : "column",
-            alignItems: wide ? "center" : "stretch",
-            gap: wide ? 20 : 0,
+            flex: wide ? 1 : undefined,
+            width: wide ? undefined : "100%",
+            gap: 20,
           }}
         >
-          <View
-            style={{
-              flex: wide ? 1 : undefined,
-              gap: wide ? 22 : 16,
-              zIndex: 1,
-            }}
+          <Txt
+            size={13}
+            weight="700"
+            color={colors.muted}
+            style={{ letterSpacing: 1.2 }}
           >
-            <View
-              style={{
-                alignSelf: "flex-start",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <View
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 4,
-                  backgroundColor: "#D9E5A8",
-                }}
-              />
-              <Txt
-                size={12}
-                weight="700"
-                color="#D9E5A8"
-                style={{ letterSpacing: 1 }}
-              >
-                {first ? "ЗАДАНИЕ ОТ УЧИТЕЛЯ" : "ТВОЙ СЛЕДУЮЩИЙ ШАГ"}
-              </Txt>
-            </View>
-            {!wide && (
-              <Image
-                source={
-                  title
-                    ? topicCover(title).image
-                    : sectionIllustrations.learning.image
-                }
-                accessible={false}
-                resizeMode="contain"
-                style={{
-                  width: "100%",
-                  height: 190,
-                  backgroundColor: "#F7F4E9",
-                  marginVertical: -3,
-                  borderRadius: 20,
-                }}
-              />
-            )}
-            <Txt
-              size={wide ? 40 : 28}
-              weight="700"
-              color="#FBF8E9"
-              style={{ lineHeight: wide ? 46 : 33, letterSpacing: -0.8 }}
-            >
-              {last || activity || first
-                ? title?.split(":")[0]
-                : "Большие открытия.\nМаленькими шагами."}
-            </Txt>
-            {useCourse && !first && (
-              <Txt size={14} color="#CCD6BD">
-                Часть {(storage.progress[last.id]?.page ?? 0) + 1} из{" "}
-                {last.pages.length}
-              </Txt>
-            )}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={
-                first
-                  ? "Начать задание"
-                  : last || activity
-                    ? "Продолжить урок"
-                    : "Выбрать тему"
-              }
-              onPress={start}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 24,
-                backgroundColor: colors.light,
-                borderRadius: 18,
-                paddingVertical: 17,
-                paddingHorizontal: 22,
-                alignSelf: wide ? "flex-start" : "stretch",
-                opacity: pressed ? 0.8 : 1,
-              })}
-            >
-              <Txt size={17} weight="700" color={colors.ink}>
-                {first
-                  ? "Начать задание"
-                  : last || activity
-                    ? "Продолжить"
-                    : "Начать учиться"}
-              </Txt>
-              <Icon name="arrow-right" size={20} color={colors.ink} />
-            </Pressable>
-          </View>
-          {wide && (
-            <Image
-              source={
-                title
-                  ? topicCover(title).image
-                  : sectionIllustrations.learning.image
-              }
-              accessible={false}
-              resizeMode="contain"
-              style={{
-                width: "43%",
-                height: 310,
-                borderRadius: 24,
-                backgroundColor: "#F7F4E9",
-              }}
-            />
-          )}
+            {first ? "ЗАДАНИЕ ОТ УЧИТЕЛЯ" : "ТВОЁ СЛЕДУЮЩЕЕ ОТКРЫТИЕ"}
+          </Txt>
+          <Txt
+            accessibilityRole="header"
+            size={wide ? 38 : 29}
+            weight="700"
+            style={{ lineHeight: wide ? 46 : 36, letterSpacing: -0.7 }}
+          >
+            {last || activity || first
+              ? title?.split(":")[0]
+              : "Большие открытия.\nМаленькими шагами."}
+          </Txt>
+          <Button onPress={start} icon="arrow-right">
+            {first
+              ? "Открыть задание"
+              : last || activity
+                ? "Вернуться к уроку"
+                : "Начать открытие"}
+          </Button>
+        </View>
+        <AtlasImage
+          source={
+            title
+              ? topicCover(title).image
+              : sectionIllustrations.learning.image
+          }
+          accessible={false}
+          resizeMode="contain"
+          style={{
+            width: wide ? "40%" : "100%",
+            height: wide ? 220 : 120,
+            borderRadius: 24,
+          }}
+        />
+      </View>
+      <View
+        style={{
+          flexDirection: wide ? "row" : "column",
+          alignItems: "stretch",
+          gap: 20,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <LevelCard compact onPress={() => navigate("Progress")} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <KnowledgePreview compact onPress={() => navigate("Progress")} />
         </View>
       </View>
-      <View style={{ flexDirection: "row", gap: wide ? 20 : 12 }}>
-        <VisualCard
-          title="Все темы"
-          caption="Выбери своё открытие"
-          kind="numbers"
-          compact={!wide}
-          onPress={() => navigate("Learn")}
-        />
-        <VisualCard
-          title="Мой прогресс"
-          caption={
-            latest && template
-              ? `Последняя оценка: ${latest.grade} из ${template.scale.max}${latest.demo ? " · демо" : ""}`
-              : "Твоя карта знаний"
-          }
-          kind="compass"
-          compact={!wide}
-          onPress={() => navigate("Progress")}
-        />
-      </View>
+      <Button
+        fullWidth
+        secondary
+        icon="book-open"
+        onPress={() => navigate("Learn")}
+      >
+        Все темы
+      </Button>
       {(homework.length > 0 || !!done.length) && (
         <Disclosure
           title={`Мои задания · ${homework.length + done.length}`}
@@ -394,59 +337,32 @@ export function Learn({
   active?: boolean;
 }) {
   const [reading, setReading] = useState(false);
-  const [section, setSection] = useState<
-    "course" | "videos" | "practice" | "tests"
-  >("course");
-  useEffect(() => {
-    setSection("course");
-  }, [courseRequest]);
-  useScreenScroll(`learn:${section}`);
+  useScreenScroll("learn");
   return (
     <View
-      style={{ gap: 20, maxWidth: 1040, width: "100%", alignSelf: "center" }}
+      style={{ gap: 24, maxWidth: 1040, width: "100%", alignSelf: "center" }}
     >
       {!reading && (
-        <>
-          <Txt size={32} weight="700" style={{ letterSpacing: -0.8 }}>
-            Учиться
-          </Txt>
-          <SectionTabs
-            value={section}
-            onChange={setSection}
-            options={[
-              { value: "course", label: "Учебник", icon: "book-open" },
-              { value: "videos", label: "Видео", icon: "play-circle" },
-              { value: "practice", label: "Практика", icon: "edit-3" },
-              ...(lessonStorageReady
-                ? [
-                    {
-                      value: "tests" as const,
-                      label: "Тесты",
-                      icon: "check-circle" as const,
-                    },
-                  ]
-                : []),
-            ]}
-          />
-        </>
+        <Txt size={34} weight="700" style={{ letterSpacing: -0.8 }}>
+          Твой маршрут
+        </Txt>
       )}
-      <SoftReveal changeKey={section} active={active}>
-        <SoftReveal
-          active={section === "course" || section === "videos"}
-          style={{
-            display:
-              section === "course" || section === "videos" ? "flex" : "none",
-          }}
-        >
-          <CourseLibrary
-            onTopicChange={setReading}
-            request={courseRequest}
-            mode={section === "videos" ? "videos" : "course"}
-          />
-        </SoftReveal>
-        {section === "practice" && <TopicTree openTopic={openTopic} />}
-        {section === "tests" && <LessonLibrary />}
-      </SoftReveal>
+      <CourseLibrary
+        onTopicChange={setReading}
+        request={courseRequest}
+        extras={
+          <View style={{ gap: 16 }}>
+            <Disclosure title="Темы от учителя" icon="book-open">
+              <TopicTree openTopic={openTopic} />
+            </Disclosure>
+            {lessonStorageReady && (
+              <Disclosure title="Задания от учителя" icon="check-circle">
+                <LessonLibrary />
+              </Disclosure>
+            )}
+          </View>
+        }
+      />
     </View>
   );
 }
@@ -747,6 +663,18 @@ export function Progress({
         openTopic={openTopic}
       />
     );
+  if (personal && view === "activity")
+    return (
+      <ClarityProgress
+        openCourse={openCourse}
+        openResult={openResult ?? setLocalDetail}
+        details={() => setView("topics")}
+      >
+        {lessonStorageReady && (
+          <TestProgress active={active} open={setTestAttempt} />
+        )}
+      </ClarityProgress>
+    );
   return (
     <View
       style={{ gap: 22, maxWidth: 1040, width: "100%", alignSelf: "center" }}
@@ -755,13 +683,23 @@ export function Progress({
         <Txt size={32} weight="700" style={{ letterSpacing: -0.8, flex: 1 }}>
           {actor.role === "student" ? "Мой прогресс" : "Прогресс ученика"}
         </Txt>
-        <Image
+        <AtlasImage
           source={sectionIllustrations.progress.image}
           accessible={false}
           resizeMode="contain"
           style={{ width: 88, height: 88, borderRadius: 16 }}
         />
       </View>
+      {personal && (
+        <Button
+          small
+          secondary
+          icon="arrow-left"
+          onPress={() => setView("activity")}
+        >
+          Мои успехи
+        </Button>
+      )}
       <SectionTabs
         value={view}
         onChange={setView}
@@ -784,6 +722,7 @@ export function Progress({
           {view === "activity" && (
             <>
               <LevelCard />
+              <KnowledgePreview onPress={() => setView("reports")} />
               {openCourse && <CourseProgress openCourse={openCourse} />}
               {lessonStorageReady && (
                 <Disclosure title="Результаты тестов" icon="check-circle">

@@ -1,42 +1,41 @@
-# GitHub repository and free demo hosting
+# Espada: публикация приложения
 
-- Repository: [Kringlz/espada-learning](https://github.com/Kringlz/espada-learning)
-- Website: [Espada Learning](https://kringlz.github.io/espada-learning/)
-- Design preview: [Espada · Линия](https://kringlz.github.io/espada-learning/design-lab/preview.html?v=m)
-- [Section illustrations](https://kringlz.github.io/espada-learning/design-lab/illustrations.html)
+- Репозиторий: [Kringlz/espada-learning](https://github.com/Kringlz/espada-learning)
+- Рабочее приложение: [Espada](https://kringlz.github.io/espada-learning/)
+- Отдельная площадка дизайна: [макеты](https://kringlz.github.io/espada-learning/design-lab/preview.html?v=i)
 
-The public repository contains the app source, tests, migrations and documentation. Build output,
-local records, uploaded videos, credentials and the original private brief are not committed.
-The release history starts in [CHANGELOG.md](../CHANGELOG.md).
+GitHub Pages обслуживает интерфейс, Supabase — регистрацию, вход, группы,
+связи родителей с детьми, задания и результаты работ. Публикация использует
+`EXPO_PUBLIC_DATA_MODE=supabase`; переключение учебных аккаунтов в ней недоступно.
+Секреты, локальные записи и исходный частный бриф не входят в репозиторий.
 
-## Deployment
+## Выпуск
 
-In repository Settings → Pages, set Source to **GitHub Actions**. The workflow
-`.github/workflows/pages.yml` checks types and tests, builds the public local-data demo and deploys
-it on pushes to `main`. Pull requests build and check without publishing. It uses GitHub's
-short-lived deployment token; no personal access token or cloud secret belongs in this repository.
+Workflow `.github/workflows/pages.yml` при push в `main` проверяет типы,
+модульные тесты и изоляцию данных на временной PostgreSQL, собирает Expo web
+и публикует сайт. Pull request выполняет проверки без публикации.
+В Settings → Pages выбран источник **GitHub Actions**.
 
-The project path is derived from the repository name, for example `/espada-learning`.
-`app.config.ts` supplies that path to Expo, including scripts, fonts and bundled assets.
-Ordinary local development uses the domain root. A renamed repository is handled by the next build.
+URL и публичный клиентский ключ Supabase заданы в настройках сборки.
+Привилегированный `service_role` ключ никогда не включается в браузерную сборку.
+Путь `/espada-learning` определяется по имени репозитория и применяется
+к скриптам, шрифтам, иллюстрациям и звукам.
 
-Local reproduction:
+## Локальная проверка
 
 ```sh
 npm ci
 npm run check
-EXPO_NO_DOTENV=1 EXPO_PUBLIC_DATA_MODE=demo GITHUB_PAGES_BASE_PATH=/espada-learning npm run build:pages
+EXPO_NO_DOTENV=1 EXPO_PUBLIC_DATA_MODE=demo npm run build:web
 ```
 
-## Scope
+Это отдельный локальный деморежим с синтетическими аккаунтами всех ролей.
+Он не изменяет рабочую базу. Для проверки подключённой сборки используйте
+публичные параметры своего Supabase и `EXPO_PUBLIC_DATA_MODE=supabase`.
 
-Pages is static web hosting. The hosted app starts with synthetic demo accounts and keeps
-changes/videos in that visitor's browser. It does not sync teacher/student devices, store real
-accounts centrally or replace Supabase Auth/PostgreSQL/Storage. Localhost demo data is not copied
-to the public site. Clearing the site's browser storage removes that visitor's demo data.
+## Хранение прогресса
 
-Do not enter real student records into this public demo. For a real pilot, configure the separate
-backend described in [BACKEND.md](BACKEND.md) and change the hosting environment deliberately.
-
-On GitHub Free, Pages requires a public repository. Reference:
-https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+Группы, задания, учительские отчёты и проверки хранятся в существующей базе.
+Чтение встроенного курса и журнал игровых очков используют прежнее локальное
+хранилище с отдельным ключом на аккаунт. Их серверная синхронизация не является
+частью обновления дизайна. Данные localhost не переносятся на домен Pages.

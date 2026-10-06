@@ -1,13 +1,15 @@
+import { ClarityControls } from "./src/components/ClarityControls";
+import { LessonFocus, FocusedLesson } from "./src/components/LessonFocus";
 import { SoundProvider, useSounds } from "./src/engagement/Sounds";
 import { RewardsProvider } from "./src/engagement/RewardContext";
 import { RewardNotice } from "./src/engagement/LevelCard";
 import { SoftReveal } from "./src/components/Motion";
 import { Parent } from "./src/screens/Family";
 import { useUITheme } from "./src/components/ui";
-import { ThemeProvider } from "./src/theme/Theme";
+import { ClarityThemeProvider, ThemeProvider } from "./src/theme/Theme";
 import { Brand } from "./src/components/Brand";
 import { CourseProgressProvider } from "./src/course/storage";
-import { ScreenScroll } from "./src/components/ScreenScroll";
+import { ScreenAnchor, ScreenScroll } from "./src/components/ScreenScroll";
 import { isLessonPreview } from "./src/lessons/service";
 import { ReportDetail } from "./src/screens/Reports";
 import { errorMessage } from "./src/i18n/errors";
@@ -59,13 +61,15 @@ const navIcons: Record<string, any> = {
 export default function App() {
   return (
     <ThemeProvider>
-      <SoundProvider>
-        <SafeAreaProvider>
-          <LearningProvider fallback={(props) => <Welcome {...props} />}>
-            <Workspace />
-          </LearningProvider>
-        </SafeAreaProvider>
-      </SoundProvider>
+      <ClarityThemeProvider>
+        <SoundProvider>
+          <SafeAreaProvider>
+            <LearningProvider fallback={(props) => <Welcome {...props} />}>
+              <Workspace />
+            </LearningProvider>
+          </SafeAreaProvider>
+        </SoundProvider>
+      </ClarityThemeProvider>
     </ThemeProvider>
   );
 }
@@ -180,241 +184,256 @@ function Welcome({
     busy || !name.trim() || (role !== "teacher" && !code.trim());
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
-      <View
-        style={{
-          flex: 1,
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          flexGrow: 1,
           justifyContent: "center",
           alignItems: "center",
           padding: 24,
         }}
       >
-        <Card style={{ maxWidth: 470, width: "100%", gap: 20 }}>
-          <Brand />
-          <Txt size={30} weight="600">
-            A little progress, every day.
-          </Txt>
-          {loading ? (
-            <ActivityIndicator color={colors.green} />
-          ) : (
-            <>
-              {Boolean(error || message) && (
-                <Txt color={colors.red} accessibilityRole="alert">
-                  {error || message}
-                </Txt>
-              )}
-              {mode === "supabase" ? (
-                <>
-                  {!hasSession && screen !== "confirm" && (
-                    <View style={[styles.row, { gap: 8 }]}>
-                      <Button
-                        small
-                        secondary={screen !== "login"}
-                        onPress={() => setScreen("login")}
-                      >
-                        Войти
-                      </Button>
-                      <Button
-                        small
-                        secondary={screen !== "register"}
-                        onPress={() => setScreen("register")}
-                      >
-                        Зарегистрироваться
-                      </Button>
-                    </View>
-                  )}
-                  {screen === "confirm" && !hasSession ? (
-                    <>
-                      <Txt color={colors.muted}>
-                        {`Мы отправили код подтверждения на ${email}. Введите его ниже. Если письма нет — проверьте «Спам» и «Промоакции».`}
-                      </Txt>
-                      <Field
-                        label="Код из письма"
-                        numeric
-                        maxLength={10}
-                        value={otp}
-                        onChangeText={(s) => setOtp(s.replace(/\D/g, ""))}
-                      />
-                      <Button
-                        disabled={busy || otp.length < 6}
-                        onPress={() => {
-                          setBusy(true);
-                          setMessage("");
-                          void confirmEmail(email.trim(), otp)
-                            .catch((e) => setMessage(errorMessage(e)))
-                            .finally(() => setBusy(false));
-                        }}
-                      >
-                        Подтвердить
-                      </Button>
-                      <Button
-                        secondary
-                        disabled={busy || resendIn > 0}
-                        onPress={() => {
-                          setBusy(true);
-                          setMessage("");
-                          void resendConfirmation(email.trim())
-                            .then(() => {
-                              setResendIn(60);
-                              setMessage("Новый код отправлен.");
-                            })
-                            .catch((e) => setMessage(errorMessage(e)))
-                            .finally(() => setBusy(false));
-                        }}
-                      >
-                        {resendIn > 0
-                          ? `Отправить код ещё раз (${resendIn} с)`
-                          : "Отправить код ещё раз"}
-                      </Button>
-                      <Button
-                        secondary
-                        disabled={busy}
-                        onPress={() => {
-                          setMessage("");
-                          setOtp("");
-                          setScreen("register");
-                        }}
-                      >
-                        Изменить email
-                      </Button>
-                    </>
-                  ) : screen === "login" ? (
-                    <>
-                      <Txt color={colors.muted}>
-                        Войдите в аккаунт вашей организации.
-                      </Txt>
-                      <Field
-                        label="Email"
-                        value={email}
-                        onChangeText={setEmail}
-                      />
-                      <Field
-                        label="Пароль"
-                        secure
-                        value={password}
-                        onChangeText={setPassword}
-                      />
-                      <Button
-                        disabled={busy || !email || !password}
-                        onPress={() => {
-                          setBusy(true);
-                          setMessage("");
-                          void login(email.trim(), password)
-                            .catch((e) => {
-                              const m = errorMessage(e);
-                              if (m === errorMessage("Email not confirmed")) {
-                                setOtp("");
-                                setScreen("confirm");
-                              }
-                              setMessage(m);
-                            })
-                            .finally(() => setBusy(false));
-                        }}
-                      >
-                        Войти
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Txt color={colors.muted}>
-                        {hasSession
-                          ? "Почта подтверждена. Завершите регистрацию."
-                          : "Учителю код не нужен. Ученику нужен код группы, родителю — код ученика."}
-                      </Txt>
-                      {roleButtons}
-                      <Field label="Имя" value={name} onChangeText={setName} />
-                      {!hasSession && (
-                        <>
-                          <Field
-                            label="Email"
-                            value={email}
-                            onChangeText={setEmail}
-                          />
-                          <Field
-                            label="Пароль"
-                            secure
-                            value={password}
-                            onChangeText={setPassword}
-                          />
-                        </>
-                      )}
-                      {role === "student" && (
-                        <Field
-                          label="Код группы"
-                          value={code}
-                          onChangeText={setCode}
-                        />
-                      )}
-                      {role === "parent" && (
-                        <Field
-                          label="Код ученика"
-                          value={code}
-                          onChangeText={setCode}
-                        />
-                      )}
-                      <Button
-                        disabled={
-                          registerDisabled ||
-                          (!hasSession && (!email || !password))
-                        }
-                        onPress={() =>
-                          submitRegister(
-                            hasSession
-                              ? {}
-                              : { email: email.trim(), password },
-                          )
-                        }
-                      >
-                        {hasSession
-                          ? "Завершить регистрацию"
-                          : "Зарегистрироваться"}
-                      </Button>
-                    </>
-                  )}
-                </>
-              ) : screen === "login" ? (
-                <>
-                  <Button onPress={retry}>Retry loading local demo</Button>
-                  <Button secondary onPress={() => setScreen("register")}>
-                    Зарегистрироваться (демо)
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Txt color={colors.muted}>
-                    Демо-регистрация создаёт новый синтетический аккаунт на
-                    этом устройстве.
+        <View style={{ maxWidth: 480, width: "100%", gap: 24 }}>
+          <View style={[styles.row, { justifyContent: "space-between" }]}>
+            <Brand />
+            <ClarityControls />
+          </View>
+          <Card style={{ gap: 20, marginTop: 16 }}>
+            <Txt size={30} weight="600">
+              {screen === "confirm"
+                ? "Проверьте почту"
+                : screen === "register"
+                  ? "Начнём знакомство"
+                  : "Рады видеть вас"}
+            </Txt>
+            {loading ? (
+              <ActivityIndicator color={colors.green} />
+            ) : (
+              <>
+                {Boolean(error || message) && (
+                  <Txt color={colors.red} accessibilityRole="alert">
+                    {error || message}
                   </Txt>
-                  {roleButtons}
-                  <Field label="Имя" value={name} onChangeText={setName} />
-                  {role === "student" && (
-                    <Field
-                      label="Код группы"
-                      value={code}
-                      onChangeText={setCode}
-                    />
-                  )}
-                  {role === "parent" && (
-                    <Field
-                      label="Код ученика"
-                      value={code}
-                      onChangeText={setCode}
-                    />
-                  )}
-                  <Button
-                    disabled={registerDisabled}
-                    onPress={() => submitRegister({})}
-                  >
-                    Зарегистрироваться
-                  </Button>
-                  <Button secondary onPress={() => setScreen("login")}>
-                    Назад
-                  </Button>
-                </>
-              )}
-            </>
-          )}
-        </Card>
-      </View>
+                )}
+                {mode === "supabase" ? (
+                  <>
+                    {!hasSession && screen !== "confirm" && (
+                      <View style={[styles.row, { gap: 8, flexWrap: "wrap" }]}>
+                        <Button
+                          small
+                          secondary={screen !== "login"}
+                          onPress={() => setScreen("login")}
+                        >
+                          Войти
+                        </Button>
+                        <Button
+                          small
+                          secondary={screen !== "register"}
+                          onPress={() => setScreen("register")}
+                        >
+                          Создать аккаунт
+                        </Button>
+                      </View>
+                    )}
+                    {screen === "confirm" && !hasSession ? (
+                      <>
+                        <Txt color={colors.muted}>
+                          {`Мы отправили код подтверждения на ${email}. Введите его ниже. Если письма нет — проверьте «Спам» и «Промоакции».`}
+                        </Txt>
+                        <Field
+                          label="Код из письма"
+                          numeric
+                          maxLength={10}
+                          value={otp}
+                          onChangeText={(s) => setOtp(s.replace(/\D/g, ""))}
+                        />
+                        <Button
+                          disabled={busy || otp.length < 6}
+                          onPress={() => {
+                            setBusy(true);
+                            setMessage("");
+                            void confirmEmail(email.trim(), otp)
+                              .catch((e) => setMessage(errorMessage(e)))
+                              .finally(() => setBusy(false));
+                          }}
+                        >
+                          Подтвердить
+                        </Button>
+                        <Button
+                          secondary
+                          disabled={busy || resendIn > 0}
+                          onPress={() => {
+                            setBusy(true);
+                            setMessage("");
+                            void resendConfirmation(email.trim())
+                              .then(() => {
+                                setResendIn(60);
+                                setMessage("Новый код отправлен.");
+                              })
+                              .catch((e) => setMessage(errorMessage(e)))
+                              .finally(() => setBusy(false));
+                          }}
+                        >
+                          {resendIn > 0
+                            ? `Отправить код ещё раз (${resendIn} с)`
+                            : "Отправить код ещё раз"}
+                        </Button>
+                        <Button
+                          secondary
+                          disabled={busy}
+                          onPress={() => {
+                            setMessage("");
+                            setOtp("");
+                            setScreen("register");
+                          }}
+                        >
+                          Изменить email
+                        </Button>
+                      </>
+                    ) : screen === "login" ? (
+                      <>
+                        <Field
+                          label="Email"
+                          value={email}
+                          onChangeText={setEmail}
+                        />
+                        <Field
+                          label="Пароль"
+                          secure
+                          value={password}
+                          onChangeText={setPassword}
+                        />
+                        <Button
+                          disabled={busy || !email || !password}
+                          onPress={() => {
+                            setBusy(true);
+                            setMessage("");
+                            void login(email.trim(), password)
+                              .catch((e) => {
+                                const m = errorMessage(e);
+                                if (m === errorMessage("Email not confirmed")) {
+                                  setOtp("");
+                                  setScreen("confirm");
+                                }
+                                setMessage(m);
+                              })
+                              .finally(() => setBusy(false));
+                          }}
+                        >
+                          Войти
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Txt color={colors.muted}>
+                          {hasSession
+                            ? "Почта подтверждена. Завершите регистрацию."
+                            : role === "student"
+                              ? "Код группы можно получить у учителя."
+                              : role === "parent"
+                                ? "Код ученика есть в профиле ребёнка."
+                                : "Создайте свою группу после регистрации."}
+                        </Txt>
+                        {roleButtons}
+                        <Field
+                          label="Имя"
+                          value={name}
+                          onChangeText={setName}
+                        />
+                        {!hasSession && (
+                          <>
+                            <Field
+                              label="Email"
+                              value={email}
+                              onChangeText={setEmail}
+                            />
+                            <Field
+                              label="Пароль"
+                              secure
+                              value={password}
+                              onChangeText={setPassword}
+                            />
+                          </>
+                        )}
+                        {role === "student" && (
+                          <Field
+                            label="Код группы"
+                            value={code}
+                            onChangeText={setCode}
+                          />
+                        )}
+                        {role === "parent" && (
+                          <Field
+                            label="Код ученика"
+                            value={code}
+                            onChangeText={setCode}
+                          />
+                        )}
+                        <Button
+                          disabled={
+                            registerDisabled ||
+                            (!hasSession && (!email || !password))
+                          }
+                          onPress={() =>
+                            submitRegister(
+                              hasSession
+                                ? {}
+                                : { email: email.trim(), password },
+                            )
+                          }
+                        >
+                          {hasSession
+                            ? "Завершить регистрацию"
+                            : "Зарегистрироваться"}
+                        </Button>
+                      </>
+                    )}
+                  </>
+                ) : screen === "login" ? (
+                  <>
+                    <Button onPress={retry}>Retry loading local demo</Button>
+                    <Button secondary onPress={() => setScreen("register")}>
+                      Зарегистрироваться (демо)
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Txt color={colors.muted}>
+                      Демо-регистрация создаёт новый синтетический аккаунт на
+                      этом устройстве.
+                    </Txt>
+                    {roleButtons}
+                    <Field label="Имя" value={name} onChangeText={setName} />
+                    {role === "student" && (
+                      <Field
+                        label="Код группы"
+                        value={code}
+                        onChangeText={setCode}
+                      />
+                    )}
+                    {role === "parent" && (
+                      <Field
+                        label="Код ученика"
+                        value={code}
+                        onChangeText={setCode}
+                      />
+                    )}
+                    <Button
+                      disabled={registerDisabled}
+                      onPress={() => submitRegister({})}
+                    >
+                      Зарегистрироваться
+                    </Button>
+                    <Button secondary onPress={() => setScreen("login")}>
+                      Назад
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
+          </Card>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -449,12 +468,36 @@ function Shell() {
   >();
   const [topic, setTopic] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
+  const [focusedLesson, setFocusedLesson] = useState<FocusedLesson | null>(
+    null,
+  );
+  const registerLesson = useCallback(
+    (lesson: FocusedLesson | null, owner: string) => {
+      setFocusedLesson(
+        (current) => lesson ?? (current?.id === owner ? null : current),
+      );
+    },
+    [],
+  );
+  const clarity = true;
+  const focused = clarity && (!!topic || !!focusedLesson);
+  const leaveLesson = () => (topic ? setTopic(null) : focusedLesson?.exit());
+
   const offsets = useRef<Record<string, number>>({});
   const routeKey = `${actor.id}:${topic ? `topic:${topic}` : result ? `result:${result}` : tab}`;
   const restoring = useRef(false);
   const selectedTab = topic ? "Learn" : result ? "Progress" : tab;
   const [accountOpen, setAccountOpen] = useState(false);
   const scroller = useRef<ScrollView>(null);
+  const scrollContent = useRef<View>(null);
+  const scrollToAnchor = useCallback((node: View | null) => {
+    if (node && scrollContent.current)
+      node.measureLayout(
+        scrollContent.current,
+        (_x, y) => scroller.current?.scrollTo({ y, animated: false }),
+        () => {},
+      );
+  }, []);
   const scrollStaffToTop = useCallback(() => {
     scroller.current?.scrollTo({ y: 0, animated: false });
   }, []);
@@ -500,6 +543,10 @@ function Shell() {
         setTopic(null);
         return true;
       }
+      if (focusedLesson) {
+        focusedLesson.exit();
+        return true;
+      }
       if (result) {
         setResult(null);
         return true;
@@ -511,7 +558,7 @@ function Shell() {
       return false;
     });
     return () => handler.remove();
-  }, [topic, tab, result]);
+  }, [topic, tab, result, focusedLesson]);
   function navigate(next: string) {
     sounds.play("open");
     setTopic(null);
@@ -528,9 +575,9 @@ function Shell() {
         }[name] ?? name)
       : actor.role === "student"
         ? ({
-            Home: "Сегодня",
-            Learn: "Учиться",
-            Progress: "Мой прогресс",
+            Home: "Главная",
+            Learn: "Темы",
+            Progress: "Успехи",
             Profile: "Профиль",
           }[name] ?? translate(name))
         : translate(name);
@@ -558,14 +605,17 @@ function Shell() {
             {
               flexDirection: mobile ? "column" : "row",
               alignItems: "center",
-              gap: mobile ? 3 : 10,
+              gap: clarity ? 7 : mobile ? 3 : 10,
               paddingHorizontal: mobile ? 3 : 12,
-              paddingVertical: mobile ? 8 : 10,
+              paddingVertical: clarity ? 12 : mobile ? 8 : 10,
+              minHeight: clarity ? 56 : undefined,
               borderRadius: 16,
               backgroundColor:
                 selectedTab === t
                   ? student
-                    ? "#304D3D"
+                    ? clarity
+                      ? colors.light
+                      : "#304D3D"
                     : colors.light
                   : "transparent",
               opacity: pressed ? 0.7 : 1,
@@ -575,28 +625,34 @@ function Shell() {
         >
           <Icon
             name={navIcons[t]}
-            size={mobile ? 19 : 20}
+            size={clarity ? 26 : mobile ? 19 : 20}
             color={
               selectedTab === t
                 ? student
-                  ? "#F5F3E5"
-                  : colors.green
-                : "#7A8378"
-            }
-          />
-          <Txt
-            size={mobile ? (actor.role === "student" ? 13 : 11) : 16}
-            weight={selectedTab === t ? "600" : "400"}
-            color={
-              selectedTab === t
-                ? student
-                  ? "#F5F3E5"
+                  ? clarity
+                    ? colors.ink
+                    : "#F5F3E5"
                   : colors.green
                 : colors.muted
             }
-          >
-            {tabLabel(t)}
-          </Txt>
+          />
+          {!clarity && (
+            <Txt
+              size={clarity ? 16 : mobile ? 11 : 16}
+              weight={selectedTab === t ? "600" : "400"}
+              color={
+                selectedTab === t
+                  ? student
+                    ? clarity
+                      ? colors.ink
+                      : "#F5F3E5"
+                    : colors.green
+                  : colors.muted
+              }
+            >
+              {tabLabel(t)}
+            </Txt>
+          )}
         </Pressable>
       ))}
     </View>
@@ -608,7 +664,7 @@ function Shell() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={{ flex: 1, flexDirection: "row" }}>
-          {desktop && !student && (
+          {desktop && !student && !clarity && (
             <View
               style={{
                 width: 220,
@@ -640,23 +696,34 @@ function Shell() {
           <View style={{ flex: 1, minWidth: 0 }}>
             <View
               style={{
-                paddingHorizontal:
-                  desktop && student
-                    ? Math.max(28, (width - 1040) / 2)
-                    : desktop
-                      ? 24
-                      : 18,
-                paddingVertical: student ? 16 : 10,
+                paddingHorizontal: desktop
+                  ? Math.max(28, (width - 1040) / 2)
+                  : desktop
+                    ? 24
+                    : 18,
+                paddingVertical: 16,
                 borderBottomWidth: 1,
                 borderColor: colors.line,
-                backgroundColor: student ? colors.paper : colors.white,
+                backgroundColor: colors.paper,
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: 12,
               }}
             >
-              {student ? (
+              {focused ? (
+                <View style={[styles.row, { gap: 14, flexShrink: 1 }]}>
+                  <Button
+                    secondary
+                    small
+                    icon="arrow-left"
+                    onPress={leaveLesson}
+                  >
+                    Выйти
+                  </Button>
+                  <Brand compact={width < 600} />
+                </View>
+              ) : clarity || student ? (
                 <Brand />
               ) : desktop ? (
                 <View style={styles.row}>
@@ -677,9 +744,10 @@ function Shell() {
               ) : (
                 <Brand />
               )}
-              {student && desktop && nav()}
-              <View style={[styles.row, { gap: 4 }]}>
-                {student && (
+              {student && desktop && !clarity && nav()}
+              <View style={[styles.row, { gap: clarity ? 8 : 4 }]}>
+                {clarity && <ClarityControls />}
+                {student && !clarity && (
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={
@@ -699,31 +767,33 @@ function Shell() {
                     />
                   </Pressable>
                 )}
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    dark ? "Включить светлую тему" : "Включить тёмную тему"
-                  }
-                  onPress={() => setPreference(dark ? "light" : "dark")}
-                  style={{
-                    padding: 10,
-                    minWidth: 44,
-                    minHeight: 44,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Icon name={dark ? "sun" : "moon"} size={20} />
-                </Pressable>
+                {!clarity && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      dark ? "Включить светлую тему" : "Включить тёмную тему"
+                    }
+                    onPress={() => setPreference(dark ? "light" : "dark")}
+                    style={{
+                      padding: 10,
+                      minWidth: 44,
+                      minHeight: 44,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Icon name={dark ? "sun" : "moon"} size={20} />
+                  </Pressable>
+                )}
                 {student && mode === "demo" && width >= 440 && (
                   <Pill tone="neutral">Демо</Pill>
                 )}
-                {desktop && !student && (
+                {desktop && !student && !clarity && (
                   <Pill tone="neutral">
                     {mode === "demo" ? "LOCAL DEMO" : "CONNECTED"}
                   </Pill>
                 )}
-                {!student && (
+                {!clarity && !student && (
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Обновить учебные данные"
@@ -733,36 +803,38 @@ function Shell() {
                     <Icon name="refresh-cw" size={17} color={colors.muted} />
                   </Pressable>
                 )}
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={"Открыть профиль"}
-                  onPress={() => navigate("Profile")}
-                  style={styles.row}
-                >
-                  <View
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: colors.light,
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
+                {!focused && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={"Открыть профиль"}
+                    onPress={() => navigate("Profile")}
+                    style={styles.row}
                   >
-                    <Txt weight="600" size={13}>
-                      {actor.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .slice(0, 2)
-                        .join("")}
-                    </Txt>
-                  </View>
-                  {desktop && <Txt size={13}>{actor.name.split(" ")[0]}</Txt>}
-                  {width >= 360 && <Icon name="chevron-down" size={15} />}
-                </Pressable>
+                    <View
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: colors.light,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Txt weight="600" size={13}>
+                        {actor.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join("")}
+                      </Txt>
+                    </View>
+                    {desktop && <Txt size={15}>{actor.name.split(" ")[0]}</Txt>}
+                    {width >= 500 && <Icon name="chevron-down" size={15} />}
+                  </Pressable>
+                )}
               </View>
             </View>
-            {mode === "demo" && !student && (
+            {mode === "demo" && !clarity && !student && (
               <View
                 style={{
                   paddingHorizontal: desktop ? 24 : 14,
@@ -808,125 +880,133 @@ function Shell() {
                 </Button>
               </View>
             )}
-            <ScreenScroll.Provider value={scrollStaffToTop}>
-              <ScrollView
-                ref={scroller}
-                scrollEventThrottle={16}
-                onScroll={(event) => {
-                  if (!restoring.current)
-                    offsets.current[routeKey] =
-                      event.nativeEvent.contentOffset.y;
-                }}
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{
-                  paddingHorizontal: desktop ? 32 : 18,
-                  paddingTop: desktop ? 36 : 22,
-                  paddingBottom: 40,
-                  alignItems: "center",
-                }}
-              >
-                <View style={{ width: "100%", maxWidth: 1100 }}>
-                  {actor.role === "student" ? (
-                    <SoftReveal
-                      key={actor.id}
-                      changeKey={routeKey}
-                      testID="student-screen-transition"
+            <LessonFocus.Provider value={registerLesson}>
+              <ScreenScroll.Provider value={scrollStaffToTop}>
+                <ScreenAnchor.Provider value={scrollToAnchor}>
+                  <ScrollView
+                    ref={scroller}
+                    scrollEventThrottle={16}
+                    onScroll={(event) => {
+                      if (!restoring.current)
+                        offsets.current[routeKey] =
+                          event.nativeEvent.contentOffset.y;
+                    }}
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={{
+                      paddingHorizontal: desktop ? 32 : 18,
+                      paddingTop: desktop ? 36 : 22,
+                      paddingBottom: 40,
+                      alignItems: "center",
+                    }}
+                  >
+                    <View
+                      ref={scrollContent}
+                      collapsable={false}
+                      style={{ width: "100%", maxWidth: 1100 }}
                     >
-                      <View
-                        style={{
-                          display:
-                            !topic && !result && tab === "Home"
-                              ? "flex"
-                              : "none",
-                        }}
-                      >
-                        <Home
-                          openCourse={openCourse}
-                          openTopic={setTopic}
-                          navigate={navigate}
-                          openResult={setResult}
-                        />
-                      </View>
-                      <View
-                        style={{
-                          display:
-                            !topic && !result && tab === "Learn"
-                              ? "flex"
-                              : "none",
-                        }}
-                      >
-                        <Learn
-                          active={tab === "Learn" && !topic && !result}
-                          openTopic={setTopic}
-                          courseRequest={courseRequest}
-                        />
-                      </View>
-                      <View
-                        style={{
-                          display:
-                            !topic && !result && tab === "Progress"
-                              ? "flex"
-                              : "none",
-                        }}
-                      >
-                        <Progress
-                          active={tab === "Progress" && !topic && !result}
-                          openCourse={openCourse}
-                          openResult={setResult}
-                          openTopic={setTopic}
-                        />
-                      </View>
-                      {!topic && !result && tab === "Profile" && (
+                      {actor.role === "student" ? (
+                        <SoftReveal
+                          key={actor.id}
+                          changeKey={routeKey}
+                          testID="student-screen-transition"
+                        >
+                          <View
+                            style={{
+                              display:
+                                !topic && !result && tab === "Home"
+                                  ? "flex"
+                                  : "none",
+                            }}
+                          >
+                            <Home
+                              openCourse={openCourse}
+                              openTopic={setTopic}
+                              navigate={navigate}
+                              openResult={setResult}
+                            />
+                          </View>
+                          <View
+                            style={{
+                              display:
+                                !topic && !result && tab === "Learn"
+                                  ? "flex"
+                                  : "none",
+                            }}
+                          >
+                            <Learn
+                              active={tab === "Learn" && !topic && !result}
+                              openTopic={setTopic}
+                              courseRequest={courseRequest}
+                            />
+                          </View>
+                          <View
+                            style={{
+                              display:
+                                !topic && !result && tab === "Progress"
+                                  ? "flex"
+                                  : "none",
+                            }}
+                          >
+                            <Progress
+                              active={tab === "Progress" && !topic && !result}
+                              openCourse={openCourse}
+                              openResult={setResult}
+                              openTopic={setTopic}
+                            />
+                          </View>
+                          {!topic && !result && tab === "Profile" && (
+                            <Profile switchDemo={() => setAccountOpen(true)} />
+                          )}
+                          {result && (
+                            <View style={{ display: topic ? "none" : "flex" }}>
+                              <ReportDetail
+                                key={result}
+                                id={result}
+                                back={() => setResult(null)}
+                                openTopic={setTopic}
+                              />
+                            </View>
+                          )}
+                          {topic && (
+                            <Lesson
+                              key={`${actor.id}-${topic}`}
+                              topicId={topic}
+                              back={() => setTopic(null)}
+                              openTopic={setTopic}
+                            />
+                          )}
+                        </SoftReveal>
+                      ) : tab === "Profile" ? (
                         <Profile switchDemo={() => setAccountOpen(true)} />
-                      )}
-                      {result && (
-                        <View style={{ display: topic ? "none" : "flex" }}>
-                          <ReportDetail
-                            key={result}
-                            id={result}
-                            back={() => setResult(null)}
-                            openTopic={setTopic}
-                          />
-                        </View>
-                      )}
-                      {topic && (
-                        <Lesson
-                          key={`${actor.id}-${topic}`}
-                          topicId={topic}
-                          back={() => setTopic(null)}
-                          openTopic={setTopic}
+                      ) : actor.role === "parent" ? (
+                        <Parent key={actor.id} tab={tab} />
+                      ) : (
+                        <Staff
+                          key={`${actor.id}-${tab}`}
+                          tab={tab}
+                          onScreenChange={scrollStaffToTop}
                         />
                       )}
-                    </SoftReveal>
-                  ) : tab === "Profile" ? (
-                    <Profile switchDemo={() => setAccountOpen(true)} />
-                  ) : actor.role === "parent" ? (
-                    <Parent key={actor.id} tab={tab} />
-                  ) : (
-                    <Staff
-                      key={`${actor.id}-${tab}`}
-                      tab={tab}
-                      onScreenChange={scrollStaffToTop}
-                    />
-                  )}
-                </View>
-                {(!student || saving || isLessonPreview) && (
-                  <View style={{ marginTop: 20 }}>
-                    <Txt size={11} color={colors.muted}>
-                      {saving
-                        ? "Saving…"
-                        : mode === "demo"
-                          ? isLessonPreview
-                            ? "Новые уроки и тесты сохраняются в локальной PostgreSQL."
-                            : "Your demo workspace saves on this device."
-                          : "Connected to your learning organisation."}
-                    </Txt>
-                  </View>
-                )}
-              </ScrollView>
-            </ScreenScroll.Provider>
+                    </View>
+                    {(saving || isLessonPreview) && (
+                      <View style={{ marginTop: 20 }}>
+                        <Txt size={11} color={colors.muted}>
+                          {saving
+                            ? "Saving…"
+                            : mode === "demo"
+                              ? isLessonPreview
+                                ? "Новые уроки и тесты сохраняются в локальной PostgreSQL."
+                                : "Your demo workspace saves on this device."
+                              : "Connected to your learning organisation."}
+                        </Txt>
+                      </View>
+                    )}
+                  </ScrollView>
+                </ScreenAnchor.Provider>
+              </ScreenScroll.Provider>
+            </LessonFocus.Provider>
             {student && <RewardNotice />}
-            {!desktop && (
+            {(!desktop || clarity) && !focused && (
               <View
                 style={{
                   backgroundColor: colors.white,
@@ -936,7 +1016,19 @@ function Shell() {
                   paddingVertical: 7,
                 }}
               >
-                {nav(true)}
+                <View
+                  style={{
+                    width: "100%",
+                    maxWidth: clarity
+                      ? tabs.length > 3
+                        ? 480
+                        : 360
+                      : undefined,
+                    alignSelf: "center",
+                  }}
+                >
+                  {nav(true)}
+                </View>
               </View>
             )}
           </View>
@@ -962,8 +1054,7 @@ function Shell() {
               Выберите роль и аккаунт
             </Txt>
             <Txt size={13} color={colors.muted}>
-              Demo identity switching is not authentication. These synthetic
-              accounts share this device’s saved data.
+              Учебные аккаунты. Изменения сохраняются только на этом устройстве.
             </Txt>
             <ScrollView>
               {accounts.map((p) => (
@@ -981,7 +1072,7 @@ function Shell() {
                       marginBottom: 7,
                       borderRadius: 10,
                       backgroundColor:
-                        p.id === actor.id ? colors.light : "#F8F9F5",
+                        p.id === actor.id ? colors.light : colors.white,
                     },
                   ]}
                 >

@@ -1,3 +1,5 @@
+import { useSounds } from "../engagement/Sounds";
+import { useScreenScroll } from "../components/ScreenScroll";
 import { useRewards } from "../engagement/RewardContext";
 import { Confetti } from "../components/Motion";
 import { useUITheme } from "../components/ui";
@@ -36,8 +38,9 @@ export function Lesson({
   back: () => void;
   openTopic: (id: string) => void;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   const { award } = useRewards();
+  const { play } = useSounds();
   const { state: s, actor, dispatch, saving } = useLearning();
   const t = s.topics.find((t) => t.id === topicId)!;
   const persisted = s.activities.find(
@@ -74,9 +77,12 @@ export function Lesson({
   useEffect(() => {
     if (persisted) setActivity(persisted);
   }, [persisted?.updatedAt, persisted?.stage]);
+  const [intro, setIntro] = useState(true);
+  const [lessonSection, setLessonSection] = useState<"read" | "video">("read");
   const [storedLessons, setStoredLessons] = useState(false);
   const [viewLesson, setViewLesson] = useState(false);
   const stage = viewLesson ? "lesson" : activity.stage;
+  useScreenScroll(`${topicId}:${intro}:${stage}:${lessonSection}`);
   const qs = activity.questionIds.map((id) =>
     t.checks.find((q) => q.id === id)!,
   );
@@ -137,27 +143,59 @@ export function Lesson({
     return (
       <LessonLibrary topicId={topicId} back={() => setStoredLessons(false)} />
     );
+  if (clarity && intro)
+    return (
+      <View
+        style={{ gap: 22, maxWidth: 800, width: "100%", alignSelf: "center" }}
+      >
+        <TopicCover title={t.title} subject={t.area} eyebrow="МАТЕМАТИКА" />
+        <Button fullWidth icon="arrow-right" onPress={() => setIntro(false)}>
+          {activity.stage === "complete"
+            ? "Посмотреть результат"
+            : persisted
+              ? "Продолжить урок"
+              : "Начать урок"}
+        </Button>
+      </View>
+    );
   return (
     <View
       style={{ gap: 16, maxWidth: 900, width: "100%", alignSelf: "center" }}
     >
-      <Button secondary small onPress={back} icon="arrow-left">
-        Back to learning
-      </Button>
+      {!clarity && (
+        <Button
+          secondary
+          small
+          onPress={clarity ? () => setIntro(true) : back}
+          icon="arrow-left"
+        >
+          {clarity ? "К обзору урока" : "Back to learning"}
+        </Button>
+      )}
       <View>
-        <Pill icon={stage === "complete" ? "check-circle" : "book-open"}>
-          {stage === "complete"
-            ? "CHECK COMPLETE"
-            : t.practice
-              ? `ШАГ ${stage === "lesson" ? 1 : stage === "practice" ? 2 : 3} ИЗ 3`
-              : "МАТЕРИАЛЫ ТЕМЫ"}
-        </Pill>
-        <TopicCover
-          title={t.title}
-          subject={t.area}
-          eyebrow="МАТЕМАТИКА · УРОК"
-        />
-        <Txt color={colors.muted}>{t.objective}</Txt>
+        {!clarity && (
+          <Pill icon={stage === "complete" ? "check-circle" : "book-open"}>
+            {stage === "complete"
+              ? "CHECK COMPLETE"
+              : t.practice
+                ? `ШАГ ${stage === "lesson" ? 1 : stage === "practice" ? 2 : 3} ИЗ 3`
+                : "МАТЕРИАЛЫ ТЕМЫ"}
+          </Pill>
+        )}
+        {clarity && stage !== "lesson" ? (
+          <Txt size={22} weight="700" style={{ marginTop: 14 }}>
+            {t.title.split(":")[0]}
+          </Txt>
+        ) : (
+          <>
+            <TopicCover
+              title={t.title}
+              subject={t.area}
+              eyebrow="МАТЕМАТИКА · УРОК"
+            />
+            <Txt color={colors.muted}>{t.objective}</Txt>
+          </>
+        )}
       </View>
       {lessonStorageReady && (
         <Button
@@ -168,16 +206,17 @@ export function Lesson({
           Уроки и тесты по этой теме
         </Button>
       )}
-      {activity.stage !== "lesson" && (
-        <Button secondary small onPress={() => setViewLesson(!viewLesson)}>
-          {viewLesson
-            ? activity.stage === "complete"
-              ? "К результатам проверки"
-              : "Вернуться к практике"
-            : "Смотреть урок"}
-        </Button>
-      )}
-      {t.practice && (
+      {activity.stage !== "lesson" &&
+        (!clarity || activity.stage !== "practice") && (
+          <Button secondary small onPress={() => setViewLesson(!viewLesson)}>
+            {viewLesson
+              ? activity.stage === "complete"
+                ? "К результатам проверки"
+                : "Вернуться к практике"
+              : "Смотреть урок"}
+          </Button>
+        )}
+      {!clarity && t.practice && (
         <Steps
           labels={["Урок", "Практика", "Проверка"]}
           current={{ lesson: 0, practice: 1, check: 2, complete: 3 }[stage]}
@@ -190,13 +229,18 @@ export function Lesson({
           </Txt>
         </Card>
       )}
-      {stage === "lesson" && (
+      {(stage === "lesson" || (clarity && stage === "practice")) && (
         <>
+          {clarity && !!(t.videos?.length || t.video) && (
+            <VideoLessons topic={t} />
+          )}
           {!!t.lesson && (
             <Card>
-              <Txt size={22} weight="600">
-                Let’s make it click.
-              </Txt>
+              {!clarity && (
+                <Txt size={22} weight="600">
+                  Let’s make it click.
+                </Txt>
+              )}
               <LessonText text={t.lesson} />
               <View
                 style={{
@@ -221,11 +265,17 @@ export function Lesson({
               )}
             </Card>
           )}
-          {t.videos?.length || t.video ? <VideoLessons topic={t} /> : null}
-          {t.practice && !viewLesson && (
+          {!clarity && (t.videos?.length || t.video) ? (
+            <VideoLessons topic={t} />
+          ) : null}
+          {t.practice && !clarity && !viewLesson && (
             <Button
               disabled={saving}
-              onPress={() => void save({ stage: "practice" })}
+              onPress={() => {
+                setViewLesson(false);
+                if (activity.stage === "lesson")
+                  void save({ stage: "practice" });
+              }}
               icon="arrow-right"
             >
               Try guided practice
@@ -238,83 +288,90 @@ export function Lesson({
           )}
         </>
       )}
-      {stage === "practice" && t.practice && (
-        <Card>
-          <Pill tone="gold">A SAFE PLACE TO TRY</Pill>
-          <MathText text={t.practice.prompt} size={22} bold />
-          {t.practice.choices.map((c, i) => (
-            <Choice
-              key={i}
-              label={c}
-              selected={guided === i}
-              onPress={() => {
-                setGuided(i);
-                setBurst(0);
-                setPracticeChecked(false);
-              }}
-            />
-          ))}
-          <View style={[styles.row, { flexWrap: "wrap" }]}>
-            <Button
-              disabled={guided === null}
-              onPress={() => {
-                if (!practiceChecked && guided === t.practice?.answer) {
-                  award([
-                    {
-                      kind: "question",
-                      id: `guided:${topicId}:${t.practice.id}`,
-                    },
-                  ]);
-                  setBurst((value) => value + 1);
-                }
-                setPracticeChecked(true);
-              }}
-            >
-              Check my answer
-            </Button>
-            <Button secondary onPress={() => setHint(true)} icon="help-circle">
-              Show a hint
-            </Button>
-          </View>
-          {hint && (
-            <MathText
-              text={`Подсказка: ${t.practice.hint}`}
-              color={colors.muted}
-            />
-          )}
-          {practiceChecked && (
-            <View
-              style={{
-                gap: 12,
-                backgroundColor: colors.light,
-                padding: 20,
-                borderRadius: 12,
-              }}
-            >
-              <Confetti burst={burst} />
-              <Txt weight="600">
-                {guided === t.practice.answer
-                  ? "That’s it. Nicely worked out."
-                  : "Let’s look at the method together."}
-              </Txt>
-              <MathText text={t.practice.explanation} />
-              <Txt size={12} color={colors.muted}>
-                Практика с подсказками помогает разобраться. Состояние темы
-                меняют самостоятельные проверки.
-              </Txt>
-              <Button
-                disabled={saving}
+      {(stage === "practice" || (clarity && stage === "lesson")) &&
+        t.practice && (
+          <Card>
+            {!clarity && <Pill tone="gold">A SAFE PLACE TO TRY</Pill>}
+            <MathText text={t.practice.prompt} size={22} bold />
+            {t.practice.choices.map((c, i) => (
+              <Choice
+                key={i}
+                label={c}
+                selected={guided === i}
                 onPress={() => {
+                  setGuided(i);
                   setBurst(0);
-                  void save({ stage: "check" });
+                  setPracticeChecked(false);
+                }}
+              />
+            ))}
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              <Button
+                disabled={guided === null}
+                onPress={() => {
+                  if (!practiceChecked && guided === t.practice?.answer) {
+                    award([
+                      {
+                        kind: "question",
+                        id: `guided:${topicId}:${t.practice.id}`,
+                      },
+                    ]);
+                    setBurst((value) => value + 1);
+                  }
+                  if (!practiceChecked && guided !== t.practice?.answer)
+                    play("wrong");
+                  setPracticeChecked(true);
                 }}
               >
-                Ready for an independent check
+                Check my answer
+              </Button>
+              <Button
+                secondary
+                onPress={() => setHint(true)}
+                icon="help-circle"
+              >
+                Show a hint
               </Button>
             </View>
-          )}
-        </Card>
-      )}
+            {hint && (
+              <MathText
+                text={`Подсказка: ${t.practice.hint}`}
+                color={colors.muted}
+              />
+            )}
+            {practiceChecked && (
+              <View
+                style={{
+                  gap: 12,
+                  backgroundColor: colors.light,
+                  padding: 20,
+                  borderRadius: 12,
+                }}
+              >
+                <Confetti burst={burst} />
+                <Txt weight="600">
+                  {guided === t.practice.answer
+                    ? "That’s it. Nicely worked out."
+                    : "Let’s look at the method together."}
+                </Txt>
+                <MathText text={t.practice.explanation} />
+                <Txt size={12} color={colors.muted}>
+                  Практика с подсказками помогает разобраться. Состояние темы
+                  меняют самостоятельные проверки.
+                </Txt>
+                <Button
+                  disabled={saving}
+                  onPress={() => {
+                    setBurst(0);
+                    void save({ stage: "check" });
+                  }}
+                >
+                  Ready for an independent check
+                </Button>
+              </View>
+            )}
+          </Card>
+        )}
       {stage === "check" && (
         <>
           <Card>

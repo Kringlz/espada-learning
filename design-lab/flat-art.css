@@ -1,4 +1,4 @@
-/* Streamline Ultimate Colors; palette adapted for Espada. Mathematical interactives stay live. */
+/* Historical mathematical instruments. Mathematical interactives stay live. */
 body[data-variant=m] .m-flat-art,
 body[data-variant=m] .m-section-art,
 body[data-variant=m] .m-catalog-art{object-fit:contain;background:#f7f4e9;border-radius:16px;display:block;flex-shrink:0}
@@ -42,3 +42,39 @@ body[data-variant=m] .m-radar-art{width:48px;height:48px;border-radius:10px;obje
 body[data-variant=m] .i-story-banner{background:#f7f4e9}body[data-variant=m] .i-story-banner img{object-fit:contain}body[data-variant=m] .i-story-banner span{color:#344e3c;background:#f7f4e9}
 
 body[data-variant=m] .m-art-credit{margin:48px 0 12px;font-size:11px;color:var(--muted);line-height:1.7}body[data-variant=m] .m-art-credit a{color:inherit;text-underline-offset:3px}
+
+/* Archive plates: original engravings, paper mounts, no icon treatment. */
+body[data-variant=m] .m-atlas-art{position:relative;overflow:hidden;background:#efeade;border-radius:8px;isolation:isolate}
+body[data-variant=m] .m-atlas-art img{position:absolute;width:88%;height:84%;left:6%;top:8%;object-fit:contain;mix-blend-mode:multiply;filter:grayscale(1) sepia(.25)}
+body[data-variant=m] .atlas-numbers img,body[data-variant=m] .atlas-algebra img{width:136%;left:-18%;transform:rotate(-36deg)}
+body[data-variant=m] .m-illustrated-topic>.m-atlas-art{flex:none}
+body[data-variant=m] .m-catalog-art{width:136px;height:106px}
+body[data-variant=m] .m-illustrated-topic{gap:24px;padding:20px 0}
+body[data-variant=m] .m-tree-topic-end>.m-atlas-art{width:128px;height:108px}
+body[data-variant=m] .m-native-shortcut-art .m-atlas-art{width:190px;height:140px}
+body[data-variant=m] .i-story-banner{background:#efeade}
+body[data-variant=m] .i-story-banner img{mix-blend-mode:multiply;filter:grayscale(1) sepia(.25);padding:24px}
+body[data-variant=m] .i-story-banner span{background:#efeade}
+@media(max-width:700px){body[data-variant=m] .m-catalog-art{width:90px;height:90px}body[data-variant=m] .m-illustrated-topic{gap:14px}body[data-variant=m] .m-tree-topic-end>.m-atlas-art{width:78px;height:82px}}
+
+/* Close views for phones, with a separate black / ivory plate in dark mode. */
+body[data-variant=m] .m-atlas-art img{width:100%;height:100%;left:0;top:0;filter:grayscale(1) contrast(1.18) sepia(.25)}
+body[data-variant=m] .atlas-numbers img,body[data-variant=m] .atlas-algebra img{width:160%;left:-30%}
+body.dark[data-variant=m] .m-atlas-art,body.dark[data-variant=m] .i-story-banner{background:#000}
+body.dark[data-variant=m] .m-atlas-art img,body.dark[data-variant=m] .i-story-banner img{mix-blend-mode:normal;filter:grayscale(1) contrast(1.18) invert(1) sepia(.28) brightness(.94)}
+body.dark[data-variant=m] .i-story-banner span{background:#000;color:#f2e8cf}
+body[data-variant=m] .i-story-banner img{padding:8px}
+@media(max-width:700px){
+ body[data-variant=m] .m-tree-topic-end>.m-atlas-art{width:106px;height:126px}
+ body[data-variant=m] .m-illustrated-topic{flex-wrap:wrap;gap:14px}
+ body[data-variant=m] .m-illustrated-topic>.m-atlas-art{width:100%;height:180px}
+ body[data-variant=m] .m-native-shortcut-art{height:148px}
+ body[data-variant=m] .m-native-shortcut-art .m-atlas-art{width:100%;height:148px}
+}
+
+@media(max-width:700px){
+ body[data-variant=m] .m-tree-topic-head{flex-direction:column;align-items:stretch}
+ body[data-variant=m] .m-tree-topic-end{order:-1;align-self:stretch;position:relative}
+ body[data-variant=m] .m-tree-topic-end>.m-atlas-art{width:100%;height:180px}
+ body[data-variant=m] .m-tree-topic-end>span:last-of-type{position:absolute;right:8px;bottom:8px;padding:3px 7px;border-radius:8px;background:var(--surface);color:var(--ink)}
+}

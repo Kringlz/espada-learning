@@ -1,3 +1,4 @@
+import { AtlasImage } from "./AtlasImage";
 import { useSounds } from "../engagement/Sounds";
 import { useUITheme } from "./ui";
 import React from "react";
@@ -67,7 +68,7 @@ export function VisualCard({
           }}
         >
           {cover ? (
-            <Image
+            <AtlasImage
               source={cover.image}
               accessible={false}
               resizeMode="contain"

@@ -1,5 +1,13 @@
 # Project log
 
+## 2026-10-07 — «Ясно» across Espada
+
+- Unified light/dark design, Espada branding, icon navigation and Atlas engravings across student, teacher, parent, administrator and authentication screens.
+- Student course has a dotted route and continuous lessons with explanations, videos and exercises together. Progress leads with actual points and published report charts.
+- Teacher overview focuses on assigned groups; parent overview shows the selected child's work and knowledge chart. Administration and secondary details use disclosures.
+- Added opt-in background music, separate effects toggle, volume controls and video audio focus. Existing registration, group membership, assessment rules and storage models are preserved.
+- Validation: TypeScript, 88 tests, web exports, local role navigation and connected authentication forms. Deployment runs database isolation checks before publishing. Physical native devices and live email confirmation were not exercised.
+
 ## 2026-10-02 — varied editorial covers and topic quizzes
 
 - Added forest, olive and sand textured editorial covers selected by topic, with contrasting text in both interface themes. Generated assets and their prompts are bundled locally.

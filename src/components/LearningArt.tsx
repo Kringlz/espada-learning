@@ -1,3 +1,4 @@
+import { AtlasImage } from "./AtlasImage";
 import React from "react";
 import { Image } from "react-native";
 import { sectionIllustrations } from "./SectionIllustrations";
@@ -35,7 +36,7 @@ export function topicArt(title: string, subject?: string): ArtKind {
   return "numbers";
 }
 
-/** Decorative Streamline artwork, kept separate from instructional diagrams. */
+/** Decorative historical engraving, kept separate from instructional diagrams. */
 export function LearningArt({
   kind,
   size = 150,
@@ -56,7 +57,7 @@ export function LearningArt({
   };
   const key = keys[kind];
   return (
-    <Image
+    <AtlasImage
       source={sectionIllustrations[key].image}
       resizeMode="contain"
       accessible={false}

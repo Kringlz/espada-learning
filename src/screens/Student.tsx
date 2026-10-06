@@ -5,7 +5,15 @@ import React, { useState } from "react";
 import { Linking, View } from "react-native";
 import { useLearning } from "../services/context";
 import { uid } from "../core/ids";
-import { Button, Card, Txt, Pill, colors, styles } from "../components/ui";
+import {
+  Button,
+  Card,
+  Disclosure,
+  Txt,
+  Pill,
+  colors,
+  styles,
+} from "../components/ui";
 export { Home, Learn, Progress } from "./Reports";
 export function Profile({ switchDemo }: { switchDemo?: () => void }) {
   const { colors, styles, preference, setPreference } = useUITheme();
@@ -15,7 +23,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
   return (
     <View style={{ gap: 16, maxWidth: 800 }}>
       <Txt size={27} weight="600">
-        Your learning space.
+        Профиль
       </Txt>
       <Card>
         <Pill>
@@ -33,8 +41,8 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
         </Txt>
         <Txt color={colors.muted}>
           {mode === "demo"
-            ? "Local demo · synthetic account · saved on this device"
-            : "Connected account · access controlled by your tutoring organisation"}
+            ? "Учебный аккаунт · локальное демо"
+            : "Аккаунт Espada"}
         </Txt>
       </Card>
       <Card>
@@ -86,10 +94,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           Сменить демоаккаунт
         </Button>
       )}
-      <Card>
-        <Txt size={20} weight="600">
-          Learning, with care
-        </Txt>
+      <Disclosure title="Об Espada" icon="info">
         <Txt>
           Espada хранит результаты работ, состояния тем и учебную активность
           отдельно. Просмотр урока или видео не подтверждает освоение темы.
@@ -102,31 +107,32 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           Need help? Bring a tricky question to your next tutoring session. Your
           teacher can see completed checks and choose a useful next step.
         </Txt>
-      </Card>
-      <View style={{ gap: 4 }}>
-        <Txt
-          size={12}
-          color={colors.muted}
-          accessibilityRole="link"
-          onPress={() => void Linking.openURL("https://www.streamlinehq.com")}
-        >
-          Иллюстрации: Streamline · цвета адаптированы для Espada
-        </Txt>
-        <Txt
-          size={12}
-          color={colors.muted}
-          accessibilityRole="link"
-          onPress={() =>
-            void Linking.openURL("https://creativecommons.org/licenses/by/4.0/")
-          }
-        >
-          Лицензия CC BY 4.0
-        </Txt>
-      </View>
-      <Card>
-        <Txt size={20} weight="600">
-          Your data
-        </Txt>
+        <View style={{ gap: 4 }}>
+          <Txt
+            size={12}
+            color={colors.muted}
+            accessibilityRole="link"
+            onPress={() =>
+              void Linking.openURL("https://www.c82.net/math-instruments/about")
+            }
+          >
+            Гравюры: Бион и Стоун · реставрация Nicholas Rougeux
+          </Txt>
+          <Txt
+            size={12}
+            color={colors.muted}
+            accessibilityRole="link"
+            onPress={() =>
+              void Linking.openURL(
+                "https://creativecommons.org/publicdomain/zero/1.0/",
+              )
+            }
+          >
+            Исторический атлас · CC0
+          </Txt>
+        </View>
+      </Disclosure>
+      <Disclosure title="Ваши данные" icon="shield">
         <Txt color={colors.muted}>
           {mode === "demo"
             ? "This demo stays in local browser or device storage. Clearing that storage removes the demo records. Different devices do not sync."
@@ -162,7 +168,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
               Request account deletion
             </Button>
           ))}
-      </Card>
+      </Disclosure>
       {mode === "supabase" && (
         <Button secondary onPress={() => void signOut()}>
           Sign out

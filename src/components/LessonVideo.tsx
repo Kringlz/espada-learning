@@ -1,3 +1,4 @@
+import { useVideoAudioFocus } from "../engagement/useVideoAudioFocus";
 import { emptyWatch, trackWatch } from "../engagement/rewards";
 import { useUITheme } from "./ui";
 import React, { useRef, useEffect, useState } from "react";
@@ -16,6 +17,7 @@ export function LessonVideo({
   onSave: (n: number) => void;
   onWatched?: () => void;
 }) {
+  useVideoAudioFocus();
   const { colors, styles } = useUITheme();
   const complete = useRef(onWatched);
   complete.current = onWatched;

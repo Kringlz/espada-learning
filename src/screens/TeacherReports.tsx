@@ -107,15 +107,10 @@ export function TeacherReports({
           Назад к обзору
         </Button>
       )}
-      <Txt size={26} weight="600">
-        Результаты тестов
+      <Txt size={32} weight="700">
+        Работы
       </Txt>
-      {!student && (
-        <Txt size={13} color={colors.muted}>
-          Выберите группу и ученика. Затем добавьте результат или откройте
-          нужную работу для исправления.
-        </Txt>
-      )}
+
       <Steps
         labels={["Группа", "Ученик", "Работа"]}
         current={!group ? 0 : !student ? 1 : 2}

@@ -8,7 +8,7 @@ export default {
     userInterfaceStyle: "light",
     ios: { supportsTablet: true, bundleIdentifier: "com.espada.learning" },
     android: { package: "com.espada.learning" },
-    web: { name: "Espada · Каждый день — шаг вперёд", bundler: "metro" },
+    web: { name: "Espada", bundler: "metro" },
     experiments: { baseUrl: process.env.GITHUB_PAGES_BASE_PATH ?? "" },
     plugins: [
       "expo-secure-store",

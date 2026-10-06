@@ -1,3 +1,7 @@
+import {
+  WorkspaceOverview,
+  LearnerSnapshot,
+} from "../components/ClarityWorkspace";
 import { GroupEnrollment, ParentLinkEditor } from "./Family";
 import { useUITheme } from "../components/ui";
 import { CourseLibrary } from "../course/CourseLibrary";
@@ -10,7 +14,6 @@ import {
 import { GroupHomework } from "./GroupHomework";
 import { groupStudents, teachingGroups } from "../core/groups";
 import { TeacherReports } from "./TeacherReports";
-import { topicMastery } from "../core/reports";
 import { errorMessage } from "../i18n/errors";
 import { TopicTree } from "../components/TopicTree";
 import { VideoLessons } from "../components/VideoLessons";
@@ -20,17 +23,13 @@ import { useLearning } from "../services/context";
 import { Topic, Profile, Classroom } from "../core/types";
 import { uid } from "../core/ids";
 import {
-  Icon,
   Button,
   Card,
   Txt,
-  Pill,
   Field,
-  SectionTitle,
-  colors,
-  styles,
   dateText,
   Choice,
+  Disclosure,
 } from "../components/ui";
 import { Progress } from "./Student";
 export function Staff({
@@ -42,7 +41,7 @@ export function Staff({
 }) {
   const { colors, styles } = useUITheme();
   const { state: s, actor } = useLearning();
-  const students = s.profiles.filter((p) => p.role === "student" && p.active);
+  const [groupView, setGroupView] = useState(false);
   const [classId, setClassId] = useState("");
   const group = teachingGroups(s, actor).find((c) => c.id === classId);
   const [studentId, setStudentId] = useState("");
@@ -52,10 +51,8 @@ export function Staff({
   function changeGroup(id: string) {
     setClassId(id);
     setStudentId("");
-    setDetail(false);
     setStudentTopic(null);
   }
-  const [detail, setDetail] = useState(false);
   const [create, setCreate] = useState(false);
   const [studentTopic, setStudentTopic] = useState<string | null>(null);
   const [videoTopic, setVideoTopic] = useState<string | null>(null);
@@ -98,129 +95,43 @@ export function Staff({
   }
   return (
     <View style={{ gap: 16 }}>
-      <View>
-        <Pill>
-          {actor.role === "admin" ? "ADMINISTRATOR" : "TEACHER"} WORKSPACE
-        </Pill>
-        <Txt size={27} weight="600" style={{ marginTop: 10 }}>
-          {tab === "Overview"
-            ? "Кабинет учителя"
-            : tab === "Assessments"
-              ? "From paper to a clearer next step."
-              : tab === "Students"
-                ? "Группы и домашняя работа"
-                : "Учебная программа"}
-        </Txt>
-        <Txt color={colors.muted}>
-          {tab === "Overview"
-            ? "Your classes, recent evidence and the next useful conversation."
-            : "All changes connect to the same student learning records."}
-        </Txt>
-      </View>
-      {tab === "Overview" && (
-        <>
-          <View style={styles.grid}>
-            {[
-              {
-                title: "Assigned students",
-                icon: "users" as const,
-                value: students.length,
-              },
-              {
-                title: "Published assessments",
-                icon: "file-text" as const,
-                value: (s.reports ?? []).filter((a) => a.status === "published")
-                  .length,
-              },
-              {
-                title: "Checks completed",
-                icon: "check-circle" as const,
-                value: s.attempts.length,
-              },
-            ].map((x) => (
-              <Card key={x.title} style={{ flex: 1, minWidth: 145 }}>
-                <View style={styles.row}>
-                  <Icon name={x.icon} color={colors.green} />
-                  <Txt size={25} weight="600">
-                    {x.value}
-                  </Txt>
-                </View>
-                <Txt color={colors.muted}>{x.title}</Txt>
-              </Card>
-            ))}
-          </View>
-          <View style={styles.grid}>
-            <Card style={{ flex: 1, minWidth: 280 }}>
-              <Txt size={21} weight="600">
-                Your classes
-              </Txt>
-              {s.classes.map((c) => (
-                <View key={c.id} style={{ gap: 8, paddingVertical: 10 }}>
-                  <Txt weight="600">{c.name}</Txt>
-                  <Txt color={colors.muted} size={13}>
-                    {groupStudents(s, c.id).length} учеников · преподавателей:{" "}
-                    {c.teacherIds.length}
-                  </Txt>
-                </View>
-              ))}
-              <Button onPress={() => setCreate(true)} icon="plus">
-                Record an assessment
-              </Button>
-            </Card>
-            <Card style={{ flex: 1, minWidth: 280 }}>
-              <Txt size={21} weight="600">
-                Useful teaching opportunities
-              </Txt>
-              <Txt size={13} color={colors.muted}>
-                Common areas to revisit, without ranking students.
-              </Txt>
-              {s.topics
-                .map((t) => ({
-                  t,
-                  count: students.filter((p) => {
-                    const e = topicMastery(s, p.id, t.id);
-                    return e.status === "Изучаю";
-                  }).length,
-                }))
-                .filter((x) => x.count > 0)
-                .map((x) => (
-                  <Txt key={x.t.id} size={14}>
-                    {x.t.title} · {x.count} learner(s) developing
-                  </Txt>
-                ))}
-            </Card>
-          </View>
-          <SectionTitle title="Recent learning activity" />
-          {s.attempts.length ? (
-            s.attempts
-              .slice()
-              .reverse()
-              .slice(0, 10)
-              .map((a) => (
-                <Card key={a.id}>
-                  <Txt weight="600">
-                    {s.profiles.find((p) => p.id === a.studentId)?.name}{" "}
-                    completed {s.topics.find((t) => t.id === a.topicId)?.title}
-                  </Txt>
-                  <Txt size={13} color={colors.muted}>
-                    {dateText(a.at)} · Independent check · visible in student
-                    progress
-                  </Txt>
-                </Card>
-              ))
-          ) : (
-            <Card>
-              <Txt>Completed student checks will appear here.</Txt>
-            </Card>
+      {tab === "Overview" && !groupView ? (
+        <WorkspaceOverview
+          newReport={() => setCreate(true)}
+          openGroup={(id) => {
+            changeGroup(id);
+            setGroupView(true);
+            onScreenChange();
+          }}
+        />
+      ) : (
+        <View style={{ gap: 10 }}>
+          {groupView && (
+            <Button
+              secondary
+              small
+              icon="arrow-left"
+              onPress={() => setGroupView(false)}
+            >
+              К обзору
+            </Button>
           )}
-        </>
+          <Txt size={32} weight="700">
+            {tab === "Students" || groupView
+              ? "Мои группы"
+              : "Учебная программа"}
+          </Txt>
+        </View>
       )}
-      {tab === "Students" && (
+      {(tab === "Students" || groupView) && (
         <>
           <GroupPicker value={group?.id ?? ""} onChange={changeGroup} />
           {group && (
             <>
-              <GroupCodeAndSchedule key={`code-${group.id}`} classId={group.id} />
+              <GroupCodeAndSchedule
+                key={`code-${group.id}`}
+                classId={group.id}
+              />
               <GroupEnrollment key={`enroll-${group.id}`} classId={group.id} />
               <GroupHomework key={group.id} classId={group.id} />
               <StudentPicker
@@ -229,27 +140,24 @@ export function Staff({
                 value={selectedStudent?.id ?? ""}
                 onChange={(id) => {
                   setStudentId(id);
-                  setDetail(false);
                 }}
               />
               {selectedStudent && (
                 <>
+                  <LearnerSnapshot
+                    studentId={selectedStudent.id}
+                    details={
+                      <Progress
+                        key={studentId}
+                        studentId={studentId}
+                        openTopic={setStudentTopic}
+                      />
+                    }
+                  />
                   <ParentLinkEditor
                     key={selectedStudent.id}
                     studentId={selectedStudent.id}
                   />
-                  <Button secondary onPress={() => setDetail(!detail)}>
-                    {detail
-                      ? "Скрыть прогресс ученика"
-                      : "Посмотреть прогресс ученика"}
-                  </Button>
-                  {detail && (
-                    <Progress
-                      key={studentId}
-                      studentId={studentId}
-                      openTopic={setStudentTopic}
-                    />
-                  )}
                 </>
               )}
             </>
@@ -469,17 +377,14 @@ function Management() {
   return (
     <View style={{ gap: 16, maxWidth: 1000 }}>
       <Txt size={27} weight="600">
-        Manage your learning community.
+        Управление
       </Txt>
       {Boolean(notice) && (
         <Card>
           <Txt accessibilityRole="alert">{notice}</Txt>
         </Card>
       )}
-      <Card>
-        <Txt size={21} weight="600">
-          Accounts
-        </Txt>
+      <Disclosure title="Аккаунты" icon="users">
         {s.profiles.map((p) => (
           <View
             key={p.id}
@@ -510,53 +415,54 @@ function Management() {
             )}
           </View>
         ))}
-        <Field
-          label="New account display name"
-          value={profile.name}
-          onChangeText={(name) => setProfile({ ...profile, name })}
-        />
-        {mode === "supabase" && (
-          <>
-            <Txt size={13}>
-              Create the authentication user in the Supabase dashboard first.
-              Paste its UUID here; no passwords or privileged keys enter this
-              console.
-            </Txt>
-            <Field
-              label="Existing authentication user UUID"
-              value={profile.id}
-              onChangeText={(id) => setProfile({ ...profile, id })}
-            />
-          </>
-        )}
-        <View style={[styles.row, { flexWrap: "wrap" }]}>
-          {(["student", "parent", "teacher", "admin"] as const).map((role) => (
-            <Button
-              key={role}
-              small
-              secondary={profile.role !== role}
-              onPress={() => setProfile({ ...profile, role })}
-            >
-              {role}
-            </Button>
-          ))}
-        </View>
-        <Button
-          disabled={saving || !profile.name.trim()}
-          onPress={() =>
-            void act(
-              { type: "saveProfile", profile },
-              "Account saved. Assign class membership below to grant access.",
-            )
-          }
-        >
-          Save account
-        </Button>
-      </Card>
-      <Card>
-        <Txt size={21} weight="600">
-          Classes & membership
-        </Txt>
+        <Disclosure title="Добавить аккаунт вручную" icon="user-plus">
+          <Field
+            label="New account display name"
+            value={profile.name}
+            onChangeText={(name) => setProfile({ ...profile, name })}
+          />
+          {mode === "supabase" && (
+            <>
+              <Txt size={13}>
+                Create the authentication user in the Supabase dashboard first.
+                Paste its UUID here; no passwords or privileged keys enter this
+                console.
+              </Txt>
+              <Field
+                label="Existing authentication user UUID"
+                value={profile.id}
+                onChangeText={(id) => setProfile({ ...profile, id })}
+              />
+            </>
+          )}
+          <View style={[styles.row, { flexWrap: "wrap" }]}>
+            {(["student", "parent", "teacher", "admin"] as const).map(
+              (role) => (
+                <Button
+                  key={role}
+                  small
+                  secondary={profile.role !== role}
+                  onPress={() => setProfile({ ...profile, role })}
+                >
+                  {role}
+                </Button>
+              ),
+            )}
+          </View>
+          <Button
+            disabled={saving || !profile.name.trim()}
+            onPress={() =>
+              void act(
+                { type: "saveProfile", profile },
+                "Account saved. Assign class membership below to grant access.",
+              )
+            }
+          >
+            Save account
+          </Button>
+        </Disclosure>
+      </Disclosure>
+      <Disclosure title="Группы" icon="grid">
         <View style={[styles.row, { flexWrap: "wrap" }]}>
           {s.classes.map((c) => (
             <Button
@@ -629,7 +535,7 @@ function Management() {
             />
           ))}
         <Button
-          disabled={saving}
+          disabled={saving || !classroom.name.trim()}
           onPress={() =>
             void act(
               { type: "saveClass", classroom },
@@ -642,11 +548,8 @@ function Management() {
         {s.classes.some((c) => c.id === classroom.id) && (
           <GroupCodeAndSchedule key={classroom.id} classId={classroom.id} />
         )}
-      </Card>
-      <Card>
-        <Txt size={21} weight="600">
-          Deletion requests
-        </Txt>
+      </Disclosure>
+      <Disclosure title="Запросы на удаление" icon="archive">
         <Txt size={13} color={colors.muted}>
           {mode === "demo"
             ? "Demo erasure removes this student and all related synthetic records."
@@ -691,7 +594,7 @@ function Management() {
         {!s.deletionRequests.length && (
           <Txt color={colors.muted}>No pending requests.</Txt>
         )}
-      </Card>
+      </Disclosure>
     </View>
   );
 }

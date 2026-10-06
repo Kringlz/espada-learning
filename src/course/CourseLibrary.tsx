@@ -1,3 +1,6 @@
+import { ClarityReading } from "./ClarityReading";
+import { ClarityRoute } from "./ClarityRoute";
+import { useLessonFocus } from "../components/LessonFocus";
 import { SectionTabs } from "../components/SectionTabs";
 import { courseVideos, videoCount } from "./videos";
 import { SoftReveal } from "../components/Motion";
@@ -48,7 +51,7 @@ export function CourseLibrary({
   mode?: "course" | "videos";
   onTopicChange?: (selected: boolean) => void;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   const { actor } = useLearning();
   return (
     <CourseBrowser
@@ -74,7 +77,7 @@ function CourseBrowser({
   mode: "course" | "videos";
   onTopicChange?: (selected: boolean) => void;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   const { width } = useWindowDimensions();
   const [gridWidth, setGridWidth] = useState(0);
   const columns = gridWidth >= 780 ? 3 : gridWidth >= 420 ? 2 : 1;
@@ -84,6 +87,7 @@ function CourseBrowser({
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<CourseTopic | null>(null);
   const storage = useCourseProgress(actorId);
+  useLessonFocus(!!selected, () => setSelected(null));
   useEffect(() => {
     onTopicChange?.(!!selected);
   }, [selected, onTopicChange]);
@@ -156,9 +160,7 @@ function CourseBrowser({
         <>
           <Disclosure
             key={`grade-${grade}`}
-            title={
-              grade ? `${grade} класс · изменить` : "Все классы · изменить"
-            }
+            title={grade ? `${grade} класс` : "Все классы"}
             icon="book-open"
           >
             <View style={[styles.row, { flexWrap: "wrap" }]}>
@@ -234,43 +236,56 @@ function CourseBrowser({
               </Button>
             </Card>
           )}
-          <View
-            onLayout={(event) => setGridWidth(event.nativeEvent.layout.width)}
-            style={{ flexDirection: "row", flexWrap: "wrap", gap: gridGap }}
-          >
-            {filtered.map((t) => {
-              const p = storage.progress[t.id];
-              const title = courseContent[t.id].pages[0].title;
-              return (
-                <View
-                  key={t.id}
-                  style={{
-                    width: gridWidth
-                      ? (gridWidth - gridGap * (columns - 1)) / columns
-                      : "48%",
-                  }}
-                >
-                  <VisualCard
-                    title={title}
-                    kind={topicArt(t.title, t.subject)}
-                    cover={topicCover(t.title, t.subject)}
-                    compact={width < 580}
-                    horizontal={columns === 1}
-                    caption={
-                      mode === "videos"
-                        ? `${videoCount(t.id)} видео · по частям урока`
-                        : `${coursePartsLabel(t.pages.length)}${p?.updatedAt ? " · продолжить" : ""}`
-                    }
-                    progress={
-                      (100 * (p?.readPages.length ?? 0)) / t.pages.length
-                    }
-                    label={`${mode === "videos" ? "Видео" : p?.updatedAt ? "Продолжить" : "Начать"}: ${title}, ${t.grade} класс`}
-                    onPress={() => selectTopic(t)}
-                  />
-                </View>
-              );
-            })}
-          </View>
+          {clarity ? (
+            <ClarityRoute
+              topics={filtered}
+              progress={storage.progress}
+              videos={mode === "videos"}
+              open={selectTopic}
+            />
+          ) : (
+            <>
+              <View
+                onLayout={(event) =>
+                  setGridWidth(event.nativeEvent.layout.width)
+                }
+                style={{ flexDirection: "row", flexWrap: "wrap", gap: gridGap }}
+              >
+                {filtered.map((t) => {
+                  const p = storage.progress[t.id];
+                  const title = courseContent[t.id].pages[0].title;
+                  return (
+                    <View
+                      key={t.id}
+                      style={{
+                        width: gridWidth
+                          ? (gridWidth - gridGap * (columns - 1)) / columns
+                          : "48%",
+                      }}
+                    >
+                      <VisualCard
+                        title={title}
+                        kind={topicArt(t.title, t.subject)}
+                        cover={topicCover(t.title, t.subject)}
+                        compact={width < 580}
+                        horizontal={columns === 1}
+                        caption={
+                          mode === "videos"
+                            ? `${videoCount(t.id)} видео · по частям урока`
+                            : `${coursePartsLabel(t.pages.length)}${p?.updatedAt ? " · продолжить" : ""}`
+                        }
+                        progress={
+                          (100 * (p?.readPages.length ?? 0)) / t.pages.length
+                        }
+                        label={`${mode === "videos" ? "Видео" : p?.updatedAt ? "Продолжить" : "Начать"}: ${title}, ${t.grade} класс`}
+                        onPress={() => selectTopic(t)}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            </>
+          )}
           {extras}
         </>
       )}
@@ -292,10 +307,12 @@ function CourseReader({
   next: (t: CourseTopic) => void;
   initialTab: "theory" | "video";
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   const p = storage.progress[topic.id] ?? emptyProgress();
   const [page, setPage] = useState(p.page);
-  const [tab, setTab] = useState<"theory" | "video" | "practice">(initialTab);
+  const [tab, setTab] = useState<"overview" | "theory" | "video" | "practice">(
+    clarity && initialTab === "theory" ? "overview" : initialTab,
+  );
   const [sourceError, setSourceError] = useState("");
   useEffect(() => {
     if (storage.ready) setPage(p.page);
@@ -321,24 +338,58 @@ function CourseReader({
   }
   return (
     <SoftReveal changeKey={`${tab}:${page}`} style={{ gap: 22 }}>
-      <Button small secondary icon="arrow-left" onPress={back}>
-        Все темы
-      </Button>
+      {!clarity && (
+        <Button small secondary icon="arrow-left" onPress={back}>
+          Все темы
+        </Button>
+      )}
+      {clarity && tab === "practice" && (
+        <Button
+          small
+          secondary
+          icon="book-open"
+          onPress={() => setTab("theory")}
+        >
+          К объяснению
+        </Button>
+      )}
       {tab === "practice" && (
-        <Txt size={26} weight="700">
+        <Txt size={clarity ? 21 : 26} weight="700">
           {content.pages[0].title}
         </Txt>
       )}
-      <SectionTabs
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: "theory", label: "Урок", icon: "book-open" },
-          { value: "video", label: "Видео", icon: "play-circle" },
-          { value: "practice", label: "Задания", icon: "check-square" },
-        ]}
-      />
-      {tab === "theory" ? (
+      {tab === "overview" ? (
+        <>
+          <TopicCover
+            title={content.pages[0].title}
+            themeTitle={topic.title}
+            subject={topic.subject}
+            eyebrow={`${topic.grade} КЛАСС`}
+          />
+          <Button fullWidth icon="arrow-right" onPress={() => setTab("theory")}>
+            {p.readPages.length || Object.keys(p.quiz).length
+              ? "Продолжить урок"
+              : "Начать урок"}
+          </Button>
+        </>
+      ) : clarity ? null : (
+        <SectionTabs
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: "theory", label: "Урок", icon: "book-open" },
+            { value: "video", label: "Видео", icon: "play-circle" },
+            { value: "practice", label: "Задания", icon: "check-square" },
+          ]}
+        />
+      )}
+      {tab === "overview" ? null : tab === "theory" && clarity ? (
+        <ClarityReading
+          topic={topic}
+          storage={storage}
+          next={nextTopic ? () => next(nextTopic) : undefined}
+        />
+      ) : tab === "theory" ? (
         <>
           <TopicCover
             title={currentContent.title}
@@ -493,49 +544,53 @@ function CourseReader({
           next={nextTopic ? () => next(nextTopic) : undefined}
         />
       )}
-      <Txt
-        size={12}
-        color={storage.error ? colors.red : colors.muted}
-        accessibilityLiveRegion="polite"
-      >
-        {storage.error
-          ? "Изменения не сохранены"
-          : storage.saving
-            ? "Сохраняем…"
-            : storage.ready
-              ? "Сохранено на устройстве"
-              : "Загружаем сохранённые отметки…"}
-      </Txt>
-      <Disclosure title="О конспекте и источниках" icon="info">
-        <Txt size={13}>
-          Математика, {topic.grade} класс · страницы {topic.startPage}–
-          {topic.endPage} предоставленного PDF. Текст адаптирован для чтения в
-          приложении; математические обозначения и чертежи сохранены.
+      {(!clarity || !!storage.error || !storage.ready) && (
+        <Txt
+          size={12}
+          color={storage.error ? colors.red : colors.muted}
+          accessibilityLiveRegion="polite"
+        >
+          {storage.error
+            ? "Изменения не сохранены"
+            : storage.saving
+              ? "Сохраняем…"
+              : storage.ready
+                ? "Сохранено на устройстве"
+                : "Загружаем сохранённые отметки…"}
         </Txt>
-        <Txt size={13}>{topic.practice.source}</Txt>
-        {Platform.OS === "web" && (
-          <Button
-            secondary
-            icon="external-link"
-            onPress={() => {
-              setSourceError("");
-              void Linking.openURL(
-                Asset.fromModule(pdfAssets[topic.grade]).uri +
-                  `#page=${topic.startPage}`,
-              ).catch(() =>
-                setSourceError("Не удалось открыть PDF. Повторите попытку."),
-              );
-            }}
-          >
-            Открыть оригинал PDF
-          </Button>
-        )}
-        {!!sourceError && (
-          <Txt accessibilityRole="alert" color={colors.red}>
-            {sourceError}
+      )}
+      {(!clarity || tab !== "overview") && (
+        <Disclosure title="О конспекте и источниках" icon="info">
+          <Txt size={13}>
+            Математика, {topic.grade} класс · страницы {topic.startPage}–
+            {topic.endPage} предоставленного PDF. Текст адаптирован для чтения в
+            приложении; математические обозначения и чертежи сохранены.
           </Txt>
-        )}
-      </Disclosure>
+          <Txt size={13}>{topic.practice.source}</Txt>
+          {Platform.OS === "web" && (
+            <Button
+              secondary
+              icon="external-link"
+              onPress={() => {
+                setSourceError("");
+                void Linking.openURL(
+                  Asset.fromModule(pdfAssets[topic.grade]).uri +
+                    `#page=${topic.startPage}`,
+                ).catch(() =>
+                  setSourceError("Не удалось открыть PDF. Повторите попытку."),
+                );
+              }}
+            >
+              Открыть оригинал PDF
+            </Button>
+          )}
+          {!!sourceError && (
+            <Txt accessibilityRole="alert" color={colors.red}>
+              {sourceError}
+            </Txt>
+          )}
+        </Disclosure>
+      )}
     </SoftReveal>
   );
 }

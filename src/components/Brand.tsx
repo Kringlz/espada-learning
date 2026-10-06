@@ -1,15 +1,22 @@
 import React from "react";
-import { Image, View } from "react-native";
+import { Image, View, useWindowDimensions } from "react-native";
 import { useTheme } from "../theme/Theme";
 import { Txt } from "./ui";
 
-export function Brand() {
+export function Brand({ compact = false }: { compact?: boolean }) {
   const { dark } = useTheme();
+  const narrow = useWindowDimensions().width < 360;
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: narrow ? 6 : 10,
+      }}
+    >
       <View
         style={{
-          width: 44,
+          width: narrow ? 38 : 44,
           height: 48,
           borderRadius: 12,
           overflow: "hidden",
@@ -29,9 +36,11 @@ export function Brand() {
           resizeMode="contain"
         />
       </View>
-      <Txt size={27} weight="700" style={{ letterSpacing: -1 }}>
-        espada.
-      </Txt>
+      {!compact && (
+        <Txt size={narrow ? 23 : 27} weight="700" style={{ letterSpacing: -1 }}>
+          Espada
+        </Txt>
+      )}
     </View>
   );
 }

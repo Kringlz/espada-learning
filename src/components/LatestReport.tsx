@@ -103,6 +103,8 @@ export function LatestReport({
           style={{
             flexGrow: 1,
             flexBasis: 300,
+            flexShrink: 1,
+            maxWidth: "100%",
             minWidth: 0,
             backgroundColor: colors.light,
             paddingVertical: 8,
@@ -111,7 +113,16 @@ export function LatestReport({
         >
           <ResultRadar template={template} report={report} earlier={earlier} />
         </View>
-        <View style={{ flexGrow: 1, flexBasis: 260, gap: 14 }}>
+        <View
+          style={{
+            flexGrow: 1,
+            flexBasis: 260,
+            flexShrink: 1,
+            maxWidth: "100%",
+            minWidth: 0,
+            gap: 14,
+          }}
+        >
           {!!strongest.length && (
             <View
               style={{

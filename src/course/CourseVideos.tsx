@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Linking, View } from "react-native";
+import { Linking, View, Pressable } from "react-native";
 import {
   Button,
   Card,
@@ -18,14 +18,22 @@ import { videosForPage, youtubePlaylistUrl, youtubeWatchUrl } from "./videos";
 export function CourseVideos({
   topicId,
   page,
+  embedded = false,
+  onOpen,
+  excludeVideoIds = [],
 }: {
   topicId: string;
   page: number;
+  embedded?: boolean;
+  onOpen?: () => void;
+  excludeVideoIds?: string[];
 }) {
   const { colors, styles } = useUITheme();
   const active = useContext(MotionActiveContext);
   const { award, earned } = useRewards();
-  const videos = videosForPage(topicId, page);
+  const videos = videosForPage(topicId, page).filter(
+    (video) => !excludeVideoIds.includes(video.id),
+  );
   const [selected, setSelected] = useState(0);
   const [opened, setOpened] = useState(false);
   const [error, setError] = useState("");
@@ -51,6 +59,91 @@ export function CourseVideos({
       );
     }
   }
+  if (embedded)
+    return (
+      <View style={{ gap: 12 }}>
+        {opened && active ? (
+          <YouTubePlayer
+            key={video.id}
+            id={video.id}
+            title={video.title}
+            onWatched={() => award([event])}
+          />
+        ) : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Смотреть видео: ${video.title}`}
+            onPress={() => {
+              onOpen?.();
+              setOpened(true);
+            }}
+            style={({ pressed }) => ({
+              backgroundColor: colors.light,
+              borderRadius: 24,
+              minHeight: 160,
+              padding: 24,
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 16,
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: colors.primary,
+              }}
+            >
+              <Icon name="play" size={28} color={colors.onPrimary} />
+            </View>
+            <Txt size={16} weight="600">
+              {video.duration}
+              {earned(event) ? " · ✓" : ""}
+            </Txt>
+          </Pressable>
+        )}
+        {opened && (
+          <Disclosure title="О видео" icon="info">
+            <Txt size={16}>{video.title}</Txt>
+            <Txt size={14} color={colors.muted}>
+              {video.sourceTitle}
+            </Txt>
+            {videos.length > 1 &&
+              videos.map((item, i) => (
+                <Button
+                  key={item.id}
+                  small
+                  secondary
+                  selected={selected === i}
+                  onPress={() => {
+                    setSelected(i);
+                    onOpen?.();
+                    setOpened(true);
+                  }}
+                >
+                  {item.title}
+                </Button>
+              ))}
+            <Button
+              small
+              secondary
+              onPress={() => void openLink(youtubeWatchUrl(video))}
+            >
+              Открыть на YouTube
+            </Button>
+          </Disclosure>
+        )}
+        {!!error && (
+          <Txt accessibilityRole="alert" color={colors.red}>
+            {error}
+          </Txt>
+        )}
+      </View>
+    );
   return (
     <Card style={{ gap: 16 }}>
       <Txt size={12} color={colors.muted}>

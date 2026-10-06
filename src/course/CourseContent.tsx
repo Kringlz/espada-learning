@@ -9,15 +9,17 @@ import { Button, colors, Txt, Icon, Disclosure } from "../components/ui";
 export function CourseContent({
   blocks,
   nested = false,
+  emphasis = false,
 }: {
   blocks: ContentBlock[];
   nested?: boolean;
+  emphasis?: boolean;
 }) {
   const { colors, styles } = useUITheme();
   return (
     <View style={{ gap: nested ? 16 : 28 }}>
       {blocks.map((block, i) => (
-        <Block key={i} block={block} />
+        <Block key={i} block={block} emphasis={emphasis} />
       ))}
     </View>
   );
@@ -72,7 +74,13 @@ function Figure({
     </View>
   );
 }
-function Block({ block }: { block: ContentBlock }) {
+function Block({
+  block,
+  emphasis = false,
+}: {
+  block: ContentBlock;
+  emphasis?: boolean;
+}) {
   const { colors, styles } = useUITheme();
   if (block.kind === "calculation")
     return (
@@ -281,5 +289,7 @@ function Block({ block }: { block: ContentBlock }) {
       </View>
     );
   }
-  return "runs" in block ? <RichText runs={block.runs} /> : null;
+  return "runs" in block ? (
+    <RichText runs={block.runs} size={emphasis ? 26 : undefined} />
+  ) : null;
 }

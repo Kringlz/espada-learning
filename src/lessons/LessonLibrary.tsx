@@ -1,3 +1,5 @@
+import { AtlasImage } from "../components/AtlasImage";
+import { useLessonFocus } from "../components/LessonFocus";
 import { useRewards } from "../engagement/RewardContext";
 import { Confetti } from "../components/Motion";
 import { useUITheme } from "../components/ui";
@@ -185,6 +187,12 @@ export function LessonLibrary({
   useScreenScroll(
     `${lesson?.id ?? "catalog"}:${attempt?.id ?? ""}:${admin?.id ?? ""}:${importing}`,
   );
+  useLessonFocus(actor.role === "student" && !!(lesson || attempt), () => {
+    if (attempt) {
+      if (initialAttemptId && back) back();
+      else leaveAttempt();
+    } else setLesson(null);
+  });
   const startKey = useRef(uid());
   async function run(action: () => Promise<void>) {
     if (busy) return;
@@ -431,7 +439,7 @@ export function LessonLibrary({
                         last = attempts.find((a) => a.status === "submitted");
                       return (
                         <Card key={l.id}>
-                          <Image
+                          <AtlasImage
                             source={topicCover(l.title).image}
                             accessible={false}
                             resizeMode="cover"

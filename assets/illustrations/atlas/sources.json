@@ -1,0 +1,51 @@
+{
+  "collection": "The Construction & Principal Uses of Mathematical Instruments (1758)",
+  "authors": "Nicolas Bion; English edition and additions by Edmund Stone",
+  "restoration": "Nicholas Rougeux, 2022",
+  "license": "CC0 1.0 Universal (restored figures)",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "licenseEvidence": "https://www.c82.net/math-instruments/about#licensing",
+  "note": "Original image files unmodified. Layout, image sizing, optional grayscale filter and paper backgrounds are implemented by Espada UI. Historical decorative plates, not instructional diagrams.",
+  "assets": {
+    "algebra": {
+      "title": "Вычислительный сектор",
+      "page": "https://www.c82.net/math-instruments/book2-chapter1",
+      "file": "https://www.c82.net/images/math-instruments/figures/plate-6/fig-1.jpg"
+    },
+    "geometry": {
+      "title": "Чертёжные циркули",
+      "page": "https://www.c82.net/math-instruments/book1-chapter1",
+      "file": "https://www.c82.net/images/math-instruments/figures/plate-1/fig-A.jpg"
+    },
+    "numbers": {
+      "title": "Счётная шкала",
+      "page": "https://www.c82.net/math-instruments/book1-additions-chapter1",
+      "file": "https://www.c82.net/images/math-instruments/figures/plate-3/fig-1.jpg"
+    },
+    "fractions": {
+      "title": "Делительный циркуль",
+      "page": "https://www.c82.net/math-instruments/book3-chapter1",
+      "file": "https://www.c82.net/images/math-instruments/figures/plate-9/fig-G.jpg"
+    },
+    "ratio": {
+      "title": "Пантограф",
+      "page": "https://www.c82.net/math-instruments/book3-chapter2",
+      "file": "https://www.c82.net/images/math-instruments/figures/plate-10/fig-K.jpg"
+    },
+    "graphs": {
+      "title": "Эллипсограф",
+      "page": "https://www.c82.net/math-instruments/book3-chapter1",
+      "file": "https://www.c82.net/images/math-instruments/figures/plate-9/fig-L.jpg"
+    },
+    "probability": {
+      "title": "Измерительная шкала",
+      "page": "https://www.c82.net/math-instruments/book1-chapter3",
+      "file": "https://www.c82.net/images/math-instruments/figures/plate-2/fig-E.jpg"
+    },
+    "practice": {
+      "title": "Drawing pen and pencil holder",
+      "page": "https://www.c82.net/math-instruments/book1-chapter1",
+      "file": "https://www.c82.net/images/math-instruments/figures/plate-1/fig-C.jpg"
+    }
+  }
+}

@@ -53,9 +53,7 @@ export function GroupPicker({
           <Txt size={18} weight="600">
             Выберите группу
           </Txt>
-          <Txt size={13} color={colors.muted}>
-            Сначала выберите группу. Затем появятся только её ученики.
-          </Txt>
+
           {groups.map((c) => (
             <Button
               key={c.id}
@@ -69,13 +67,12 @@ export function GroupPicker({
           {!groups.length && (
             <Txt>
               {actor.role === "admin"
-                ? "У вас пока нет групп. Создайте группу на вкладке «Manage»."
+                ? "У вас пока нет групп. Создайте группу в разделе управления."
                 : "У вас пока нет групп. Создайте свою первую группу ниже."}
             </Txt>
           )}
           {actor.role === "teacher" && (
-            <View style={{ gap: 10, marginTop: 8 }}>
-              <Txt weight="600">Создать группу</Txt>
+            <Disclosure title="Новая группа" icon="plus">
               <Field
                 label="Название группы"
                 value={name}
@@ -107,7 +104,7 @@ export function GroupPicker({
                 Создать группу
               </Button>
               {!!message && <Notice tone="error">{message}</Notice>}
-            </View>
+            </Disclosure>
           )}
         </>
       )}

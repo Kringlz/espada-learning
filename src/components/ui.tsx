@@ -23,12 +23,17 @@ import {
 } from "../theme/Theme";
 export function useUITheme() {
   const theme = useTheme();
-  return { ...theme, styles: theme.dark ? darkStyles : styles };
+  let themedStyles = themeStyleCache.get(theme.colors);
+  if (!themedStyles) {
+    themedStyles = createStyles(theme.colors);
+    themeStyleCache.set(theme.colors, themedStyles);
+  }
+  return { ...theme, styles: themedStyles };
 }
 export const dateText = formatDate;
 export function Txt({
   children,
-  size = 15,
+  size: providedSize,
   color,
   weight = "400",
   style,
@@ -41,7 +46,8 @@ export function Txt({
   style?: StyleProp<TextStyle>;
   [key: string]: any;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, clarity } = useUITheme();
+  const size = providedSize ?? (clarity ? 18 : 15);
   return (
     <Text
       {...props}
@@ -94,6 +100,7 @@ export function Button({
   small = false,
   label,
   math = false,
+  fullWidth = false,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -104,8 +111,9 @@ export function Button({
   small?: boolean;
   label?: string;
   math?: boolean;
+  fullWidth?: boolean;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   const { play } = useSounds();
   return (
     <Pressable
@@ -130,7 +138,10 @@ export function Button({
           borderWidth: 1,
           borderColor: selected ? colors.green : "transparent",
           opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
-          paddingVertical: small ? 10 : 14,
+          alignSelf: fullWidth ? "stretch" : "flex-start",
+          minHeight: clarity ? (small ? 48 : 58) : 48,
+          borderRadius: clarity ? 16 : 18,
+          paddingVertical: small ? 10 : clarity ? 16 : 14,
           paddingHorizontal: small ? 12 : 18,
         },
       ]}
@@ -146,14 +157,14 @@ export function Button({
         <View style={{ flexShrink: 1, minWidth: 0 }}>
           <MathText
             text={children}
-            size={small ? 14 : 16}
+            size={clarity ? (small ? 16 : 19) : small ? 14 : 16}
             color={secondary ? colors.green : colors.onPrimary}
           />
         </View>
       ) : (
         <Txt
-          style={{ flexShrink: 1 }}
-          size={small ? 14 : 16}
+          style={{ flexShrink: 1, textAlign: "center" }}
+          size={clarity ? (small ? 16 : 19) : small ? 14 : 16}
           weight="600"
           color={secondary ? colors.green : colors.onPrimary}
         >
@@ -241,7 +252,7 @@ export function Field({
   editable?: boolean;
   maxLength?: number;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   return (
     <View style={{ gap: 7 }}>
       {!!label && (
@@ -269,6 +280,7 @@ export function Field({
         autoCapitalize={secure ? "none" : "sentences"}
         style={[
           styles.input,
+          clarity && { minHeight: 56, fontSize: 18 },
           multiline && { minHeight: 110, textAlignVertical: "top" },
         ]}
       />
@@ -325,7 +337,7 @@ export function Choice({
   multiple?: boolean;
   onPress: () => void;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   return (
     <Pressable
       accessibilityRole={multiple ? "checkbox" : "radio"}
@@ -334,6 +346,12 @@ export function Choice({
       onPress={onPress}
       style={[
         styles.choice,
+        clarity && {
+          minHeight: 72,
+          padding: 18,
+          borderWidth: 2,
+          borderRadius: 18,
+        },
         selected && {
           borderColor: colors.green,
           backgroundColor: colors.light,
@@ -355,7 +373,7 @@ export function Choice({
         {selected && <Icon name="check" size={13} color={colors.onPrimary} />}
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <MathText text={translate(label)} size={16} />
+        <MathText text={translate(label)} size={clarity ? 20 : 16} />
       </View>
     </Pressable>
   );
@@ -371,7 +389,7 @@ export function Disclosure({
   icon?: React.ComponentProps<typeof Icon>["name"];
   initiallyOpen?: boolean;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   const { play } = useSounds();
   const parentActive = useContext(MotionActiveContext);
   const [open, setOpen] = useState(initiallyOpen);
@@ -394,15 +412,15 @@ export function Disclosure({
           setOpen(!open);
         }}
         style={{
-          padding: 16,
-          minHeight: 52,
+          padding: clarity ? 20 : 16,
+          minHeight: clarity ? 64 : 52,
           flexDirection: "row",
           alignItems: "center",
           gap: 8,
         }}
       >
         <Icon name={icon} size={18} color={colors.green} />
-        <Txt weight="600" size={14} style={{ flex: 1 }}>
+        <Txt weight="600" size={clarity ? 18 : 14} style={{ flex: 1 }}>
           {title}
         </Txt>
         <Icon name={open ? "chevron-up" : "chevron-down"} size={16} />
@@ -566,3 +584,8 @@ const createStyles = (colors: Palette) =>
 export const styles = createStyles(colors);
 
 const darkStyles = createStyles(darkColors);
+
+const themeStyleCache = new WeakMap<Palette, ReturnType<typeof createStyles>>([
+  [colors, styles],
+  [darkColors, darkStyles],
+]);

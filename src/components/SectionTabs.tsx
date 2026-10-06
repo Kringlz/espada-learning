@@ -16,14 +16,16 @@ export function SectionTabs<T extends string>({
     icon: React.ComponentProps<typeof Icon>["name"];
   }[];
 }) {
-  const { colors } = useUITheme();
+  const { colors, clarity } = useUITheme();
   const { play } = useSounds();
   return (
     <View
       style={{
         flexDirection: "row",
         backgroundColor: colors.subtle,
-        borderRadius: 20,
+        borderRadius: clarity ? 18 : 20,
+        borderWidth: clarity ? 1 : 0,
+        borderColor: colors.line,
         padding: 4,
         gap: 4,
       }}
@@ -54,11 +56,11 @@ export function SectionTabs<T extends string>({
         >
           <Icon
             name={option.icon}
-            size={19}
+            size={clarity ? 23 : 19}
             color={value === option.value ? colors.green : colors.muted}
           />
           <Txt
-            size={13}
+            size={clarity ? 15 : 13}
             weight={value === option.value ? "700" : "500"}
             color={value === option.value ? colors.ink : colors.muted}
             style={{ textAlign: "center" }}

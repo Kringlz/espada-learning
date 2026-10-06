@@ -1,7 +1,9 @@
+import { AtlasImage } from "../components/AtlasImage";
+import { useSounds } from "../engagement/Sounds";
 import { sectionIllustrations } from "../components/SectionIllustrations";
 import { useRewards } from "../engagement/RewardContext";
 import { Confetti, SoftReveal } from "../components/Motion";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Image, Pressable, View } from "react-native";
 import {
   Button,
@@ -33,14 +35,19 @@ export function CoursePractice({
   storage,
   next,
   back,
+  embedded = false,
+  onStepChange,
 }: {
   topic: CourseTopic;
   storage: ReturnType<typeof useCourseProgress>;
   next?: () => void;
   back: () => void;
+  embedded?: boolean;
+  onStepChange?: () => void;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   const { award } = useRewards();
+  const { play } = useSounds();
   const p = storage.progress[topic.id] ?? emptyProgress();
   const content = courseContent[topic.id].practice;
   const questions = splitPractice(content.questions).items;
@@ -59,8 +66,29 @@ export function CoursePractice({
   const attempt = p.quiz[question.number] ?? emptyAttempt();
   const stats = quizStats(p.quiz);
   const correct = attempt.selected === 0;
-  useScreenScroll(`${topic.id}:test:${index}:${summary}`);
+  useScreenScroll(`${topic.id}:test:${index}:${summary}`, !embedded);
+  const firstRender = useRef(true);
+  const changeStep = useRef(onStepChange);
+  changeStep.current = onStepChange;
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    if (embedded) {
+      const frame = requestAnimationFrame(() => changeStep.current?.());
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [index, summary, embedded]);
   function act(action: QuizAction) {
+    if (
+      storage.ready &&
+      action.type === "submit" &&
+      !attempt.submitted &&
+      attempt.selected !== null &&
+      attempt.selected !== 0
+    )
+      play("wrong");
     if (
       storage.ready &&
       action.type === "submit" &&
@@ -98,7 +126,7 @@ export function CoursePractice({
   if (summary)
     return (
       <Card style={{ gap: 22 }}>
-        <Image
+        <AtlasImage
           source={sectionIllustrations.practice.image}
           accessible={false}
           resizeMode="contain"
@@ -237,10 +265,12 @@ export function CoursePractice({
             }}
           />
         </View>
-        <CourseContent blocks={question.blocks} />
-        <Txt size={13} color={colors.muted}>
-          Выбери один верный ответ или ход решения.
-        </Txt>
+        <CourseContent blocks={question.blocks} emphasis={clarity} />
+        {!clarity && (
+          <Txt size={13} color={colors.muted}>
+            Выбери один верный ответ или ход решения.
+          </Txt>
+        )}
         <View accessibilityRole="radiogroup" style={{ gap: 10 }}>
           {quiz.choices.map((choice, position) => {
             const selected = attempt.selected === choice.id;
@@ -265,7 +295,8 @@ export function CoursePractice({
                   backgroundColor:
                     selected || isCorrect ? colors.light : colors.white,
                   borderRadius: 18,
-                  padding: 16,
+                  padding: clarity ? 20 : 16,
+                  minHeight: clarity ? 80 : undefined,
                   gap: 12,
                   flexDirection: "row",
                   alignItems: "center",
@@ -300,7 +331,7 @@ export function CoursePractice({
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <MathText text={choice.text} size={17} />
+                  <MathText text={choice.text} size={clarity ? 21 : 17} />
                 </View>
               </Pressable>
             );
@@ -326,6 +357,7 @@ export function CoursePractice({
         {!attempt.submitted ? (
           <View style={{ gap: 12 }}>
             <Button
+              fullWidth={clarity}
               icon="check"
               disabled={attempt.selected === null}
               onPress={() => act({ type: "submit" })}
@@ -333,6 +365,7 @@ export function CoursePractice({
               Проверить ответ
             </Button>
             <Button
+              small={clarity}
               secondary
               icon="help-circle"
               disabled={attempt.hintsShown === quiz.hints.length}
@@ -343,7 +376,7 @@ export function CoursePractice({
                 : attempt.hintsShown < quiz.hints.length
                   ? "Ещё подсказка"
                   : "Все подсказки открыты"}
-              {` · ${attempt.hintsShown}/${quiz.hints.length}`}
+              {!clarity && ` · ${attempt.hintsShown}/${quiz.hints.length}`}
             </Button>
           </View>
         ) : (
@@ -381,16 +414,6 @@ export function CoursePractice({
             </View>
           </SoftReveal>
         )}
-        <Disclosure title="Мои записи" icon="edit-3">
-          <Field
-            label="Записи к этой теме"
-            placeholder="Моё решение…"
-            value={p.notes}
-            onChangeText={(notes) => storage.update(topic.id, { notes })}
-            multiline
-            maxLength={12000}
-          />
-        </Disclosure>
       </Card>
       <View
         style={[
@@ -417,7 +440,7 @@ export function CoursePractice({
       </View>
       <Disclosure
         key={`${index}-jump`}
-        title="Все задания и результат"
+        title={clarity ? "Задания и заметки" : "Все задания и результат"}
         icon="list"
       >
         <View style={[styles.row, { flexWrap: "wrap" }]}>
@@ -439,6 +462,16 @@ export function CoursePractice({
             </Button>
           ))}
         </View>
+        <Disclosure title="Мои записи" icon="edit-3">
+          <Field
+            label="Записи к этой теме"
+            placeholder="Моё решение…"
+            value={p.notes}
+            onChangeText={(notes) => storage.update(topic.id, { notes })}
+            multiline
+            maxLength={12000}
+          />
+        </Disclosure>
         <Button secondary onPress={() => setSummary(true)}>
           Посмотреть результат
         </Button>

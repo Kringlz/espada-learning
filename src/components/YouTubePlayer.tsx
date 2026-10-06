@@ -1,3 +1,4 @@
+import { useVideoAudioFocus } from "../engagement/useVideoAudioFocus";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, View } from "react-native";
 import { WebView } from "react-native-webview";
@@ -14,6 +15,7 @@ export function YouTubePlayer({
   title: string;
   onWatched?: () => void;
 }) {
+  useVideoAudioFocus();
   const { colors } = useUITheme();
   const [width, setWidth] = useState(0);
   const [error, setError] = useState(false);

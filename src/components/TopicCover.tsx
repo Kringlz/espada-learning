@@ -1,6 +1,7 @@
+import { AtlasImage } from "./AtlasImage";
 import React, { useState } from "react";
 import { Image, View, Platform } from "react-native";
-import { Txt } from "./ui";
+import { Txt, useUITheme } from "./ui";
 import { sectionIllustrations } from "./SectionIllustrations";
 import { topicIllustration } from "../core/topicIllustration";
 
@@ -19,6 +20,7 @@ export function TopicCover({
   subject?: string;
   eyebrow?: string;
 }) {
+  const { clarity, colors } = useUITheme();
   const [width, setWidth] = useState(0);
   const cover = topicCover(themeTitle, subject);
   const wide = width >= 620;
@@ -28,7 +30,7 @@ export function TopicCover({
       style={{
         overflow: "hidden",
         borderRadius: 24,
-        backgroundColor: cover.color,
+        backgroundColor: clarity ? colors.light : cover.color,
         padding: wide ? 32 : 22,
         gap: 20,
         flexDirection: wide ? "row" : "column",
@@ -45,7 +47,7 @@ export function TopicCover({
         <Txt
           size={11}
           weight="600"
-          color="#344E3C"
+          color={clarity ? colors.muted : "#344E3C"}
           style={{ letterSpacing: 2 }}
         >
           {eyebrow ?? "МАТЕМАТИКА · КОНСПЕКТ"}
@@ -53,10 +55,12 @@ export function TopicCover({
         <Txt
           accessibilityRole="header"
           size={wide ? 40 : 30}
-          color="#243E2D"
+          color={clarity ? colors.ink : "#243E2D"}
+          weight={clarity ? "700" : "400"}
           style={{
-            fontFamily:
-              Platform.OS === "ios"
+            fontFamily: clarity
+              ? undefined
+              : Platform.OS === "ios"
                 ? "Georgia"
                 : Platform.OS === "web"
                   ? "Georgia, serif"
@@ -65,17 +69,19 @@ export function TopicCover({
             letterSpacing: -0.6,
           }}
         >
-          {title}
+          {clarity ? title.split(":")[0] : title}
         </Txt>
-        <View style={{ width: 52, height: 2, backgroundColor: "#839650" }} />
+        {!clarity && (
+          <View style={{ width: 52, height: 2, backgroundColor: "#839650" }} />
+        )}
       </View>
-      <Image
+      <AtlasImage
         source={cover.image}
         accessible={false}
         resizeMode="contain"
         style={{
           width: wide ? "38%" : "100%",
-          height: wide ? 260 : 180,
+          height: wide ? 260 : 210,
           borderRadius: 18,
         }}
       />

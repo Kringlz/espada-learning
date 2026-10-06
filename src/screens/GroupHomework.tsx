@@ -65,12 +65,9 @@ export function GroupHomework({ classId }: { classId: string }) {
     <View style={{ gap: 16 }}>
       <Card>
         <Txt size={22} weight="600">
-          Домашняя работа для группы
+          Домашняя работа
         </Txt>
-        <Txt color={colors.muted}>
-          Одно задание — всем активным ученикам группы. Каждый выполняет его
-          самостоятельно.
-        </Txt>
+
         {!!notice && (
           <Notice tone={noticeError ? "error" : "success"}>{notice}</Notice>
         )}
@@ -83,7 +80,7 @@ export function GroupHomework({ classId }: { classId: string }) {
               setOpen(true);
             }}
           >
-            Задать домашнюю работу группе
+            Задать работу
           </Button>
         ) : (
           <>

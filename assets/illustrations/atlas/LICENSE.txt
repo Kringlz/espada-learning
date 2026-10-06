@@ -1,0 +1,7 @@
+Historical engravings: Nicolas Bion / Edmund Stone, 1758.
+Restored figures: Nicholas Rougeux, 2022.
+Restored figures released under CC0 1.0 Universal.
+https://www.c82.net/math-instruments/about#licensing
+https://creativecommons.org/publicdomain/zero/1.0/
+Original files unmodified. Source URLs: sources.json.
+Only the figures are reused; the source website and poster designs are not reused.

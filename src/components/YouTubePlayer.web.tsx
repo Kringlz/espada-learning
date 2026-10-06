@@ -1,3 +1,4 @@
+import { useVideoAudioFocus } from "../engagement/useVideoAudioFocus";
 import React, { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { youtubeEmbedUrl } from "../course/videos";
@@ -14,6 +15,7 @@ export function YouTubePlayer({
   title: string;
   onWatched?: () => void;
 }) {
+  useVideoAudioFocus();
   const { colors } = useUITheme();
   const element = useRef<HTMLIFrameElement>(null);
   const complete = useRef(onWatched);

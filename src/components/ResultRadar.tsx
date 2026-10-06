@@ -30,16 +30,19 @@ export function ResultRadar({
   template,
   report,
   earlier,
+  compact = false,
 }: {
   template: ReportTemplate;
   report: TeacherReport;
   earlier?: TeacherReport;
+  compact?: boolean;
 }) {
-  const { colors, styles } = useUITheme();
+  const { colors, styles, clarity } = useUITheme();
   const active = useContext(MotionActiveContext);
   const reduced = useReducedMotion();
   const motion = useRef(new Animated.Value(1)).current;
   const [growth, setGrowth] = useState(1);
+  const [chartWidth, setChartWidth] = useState(360);
   useEffect(() => {
     if (reduced || !active) {
       motion.setValue(1);
@@ -82,12 +85,22 @@ export function ResultRadar({
   );
   const enough = n >= 3 && values.filter((v) => v !== null).length >= 3;
   return (
-    <View testID="result-radar" style={{ gap: 12, width: "100%" }}>
+    <View
+      testID="result-radar"
+      onLayout={(e) => setChartWidth(e.nativeEvent.layout.width)}
+      style={{ gap: 12, width: "100%" }}
+    >
       {enough ? (
         <Svg
           width="100%"
-          height={320}
-          viewBox="0 0 360 320"
+          height={
+            compact
+              ? Math.min(240, chartWidth)
+              : clarity
+                ? (Math.min(360, chartWidth) * 320) / 360
+                : 320
+          }
+          viewBox={compact ? "70 45 220 220" : "0 0 360 320"}
           accessible
           accessibilityLabel={`Радар последнего теста. ${template.areas.map((a, i) => `${a.label}: ${values[i] === null ? "нет данных" : values[i] + "%"}`).join(". ")}`}
         >
@@ -107,7 +120,13 @@ export function ResultRadar({
           {template.areas.map((a, i) => {
             const [x, y] = point(i, 100);
             const [tx, ty] = point(i, n === 4 ? 150 : 133);
-            const lines = n <= 6 ? labelLines(a.label) : [String(i + 1)];
+            const lines = clarity
+              ? compact
+                ? []
+                : [String(i + 1)]
+              : n <= 6
+                ? labelLines(a.label)
+                : [String(i + 1)];
             return (
               <React.Fragment key={a.id}>
                 <Line x1={180} y1={155} x2={x} y2={y} stroke={colors.line} />
@@ -116,7 +135,7 @@ export function ResultRadar({
                     key={j}
                     x={tx}
                     y={ty + (j - (lines.length - 1) / 2) * 14}
-                    fontSize={12}
+                    fontSize={clarity ? 16 : 12}
                     fontFamily="Arial, sans-serif"
                     fontWeight="500"
                     textAnchor="middle"
@@ -125,17 +144,19 @@ export function ResultRadar({
                     {line}
                   </SvgText>
                 ))}
-                <SvgText
-                  x={tx}
-                  y={ty + (lines.length + 1) * 7 + 6}
-                  fontSize={12}
-                  fontFamily="Arial, sans-serif"
-                  fontWeight="700"
-                  textAnchor="middle"
-                  fill={colors.green}
-                >
-                  {values[i] === null ? "—" : `${values[i]}%`}
-                </SvgText>
+                {!compact && (
+                  <SvgText
+                    x={tx}
+                    y={ty + (lines.length + 1) * 7 + 6}
+                    fontSize={clarity ? 16 : 12}
+                    fontFamily="Arial, sans-serif"
+                    fontWeight="700"
+                    textAnchor="middle"
+                    fill={colors.green}
+                  >
+                    {values[i] === null ? "—" : `${values[i]}%`}
+                  </SvgText>
+                )}
               </React.Fragment>
             );
           })}
@@ -171,12 +192,16 @@ export function ResultRadar({
               </React.Fragment>
             );
           })}
-          <SvgText x={184} y={153} fontSize={9} fill={colors.muted}>
-            0
-          </SvgText>
-          <SvgText x={185} y={62} fontSize={9} fill={colors.muted}>
-            100%
-          </SvgText>
+          {!compact && (
+            <>
+              <SvgText x={184} y={153} fontSize={9} fill={colors.muted}>
+                0
+              </SvgText>
+              <SvgText x={185} y={62} fontSize={9} fill={colors.muted}>
+                100%
+              </SvgText>
+            </>
+          )}
         </Svg>
       ) : (
         <View
@@ -194,7 +219,7 @@ export function ResultRadar({
           </Txt>
         </View>
       )}
-      {enough && (
+      {enough && !compact && (
         <View
           style={{
             flexDirection: "row",
@@ -213,18 +238,50 @@ export function ResultRadar({
           )}
         </View>
       )}
-      {(!enough || n > 6) &&
+      {!compact &&
+        (!enough || n > 6) &&
         template.areas.map((a, i) => (
           <Txt key={a.id} size={14}>
             {i + 1}. {a.label} ·{" "}
             {values[i] === null ? "нет данных" : `${values[i]}%`}
           </Txt>
         ))}
-      {values.includes(null) && (
+      {!compact && values.includes(null) && (
         <Txt size={12} color={colors.muted}>
           Разделы без данных не считаются нулём. Линия появится, когда будут
           заполнены все разделы.
         </Txt>
+      )}
+      {clarity && !compact && (
+        <View style={{ gap: 12, paddingTop: 12 }}>
+          {template.areas.map((area, index) => (
+            <View
+              key={area.id}
+              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+            >
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 14,
+                  backgroundColor: colors.light,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Txt size={14} weight="700">
+                  {index + 1}
+                </Txt>
+              </View>
+              <Txt size={16} style={{ flex: 1 }}>
+                {area.label}
+              </Txt>
+              <Txt size={17} weight="700" color={colors.green}>
+                {values[index] === null ? "—" : `${values[index]}%`}
+              </Txt>
+            </View>
+          ))}
+        </View>
       )}
     </View>
   );
