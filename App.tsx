@@ -1,3 +1,4 @@
+import { StreakProvider } from "./src/engagement/StreakContext";
 import { ClarityControls } from "./src/components/ClarityControls";
 import { LessonFocus, FocusedLesson } from "./src/components/LessonFocus";
 import { SoundProvider, useSounds } from "./src/engagement/Sounds";
@@ -76,11 +77,13 @@ export default function App() {
 function Workspace() {
   const { actor } = useLearning();
   return (
-    <CourseProgressProvider key={actor.id} actorId={actor.id}>
-      <RewardsProvider key={actor.id}>
-        <Shell />
-      </RewardsProvider>
-    </CourseProgressProvider>
+    <StreakProvider key={actor.id}>
+      <CourseProgressProvider key={actor.id} actorId={actor.id}>
+        <RewardsProvider key={actor.id}>
+          <Shell />
+        </RewardsProvider>
+      </CourseProgressProvider>
+    </StreakProvider>
   );
 }
 const roleLabels: Record<Exclude<Role, "admin">, string> = {

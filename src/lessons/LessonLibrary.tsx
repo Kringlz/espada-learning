@@ -1,3 +1,4 @@
+import { useStreak } from "../engagement/StreakContext";
 import { AtlasImage } from "../components/AtlasImage";
 import { useLessonFocus } from "../components/LessonFocus";
 import { useRewards } from "../engagement/RewardContext";
@@ -580,6 +581,7 @@ function TestAttempt({
   const { actor } = useLearning();
   const api = useMemo(() => lessonService(actor.id), [actor.id]);
   const { award } = useRewards();
+  const { mark } = useStreak();
   const [burst, setBurst] = useState(0);
   const [attempt, setAttempt] = useState(initial),
     [answers, setAnswers] = useState(initial.answers),
@@ -625,6 +627,7 @@ function TestAttempt({
     setError("");
     try {
       const a = await api.submit(attempt);
+      if (a.status === "submitted") mark();
       if (a.status === "submitted")
         award(
           a.questions

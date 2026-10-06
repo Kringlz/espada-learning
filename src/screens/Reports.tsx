@@ -1,3 +1,4 @@
+import { StreakButton } from "../components/StreakButton";
 import { AtlasImage } from "../components/AtlasImage";
 import { ClarityProgress } from "../components/ClarityProgress";
 import { KnowledgePreview } from "../components/ClarityCards";
@@ -194,10 +195,26 @@ export function Home({
           gap: 20,
         }}
       >
-        <View style={{ gap: 12, flex: wide ? 1 : undefined }}>
-          <Txt size={15} weight="600" color={colors.muted}>
-            ✦ Сегодня будет интересно
-          </Txt>
+        <View style={{ gap: 12, flex: 1, width: "100%" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              width: "100%",
+            }}
+          >
+            <Txt
+              size={15}
+              weight="600"
+              color={colors.muted}
+              style={{ flex: 1 }}
+            >
+              ✦ Сегодня будет интересно
+            </Txt>
+            <StreakButton />
+          </View>
           <Txt
             accessibilityRole="header"
             size={wide ? 44 : 33}

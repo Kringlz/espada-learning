@@ -1,3 +1,5 @@
+import { useStreak } from "../engagement/StreakContext";
+import { didStudy } from "../engagement/streak";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
@@ -15,6 +17,7 @@ import {
 } from "./model";
 
 function useStoredCourseProgress(actorId: string) {
+  const { mark } = useStreak();
   const [progress, setProgress] = useState<CourseProgress>({});
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
@@ -85,6 +88,7 @@ function useStoredCourseProgress(actorId: string) {
         updatedAt: new Date().toISOString(),
       },
     };
+    if (didStudy(current, data[id])) mark();
     latest.current = data;
     setProgress(data);
     persist(data);

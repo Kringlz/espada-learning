@@ -1,3 +1,4 @@
+import { useStreak } from "./StreakContext";
 import React, {
   createContext,
   useCallback,
@@ -34,6 +35,7 @@ const Context = createContext({
 export const useRewards = () => useContext(Context);
 export function RewardsProvider({ children }: { children: React.ReactNode }) {
   const { actor, state } = useLearning();
+  const { mark } = useStreak();
   const course = useCourseProgress(actor.id);
   const { play } = useSounds();
   const [ledger, setLedger] = useState<RewardLedger>({});
@@ -150,7 +152,10 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
         ready,
         error,
         notice,
-        award: (events) => record(events, true),
+        award: (events) => {
+          if (events.length) mark();
+          record(events, true);
+        },
         earned: (event) => !!ledger[rewardKey(event)],
         retry: () =>
           ready ? persist(latest.current) : setReload((n) => n + 1),

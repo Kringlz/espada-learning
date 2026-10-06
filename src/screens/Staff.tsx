@@ -1,3 +1,4 @@
+import { GroupRoster } from "../components/GroupRoster";
 import {
   WorkspaceOverview,
   LearnerSnapshot,
@@ -6,11 +7,7 @@ import { GroupEnrollment, ParentLinkEditor } from "./Family";
 import { useUITheme } from "../components/ui";
 import { CourseLibrary } from "../course/CourseLibrary";
 import { LessonLibrary } from "../lessons/LessonLibrary";
-import {
-  GroupPicker,
-  StudentPicker,
-  GroupCodeAndSchedule,
-} from "../components/Groups";
+import { GroupPicker, GroupCodeAndSchedule } from "../components/Groups";
 import { GroupHomework } from "./GroupHomework";
 import { groupStudents, teachingGroups } from "../core/groups";
 import { TeacherReports } from "./TeacherReports";
@@ -128,22 +125,31 @@ export function Staff({
           <GroupPicker value={group?.id ?? ""} onChange={changeGroup} />
           {group && (
             <>
-              <GroupCodeAndSchedule
-                key={`code-${group.id}`}
-                classId={group.id}
-              />
-              <GroupEnrollment key={`enroll-${group.id}`} classId={group.id} />
-              <GroupHomework key={group.id} classId={group.id} />
-              <StudentPicker
-                key={group.id}
-                classId={group.id}
-                value={selectedStudent?.id ?? ""}
-                onChange={(id) => {
-                  setStudentId(id);
-                }}
-              />
+              {selectedStudent && (
+                <Button
+                  secondary
+                  small
+                  icon="arrow-left"
+                  onPress={() => setStudentId("")}
+                >
+                  К списку учеников
+                </Button>
+              )}
+              <View style={{ display: selectedStudent ? "none" : "flex" }}>
+                <GroupRoster
+                  key={group.id}
+                  classId={group.id}
+                  onSelect={(id) => {
+                    setStudentId(id);
+                    onScreenChange();
+                  }}
+                />
+              </View>
               {selectedStudent && (
                 <>
+                  <Txt size={26} weight="700">
+                    {selectedStudent.name}
+                  </Txt>
                   <LearnerSnapshot
                     studentId={selectedStudent.id}
                     details={
@@ -157,6 +163,19 @@ export function Staff({
                   <ParentLinkEditor
                     key={selectedStudent.id}
                     studentId={selectedStudent.id}
+                  />
+                </>
+              )}
+              {!selectedStudent && (
+                <>
+                  <GroupHomework key={group.id} classId={group.id} />
+                  <GroupEnrollment
+                    key={`enroll-${group.id}`}
+                    classId={group.id}
+                  />
+                  <GroupCodeAndSchedule
+                    key={`code-${group.id}`}
+                    classId={group.id}
                   />
                 </>
               )}

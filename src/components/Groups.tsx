@@ -263,33 +263,41 @@ export function StudentPicker({
 }
 
 export function MyGroups() {
-  const { colors, styles } = useUITheme();
+  const { colors } = useUITheme();
   const { state: s, actor } = useLearning();
   const groups = s.classes.filter((c) => c.studentIds.includes(actor.id));
   return (
-    <Card style={{ backgroundColor: colors.light }}>
-      <View style={[styles.row, { alignItems: "flex-start", gap: 9 }]}>
-        <Icon name="users" size={18} color={colors.green} />
-        <View style={{ flex: 1, gap: 3 }}>
-          <Txt size={12} color={colors.muted}>
-            {groups.length > 1 ? "Мои группы" : "Моя группа"}
-          </Txt>
-          {groups.map((c) => (
-            <View key={c.id}>
-              <Txt size={15} weight="600">
-                {c.name}
-              </Txt>
-              {!!c.schedule && (
-                <Txt size={12} color={colors.muted}>
-                  {c.schedule}
-                </Txt>
-              )}
-            </View>
-          ))}
-        </View>
+    <Card style={{ gap: 18 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <Icon name="users" size={24} color={colors.green} />
+        <Txt size={22} weight="700">
+          {groups.length > 1 ? "Мои группы" : "Моя группа"}
+        </Txt>
       </View>
+      {groups.map((c) => (
+        <View key={c.id} style={{ gap: 10 }}>
+          <Txt size={19} weight="600">
+            {c.name}
+          </Txt>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              padding: 14,
+              borderRadius: 16,
+              backgroundColor: colors.light,
+            }}
+          >
+            <Icon name="calendar" size={20} color={colors.green} />
+            <Txt size={16} style={{ flex: 1 }}>
+              {c.schedule || "Расписание ещё не задано"}
+            </Txt>
+          </View>
+        </View>
+      ))}
       {!groups.length && (
-        <Txt>Вы пока не добавлены в группу. Обратитесь к преподавателю.</Txt>
+        <Txt color={colors.muted}>Учитель поможет присоединиться к группе.</Txt>
       )}
     </Card>
   );

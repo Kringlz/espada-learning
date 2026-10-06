@@ -1,3 +1,5 @@
+import { StreakButton } from "./StreakButton";
+import { MyGroups } from "./Groups";
 import { AtlasImage } from "./AtlasImage";
 import React from "react";
 import { Image, Pressable, View, useWindowDimensions } from "react-native";
@@ -63,9 +65,17 @@ export function ClarityProgress({
     <View
       style={{ maxWidth: 1040, width: "100%", alignSelf: "center", gap: 28 }}
     >
-      <Txt size={wide ? 42 : 32} weight="700" style={{ letterSpacing: -1 }}>
-        Мои успехи
-      </Txt>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <Txt
+          size={wide ? 42 : 30}
+          weight="700"
+          style={{ letterSpacing: -1, flex: 1 }}
+        >
+          Мои успехи
+        </Txt>
+        <StreakButton />
+      </View>
+      <MyGroups />
       <View style={{ flexDirection: "row", gap: 14 }}>
         <Card
           style={{
