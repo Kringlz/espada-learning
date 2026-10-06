@@ -45,8 +45,8 @@ test("parent cannot author marks, assign homework, enroll or grant their own acc
   const s = seed(),
     parent = id(450);
   const commands: Command[] = [
-    { type: "enrollStudent", classId: id(6), studentId: id(2) },
-    { type: "linkParent", parentId: parent, studentId: id(2) },
+    { type: "enrollStudent", classId: id(6), studentCode: "ignored" },
+    { type: "linkParent", parentCode: "ignored", studentId: id(2) },
     {
       type: "assignGroup",
       id: id(991),
@@ -63,7 +63,13 @@ test("parent cannot author marks, assign homework, enroll or grant their own acc
     },
     {
       type: "saveProfile",
-      profile: { id: parent, name: "Admin", role: "admin", active: true },
+      profile: {
+        id: parent,
+        name: "Admin",
+        role: "admin",
+        active: true,
+        code: "ZZZZZZZ",
+      },
     },
     {
       type: "saveTeacherContact",
@@ -85,14 +91,16 @@ test("teacher enrolls in own group idempotently and cannot change another group"
   const c: Command = {
     type: "enrollStudent",
     classId: id(6),
-    studentId: id(2),
+    studentCode: s.profiles.find((p) => p.id === id(2))!.code,
   };
   s = applyCommand(s, id(3), c);
   s = applyCommand(s, id(3), c);
   assert.equal(s.classes[0].studentIds.filter((x) => x === id(2)).length, 1);
   assert.throws(() => applyCommand(s, id(5), c));
   assert.throws(() => applyCommand(s, id(1), c));
-  assert.throws(() => applyCommand(s, id(3), { ...c, studentId: id(3) }));
+  assert.throws(() =>
+    applyCommand(s, id(3), { ...c, studentCode: "ZZZZZZZ" }),
+  );
 });
 test("parent link can be verified and revoked only by authorized staff; inactive children hidden", () => {
   let s = seed();
@@ -100,13 +108,13 @@ test("parent link can be verified and revoked only by authorized staff; inactive
   assert.throws(() =>
     applyCommand(s, id(5), {
       type: "linkParent",
-      parentId: parent.id,
+      parentCode: parent.code,
       studentId: id(1),
     }),
   );
   s = applyCommand(s, id(3), {
     type: "linkParent",
-    parentId: parent.id,
+    parentCode: parent.code,
     studentId: id(1),
     remove: true,
   });
@@ -114,7 +122,7 @@ test("parent link can be verified and revoked only by authorized staff; inactive
   assert.equal(scopedState(s, parent).reports!.length, 0);
   s = applyCommand(s, id(3), {
     type: "linkParent",
-    parentId: parent.id,
+    parentCode: parent.code,
     studentId: id(1),
   });
   assert(canAccess(s, parent, id(1)));

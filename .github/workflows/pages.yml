@@ -22,7 +22,12 @@ jobs:
       CI: "1"
       EXPO_NO_TELEMETRY: "1"
       EXPO_NO_DOTENV: "1"
-      EXPO_PUBLIC_DATA_MODE: demo
+      # Settings → Secrets and variables → Actions → Variables:
+      # EXPO_PUBLIC_DATA_MODE=supabase, EXPO_PUBLIC_SUPABASE_URL,
+      # EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY. Without them the site stays a demo.
+      EXPO_PUBLIC_DATA_MODE: ${{ vars.EXPO_PUBLIC_DATA_MODE || 'demo' }}
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       APP_ENV: github-pages
     steps:
       - uses: actions/checkout@v6

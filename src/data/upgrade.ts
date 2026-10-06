@@ -2,6 +2,24 @@ import { State, Topic } from "../core/types";
 import { curriculum, originalCurriculum } from "./curriculum";
 import { englishCurriculum } from "./legacyEnglish";
 import { translate } from "../i18n";
+import { generateUniqueCode } from "../core/ids";
+/** Backfills human-readable codes for records saved before self-service registration shipped. */
+export function upgradeCodes(state: State): State {
+  if (
+    state.profiles.every((p) => p.code) &&
+    state.classes.every((c) => c.joinCode)
+  )
+    return state;
+  const next: State = JSON.parse(JSON.stringify(state));
+  for (const p of next.profiles)
+    if (!p.code) p.code = generateUniqueCode(next.profiles.map((x) => x.code));
+  for (const c of next.classes) {
+    if (!c.joinCode)
+      c.joinCode = generateUniqueCode(next.classes.map((x) => x.joinCode));
+    c.schedule ??= "";
+  }
+  return next;
+}
 /** Change seeded copy only; preserve authored text, evidence, IDs and videos. */
 export function upgradeCurriculum(state: State): State {
   if ((state.curriculumVersion ?? 0) >= 2) return state;

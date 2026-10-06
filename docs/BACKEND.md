@@ -10,13 +10,13 @@ Supabase combines PostgreSQL with managed authentication. Its [React Native guid
 
 No hosted resources have been created. Once an owner has authorized and configured a Supabase project:
 
-1. Apply migrations `001_learning.sql`, `002_russian_curriculum.sql`, `003_topic_videos.sql`, `004_teacher_reports.sql`, `005_group_homework.sql`, and `006_persistent_lessons.sql` in order using the SQL editor or your migration pipeline. On an existing v1 database apply only the missing migrations through 006. Apply `supabase/seed.sql` for curriculum and template content only. See [Russian video/upgrade guide](UPDATES_RU.md).
-2. Disable public sign-up. Provision initial authentication accounts through the Supabase dashboard using your approved onboarding process. Do not place passwords in seed files.
-3. Bootstrap the first administrator using a SQL insert into `public.profiles` with the matching `auth.users.id`, display name, `role='admin'`, and `active=true`. Ordinary clients cannot self-promote.
-4. Sign in as that administrator; create app profiles for already-provisioned auth users by pasting their Auth UUID. Create classes and select teacher/student members. A teacher gets access only through class membership.
+1. Apply migrations `001_learning.sql` through `008_self_service.sql` in order using the SQL editor or your migration pipeline (`supabase db push` with the Supabase CLI applies the whole `supabase/migrations/` folder). On an existing database apply only the missing migrations. Apply `supabase/seed.sql` for curriculum and template content only. See [Russian video/upgrade guide](UPDATES_RU.md).
+2. Self-service sign-up is enabled for the `teacher`, `student` and `parent` roles via the `register_profile` RPC (migration 008): a teacher signs up with just email/password; a student additionally supplies a group's join code; a parent supplies a student's personal code. Administrator accounts are never self-serve — leave Auth's "Confirm email" setting on so a stranger cannot claim an email they do not own, then do step 3 for the one admin account.
+3. Bootstrap the first administrator by having them sign up as a teacher through the app (or create their Auth user directly in the Supabase dashboard with "Auto Confirm User"), then run `update public.profiles set role='admin' where id='<their auth.users id>'` once. Ordinary clients cannot self-promote to admin through `register_profile` or `learning_command`.
+4. Sign in as that administrator; create app profiles for already-provisioned auth users by pasting their Auth UUID, or let teachers/students/parents self-register by code as above. Teachers can also create their own groups (with a join code and schedule) directly from the Students tab, in addition to the admin's class editor. A teacher gets access only through class membership.
 5. Set `.env`: `EXPO_PUBLIC_DATA_MODE=supabase`, `EXPO_PUBLIC_SUPABASE_URL`, and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. These public client values are safe only together with the enforced RLS/checked RPCs. Never include a service-role key.
 6. Restart Expo. Verify student and staff sign-in, refresh, disabled accounts, session expiry, saved drafts and the complete learning cycle against this real service before a pilot.
-7. Configure Auth email delivery, rate limits, MFA for staff, project backups, data region and recovery processes. The first version's login UI uses email/password; invitation acceptance, password reset and MFA UI remain launch work.
+7. Configure Auth email delivery with `node scripts/configure-auth-email.mjs` (custom SMTP, confirmation template with a 6-digit code from `supabase/templates/confirmation.html`, site and redirect URLs; required env vars are listed at the top of the script). Supabase's built-in mailer only delivers to project team members, so sign-up emails never reach real users without this. Also configure rate limits, MFA for staff, project backups, data region and recovery processes. The first version's login UI uses email/password; invitation acceptance, password reset and MFA UI remain launch work.
 
 ## Data structure
 
@@ -26,7 +26,9 @@ Identity, ownership and relationships use typed primary/foreign keys. Variable l
 
 Group homework uses the checked `assignGroup` command. It validates membership in the exact class, snapshots its active student roster and writes all individual completion records atomically. Copies carry `classId`, `className` and a shared `groupAssignmentId`. An audit receipt makes retries idempotent, including after membership changes. Existing individual assignments remain readable; staff UI issues new homework only to groups.
 
-Parent links have no client access policies. They are reserved for a future verified guardian workflow; creating a row alone does not expose student records.
+Parent links are created either by a parent self-registering with a student's personal `code` (auto-verified — knowing the code is the proof of the relationship) or by staff using the manual `linkParent` command in a student's group view. `parent_links_read` restricts visibility to the parent themselves, staff with access to the student, or an administrator.
+
+Every profile has a short, human-readable `code` (`public.profiles.code`) and every class has a `join_code` (`public.classes.join_code`), both unique and generated server-side (migration 008). A class also has a free-text `schedule`. Students use a class's `join_code` to self-enroll at registration; a teacher can also add an already-registered student to their group by typing that student's `code` into the group's "Добавить ученика" panel. A teacher creates and owns their own groups via `createGroup`/`updateGroupSchedule`/`regenerateGroupCode`; an administrator can still manage any class through the existing admin console.
 
 ## Access and transactions
 

@@ -25,14 +25,14 @@ writeFileSync(
   s.profiles
     .map(
       (p) =>
-        `insert into auth.users(id) values ('${p.id}');\ninsert into public.profiles values ('${p.id}','${p.name}','${p.role}',true);`,
+        `insert into auth.users(id) values ('${p.id}');\ninsert into public.profiles (id,name,role,active,code) values ('${p.id}','${p.name}','${p.role}',true,'${p.code}');`,
     )
     .join("\n") +
     "\n" +
     s.classes
       .map(
         (c) =>
-          `insert into public.classes values ('${c.id}','${c.name}');\n` +
+          `insert into public.classes (id,name,join_code,schedule) values ('${c.id}','${c.name}','${c.joinCode}','${c.schedule}');\n` +
           [...c.teacherIds, ...c.studentIds]
             .map(
               (p) =>

@@ -42,6 +42,7 @@ test("group homework reaches the whole active roster with separate completion an
     name: "Отключённый",
     role: "student",
     active: false,
+    code: "ZZZZZZ1",
   });
   original.classes[0].studentIds.push(id(810));
   let s = applyCommand(original, id(3), command, now);
@@ -104,6 +105,7 @@ test("assignment retries do not duplicate homework or add later members", () => 
     name: "Новый ученик",
     role: "student",
     active: true,
+    code: "ZZZZZZ2",
   });
   s.classes[0].studentIds.push(id(812));
   const retried = applyCommand(s, id(3), command, now);

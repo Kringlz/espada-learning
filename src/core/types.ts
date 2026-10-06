@@ -1,10 +1,18 @@
 export type Role = "student" | "parent" | "teacher" | "admin";
-export type Profile = { id: string; name: string; role: Role; active: boolean };
+export type Profile = {
+  id: string;
+  name: string;
+  role: Role;
+  active: boolean;
+  code: string;
+};
 export type Classroom = {
   id: string;
   name: string;
   teacherIds: string[];
   studentIds: string[];
+  joinCode: string;
+  schedule: string;
 };
 export type Area = "number" | "fractions" | "algebra" | "geometry" | "data";
 export type Question = {
@@ -195,13 +203,16 @@ export type State = {
   deletionRequests: DeletionRequest[];
 };
 export type Command =
-  | { type: "enrollStudent"; classId: string; studentId: string }
+  | { type: "enrollStudent"; classId: string; studentCode: string }
   | {
       type: "linkParent";
-      parentId: string;
+      parentCode: string;
       studentId: string;
       remove?: boolean;
     }
+  | { type: "createGroup"; id: string; name: string; schedule: string }
+  | { type: "updateGroupSchedule"; classId: string; schedule: string }
+  | { type: "regenerateGroupCode"; classId: string }
   | { type: "saveTeacherContact"; contact: TeacherContact }
   | { type: "saveReportTemplate"; template: ReportTemplate }
   | {

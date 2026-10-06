@@ -27,6 +27,7 @@ import {
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { LearningProvider, useLearning } from "./src/services/context";
+import { Role } from "./src/core/types";
 import { Home, Learn, Progress, Profile } from "./src/screens/Student";
 import { Staff } from "./src/screens/Staff";
 import { Lesson } from "./src/screens/Lesson";
@@ -78,22 +79,105 @@ function Workspace() {
     </CourseProgressProvider>
   );
 }
+const roleLabels: Record<Exclude<Role, "admin">, string> = {
+  teacher: "Учитель",
+  student: "Ученик",
+  parent: "Родитель",
+};
 function Welcome({
   loading,
   error,
   retry,
   login,
+  hasSession,
+  pendingRegistration,
+  registerProfile,
+  confirmEmail,
+  resendConfirmation,
 }: {
   loading: boolean;
   error: string | null;
   retry: () => void;
   login: (e: string, p: string) => Promise<void>;
+  hasSession: boolean;
+  pendingRegistration: {
+    name: string;
+    role: Role;
+    code?: string;
+    email?: string;
+  } | null;
+  registerProfile: (input: {
+    name: string;
+    role: Role;
+    code?: string;
+    email?: string;
+    password?: string;
+  }) => Promise<"ready" | "confirmEmail">;
+  confirmEmail: (email: string, token: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
 }) {
   const { colors, styles } = useUITheme();
+  const [screen, setScreen] = useState<"login" | "register" | "confirm">(
+    "login",
+  );
+  const [otp, setOtp] = useState("");
+  const [resendIn, setResendIn] = useState(0);
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState<Exclude<Role, "admin">>("teacher");
+  const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (hasSession) setScreen("register");
+  }, [hasSession]);
+  useEffect(() => {
+    if (pendingRegistration) {
+      setName(pendingRegistration.name);
+      setRole(pendingRegistration.role as Exclude<Role, "admin">);
+      setCode(pendingRegistration.code ?? "");
+      if (pendingRegistration.email && !hasSession) {
+        setEmail(pendingRegistration.email);
+        setScreen("confirm");
+      }
+    }
+  }, [pendingRegistration, hasSession]);
+  const roleButtons = (
+    <View style={[styles.row, { flexWrap: "wrap" }]}>
+      {(Object.keys(roleLabels) as (keyof typeof roleLabels)[]).map((r) => (
+        <Button key={r} small secondary={role !== r} onPress={() => setRole(r)}>
+          {roleLabels[r]}
+        </Button>
+      ))}
+    </View>
+  );
+  const submitRegister = (extra: { email?: string; password?: string }) => {
+    setBusy(true);
+    setMessage("");
+    void registerProfile({
+      name: name.trim(),
+      role,
+      code: role === "teacher" ? undefined : code.trim(),
+      ...extra,
+    })
+      .then((outcome) => {
+        if (outcome === "confirmEmail") {
+          setOtp("");
+          setResendIn(60);
+          setScreen("confirm");
+        }
+      })
+      .catch((e) => setMessage(errorMessage(e)))
+      .finally(() => setBusy(false));
+  };
+  const registerDisabled =
+    busy || !name.trim() || (role !== "teacher" && !code.trim());
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
       <View
@@ -120,30 +204,212 @@ function Welcome({
               )}
               {mode === "supabase" ? (
                 <>
-                  <Txt color={colors.muted}>
-                    Sign in with the account from your tutoring organisation.
-                  </Txt>
-                  <Field label="Email" value={email} onChangeText={setEmail} />
-                  <Field
-                    label="Password"
-                    secure
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                  <Button
-                    disabled={busy || !email || !password}
-                    onPress={() => {
-                      setBusy(true);
-                      void login(email.trim(), password)
-                        .catch((e) => setMessage(errorMessage(e)))
-                        .finally(() => setBusy(false));
-                    }}
-                  >
-                    Sign in
+                  {!hasSession && screen !== "confirm" && (
+                    <View style={[styles.row, { gap: 8 }]}>
+                      <Button
+                        small
+                        secondary={screen !== "login"}
+                        onPress={() => setScreen("login")}
+                      >
+                        Войти
+                      </Button>
+                      <Button
+                        small
+                        secondary={screen !== "register"}
+                        onPress={() => setScreen("register")}
+                      >
+                        Зарегистрироваться
+                      </Button>
+                    </View>
+                  )}
+                  {screen === "confirm" && !hasSession ? (
+                    <>
+                      <Txt color={colors.muted}>
+                        {`Мы отправили код подтверждения на ${email}. Введите его ниже. Если письма нет — проверьте «Спам» и «Промоакции».`}
+                      </Txt>
+                      <Field
+                        label="Код из письма"
+                        numeric
+                        maxLength={10}
+                        value={otp}
+                        onChangeText={(s) => setOtp(s.replace(/\D/g, ""))}
+                      />
+                      <Button
+                        disabled={busy || otp.length < 6}
+                        onPress={() => {
+                          setBusy(true);
+                          setMessage("");
+                          void confirmEmail(email.trim(), otp)
+                            .catch((e) => setMessage(errorMessage(e)))
+                            .finally(() => setBusy(false));
+                        }}
+                      >
+                        Подтвердить
+                      </Button>
+                      <Button
+                        secondary
+                        disabled={busy || resendIn > 0}
+                        onPress={() => {
+                          setBusy(true);
+                          setMessage("");
+                          void resendConfirmation(email.trim())
+                            .then(() => {
+                              setResendIn(60);
+                              setMessage("Новый код отправлен.");
+                            })
+                            .catch((e) => setMessage(errorMessage(e)))
+                            .finally(() => setBusy(false));
+                        }}
+                      >
+                        {resendIn > 0
+                          ? `Отправить код ещё раз (${resendIn} с)`
+                          : "Отправить код ещё раз"}
+                      </Button>
+                      <Button
+                        secondary
+                        disabled={busy}
+                        onPress={() => {
+                          setMessage("");
+                          setOtp("");
+                          setScreen("register");
+                        }}
+                      >
+                        Изменить email
+                      </Button>
+                    </>
+                  ) : screen === "login" ? (
+                    <>
+                      <Txt color={colors.muted}>
+                        Войдите в аккаунт вашей организации.
+                      </Txt>
+                      <Field
+                        label="Email"
+                        value={email}
+                        onChangeText={setEmail}
+                      />
+                      <Field
+                        label="Пароль"
+                        secure
+                        value={password}
+                        onChangeText={setPassword}
+                      />
+                      <Button
+                        disabled={busy || !email || !password}
+                        onPress={() => {
+                          setBusy(true);
+                          setMessage("");
+                          void login(email.trim(), password)
+                            .catch((e) => {
+                              const m = errorMessage(e);
+                              if (m === errorMessage("Email not confirmed")) {
+                                setOtp("");
+                                setScreen("confirm");
+                              }
+                              setMessage(m);
+                            })
+                            .finally(() => setBusy(false));
+                        }}
+                      >
+                        Войти
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Txt color={colors.muted}>
+                        {hasSession
+                          ? "Почта подтверждена. Завершите регистрацию."
+                          : "Учителю код не нужен. Ученику нужен код группы, родителю — код ученика."}
+                      </Txt>
+                      {roleButtons}
+                      <Field label="Имя" value={name} onChangeText={setName} />
+                      {!hasSession && (
+                        <>
+                          <Field
+                            label="Email"
+                            value={email}
+                            onChangeText={setEmail}
+                          />
+                          <Field
+                            label="Пароль"
+                            secure
+                            value={password}
+                            onChangeText={setPassword}
+                          />
+                        </>
+                      )}
+                      {role === "student" && (
+                        <Field
+                          label="Код группы"
+                          value={code}
+                          onChangeText={setCode}
+                        />
+                      )}
+                      {role === "parent" && (
+                        <Field
+                          label="Код ученика"
+                          value={code}
+                          onChangeText={setCode}
+                        />
+                      )}
+                      <Button
+                        disabled={
+                          registerDisabled ||
+                          (!hasSession && (!email || !password))
+                        }
+                        onPress={() =>
+                          submitRegister(
+                            hasSession
+                              ? {}
+                              : { email: email.trim(), password },
+                          )
+                        }
+                      >
+                        {hasSession
+                          ? "Завершить регистрацию"
+                          : "Зарегистрироваться"}
+                      </Button>
+                    </>
+                  )}
+                </>
+              ) : screen === "login" ? (
+                <>
+                  <Button onPress={retry}>Retry loading local demo</Button>
+                  <Button secondary onPress={() => setScreen("register")}>
+                    Зарегистрироваться (демо)
                   </Button>
                 </>
               ) : (
-                <Button onPress={retry}>Retry loading local demo</Button>
+                <>
+                  <Txt color={colors.muted}>
+                    Демо-регистрация создаёт новый синтетический аккаунт на
+                    этом устройстве.
+                  </Txt>
+                  {roleButtons}
+                  <Field label="Имя" value={name} onChangeText={setName} />
+                  {role === "student" && (
+                    <Field
+                      label="Код группы"
+                      value={code}
+                      onChangeText={setCode}
+                    />
+                  )}
+                  {role === "parent" && (
+                    <Field
+                      label="Код ученика"
+                      value={code}
+                      onChangeText={setCode}
+                    />
+                  )}
+                  <Button
+                    disabled={registerDisabled}
+                    onPress={() => submitRegister({})}
+                  >
+                    Зарегистрироваться
+                  </Button>
+                  <Button secondary onPress={() => setScreen("login")}>
+                    Назад
+                  </Button>
+                </>
               )}
             </>
           )}

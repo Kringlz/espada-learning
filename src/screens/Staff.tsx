@@ -2,7 +2,11 @@ import { GroupEnrollment, ParentLinkEditor } from "./Family";
 import { useUITheme } from "../components/ui";
 import { CourseLibrary } from "../course/CourseLibrary";
 import { LessonLibrary } from "../lessons/LessonLibrary";
-import { GroupPicker, StudentPicker } from "../components/Groups";
+import {
+  GroupPicker,
+  StudentPicker,
+  GroupCodeAndSchedule,
+} from "../components/Groups";
 import { GroupHomework } from "./GroupHomework";
 import { groupStudents, teachingGroups } from "../core/groups";
 import { TeacherReports } from "./TeacherReports";
@@ -216,6 +220,7 @@ export function Staff({
           <GroupPicker value={group?.id ?? ""} onChange={changeGroup} />
           {group && (
             <>
+              <GroupCodeAndSchedule key={`code-${group.id}`} classId={group.id} />
               <GroupEnrollment key={`enroll-${group.id}`} classId={group.id} />
               <GroupHomework key={group.id} classId={group.id} />
               <StudentPicker
@@ -442,12 +447,15 @@ function Management() {
     name: "",
     role: "student",
     active: true,
+    code: "",
   });
   const [classroom, setClassroom] = useState<Classroom>({
     id: uid(),
     name: "",
     studentIds: [],
     teacherIds: [],
+    joinCode: "",
+    schedule: "",
   });
   const [erase, setErase] = useState<string | null>(null);
   async function act(command: Parameters<typeof dispatch>[0], message: string) {
@@ -569,6 +577,8 @@ function Management() {
                 name: "",
                 studentIds: [],
                 teacherIds: [],
+                joinCode: "",
+                schedule: "",
               })
             }
           >
@@ -629,6 +639,9 @@ function Management() {
         >
           Save class
         </Button>
+        {s.classes.some((c) => c.id === classroom.id) && (
+          <GroupCodeAndSchedule key={classroom.id} classId={classroom.id} />
+        )}
       </Card>
       <Card>
         <Txt size={21} weight="600">

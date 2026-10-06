@@ -6,7 +6,7 @@ create function pg_temp.issue(patch jsonb default '{}'::jsonb) returns void lang
  select public.learning_command('{"type":"assignGroup","id":"00000000-0000-4000-8000-000000000800","classId":"00000000-0000-4000-8000-000000000006","topicId":"equivalent","reason":"Изучить урок и пройти проверку","override":true}'::jsonb || patch)
 $$;
 insert into auth.users values ('00000000-0000-4000-8000-000000000810');
-insert into public.profiles values ('00000000-0000-4000-8000-000000000810','Отключённый ученик','student',false);
+insert into public.profiles (id,name,role,active) values ('00000000-0000-4000-8000-000000000810','Отключённый ученик','student',false);
 insert into public.class_memberships values ('00000000-0000-4000-8000-000000000006','00000000-0000-4000-8000-000000000810');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);

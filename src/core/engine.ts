@@ -10,7 +10,7 @@ import {
   Profile,
   Area,
 } from "./types";
-import { uid } from "./ids";
+import { uid, generateUniqueCode } from "./ids";
 import { groupStudents, teachingGroups } from "./groups";
 export const canAccess = (s: State, actor: Profile, studentId: string) =>
   actor.active &&
@@ -455,36 +455,42 @@ export function applyCommand(
         (actor.role !== "admin" && !group.teacherIds.includes(actor.id))
       )
         throw Error("Нет доступа к этой группе.");
-      if (
-        !s.profiles.some(
-          (p) => p.id === cmd.studentId && p.role === "student" && p.active,
-        )
-      )
+      const student = s.profiles.find(
+        (p) =>
+          p.code === cmd.studentCode.trim().toUpperCase() &&
+          p.role === "student" &&
+          p.active,
+      );
+      if (!student)
         throw Error("Код ученика не найден. Проверьте его в профиле ученика.");
-      if (!group.studentIds.includes(cmd.studentId)) {
-        group.studentIds.push(cmd.studentId);
-        audit(group.id, "student.enrolled", null, { studentId: cmd.studentId });
+      if (!group.studentIds.includes(student.id)) {
+        group.studentIds.push(student.id);
+        audit(group.id, "student.enrolled", null, { studentId: student.id });
       }
       break;
     }
     case "linkParent": {
       requireStaff(cmd.studentId);
+      const parent = s.profiles.find(
+        (p) =>
+          p.code === cmd.parentCode.trim().toUpperCase() &&
+          p.role === "parent" &&
+          p.active,
+      );
       if (
         !s.profiles.some(
           (p) => p.id === cmd.studentId && p.role === "student" && p.active,
         ) ||
-        !s.profiles.some(
-          (p) => p.id === cmd.parentId && p.role === "parent" && p.active,
-        )
+        !parent
       )
         throw Error("Проверьте коды действующих аккаунтов ученика и родителя.");
       const old = (s.parentLinks ?? []).find(
-        (l) => l.parentId === cmd.parentId && l.studentId === cmd.studentId,
+        (l) => l.parentId === parent.id && l.studentId === cmd.studentId,
       );
       s.parentLinks = (s.parentLinks ?? []).filter((l) => l !== old);
       if (!cmd.remove)
         s.parentLinks.push({
-          parentId: cmd.parentId,
+          parentId: parent.id,
           studentId: cmd.studentId,
           verifiedAt: now,
         });
@@ -492,9 +498,44 @@ export function applyCommand(
         cmd.studentId,
         cmd.remove ? "parent.unlinked" : "parent.linked",
         old ?? null,
-        cmd.remove
-          ? null
-          : { parentId: cmd.parentId, studentId: cmd.studentId },
+        cmd.remove ? null : { parentId: parent.id, studentId: cmd.studentId },
+      );
+      break;
+    }
+    case "createGroup": {
+      if (!["teacher", "admin"].includes(actor.role))
+        throw Error("Доступно только учителю или администратору.");
+      if (!cmd.name.trim()) throw Error("Укажите название группы.");
+      s.classes.push({
+        id: cmd.id,
+        name: cmd.name.trim(),
+        teacherIds: actor.role === "teacher" ? [actor.id] : [],
+        studentIds: [],
+        joinCode: generateUniqueCode(s.classes.map((c) => c.joinCode)),
+        schedule: cmd.schedule.trim(),
+      });
+      break;
+    }
+    case "updateGroupSchedule": {
+      const group = s.classes.find((c) => c.id === cmd.classId);
+      if (
+        !group ||
+        (actor.role !== "admin" && !group.teacherIds.includes(actor.id))
+      )
+        throw Error("Нет доступа к этой группе.");
+      if (cmd.schedule.length > 200) throw Error("Слишком длинное расписание.");
+      group.schedule = cmd.schedule.trim();
+      break;
+    }
+    case "regenerateGroupCode": {
+      const group = s.classes.find((c) => c.id === cmd.classId);
+      if (
+        !group ||
+        (actor.role !== "admin" && !group.teacherIds.includes(actor.id))
+      )
+        throw Error("Нет доступа к этой группе.");
+      group.joinCode = generateUniqueCode(
+        s.classes.filter((c) => c.id !== group.id).map((c) => c.joinCode),
       );
       break;
     }
@@ -913,7 +954,16 @@ export function applyCommand(
         )
       )
         throw Error("Choose a class name and valid members.");
-      s.classes = [...s.classes.filter((x) => x.id !== c.id), c];
+      const old = s.classes.find((x) => x.id === c.id);
+      const next = {
+        ...c,
+        joinCode:
+          old?.joinCode ||
+          c.joinCode ||
+          generateUniqueCode(s.classes.map((x) => x.joinCode)),
+        schedule: c.schedule?.trim() ?? old?.schedule ?? "",
+      };
+      s.classes = [...s.classes.filter((x) => x.id !== c.id), next];
       break;
     }
     case "saveProfile": {
@@ -929,8 +979,13 @@ export function applyCommand(
       const old = s.profiles.find((x) => x.id === p.id);
       if (old && old.role !== p.role)
         throw Error("Existing account roles cannot be changed here.");
-      s.profiles = [...s.profiles.filter((x) => x.id !== p.id), p];
-      audit(p.id, "account.updated", old, p);
+      const next = {
+        ...p,
+        code:
+          old?.code || p.code || generateUniqueCode(s.profiles.map((x) => x.code)),
+      };
+      s.profiles = [...s.profiles.filter((x) => x.id !== p.id), next];
+      audit(p.id, "account.updated", old, next);
       break;
     }
     case "requestDeletion": {

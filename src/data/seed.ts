@@ -1,7 +1,7 @@
 import { translate } from "../i18n";
 import { State, Assessment, Mark } from "../core/types";
 import { curriculum, originalCurriculum } from "./curriculum";
-import { fixedId as id } from "../core/ids";
+import { fixedId as id, fixedCode as code } from "../core/ids";
 export const demoStudentId = id(1);
 export function createSeed(now = new Date()): State {
   const date = (days: number) =>
@@ -50,11 +50,41 @@ export function createSeed(now = new Date()): State {
     schemaVersion: 1,
     curriculumVersion: 2,
     profiles: [
-      { id: id(1), name: "Alex Morgan", role: "student", active: true },
-      { id: id(2), name: "Sam Rivera", role: "student", active: true },
-      { id: id(3), name: "Jamie Chen", role: "teacher", active: true },
-      { id: id(4), name: "Taylor Reed", role: "admin", active: true },
-      { id: id(5), name: "Robin Ellis", role: "teacher", active: true },
+      {
+        id: id(1),
+        name: "Alex Morgan",
+        role: "student",
+        active: true,
+        code: code(1),
+      },
+      {
+        id: id(2),
+        name: "Sam Rivera",
+        role: "student",
+        active: true,
+        code: code(2),
+      },
+      {
+        id: id(3),
+        name: "Jamie Chen",
+        role: "teacher",
+        active: true,
+        code: code(3),
+      },
+      {
+        id: id(4),
+        name: "Taylor Reed",
+        role: "admin",
+        active: true,
+        code: code(4),
+      },
+      {
+        id: id(5),
+        name: "Robin Ellis",
+        role: "teacher",
+        active: true,
+        code: code(5),
+      },
     ],
     classes: [
       {
@@ -62,12 +92,16 @@ export function createSeed(now = new Date()): State {
         name: "Maths foundations · Group A",
         teacherIds: [id(3)],
         studentIds: [id(1), id(2)],
+        joinCode: code(6),
+        schedule: "Пн, Ср 18:00",
       },
       {
         id: id(7),
         name: "Maths foundations · Group B",
         teacherIds: [id(5)],
         studentIds: [],
+        joinCode: code(7),
+        schedule: "",
       },
     ],
     topics: curriculum,

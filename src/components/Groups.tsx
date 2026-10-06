@@ -3,7 +3,19 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { useLearning } from "../services/context";
 import { groupStudents, teachingGroups } from "../core/groups";
-import { Button, Card, Field, Txt, Icon, colors, styles } from "./ui";
+import { uid } from "../core/ids";
+import { errorMessage } from "../i18n/errors";
+import {
+  Button,
+  Card,
+  Disclosure,
+  Field,
+  Notice,
+  Txt,
+  Icon,
+  colors,
+  styles,
+} from "./ui";
 
 export function GroupPicker({
   value,
@@ -13,9 +25,12 @@ export function GroupPicker({
   onChange: (id: string) => void;
 }) {
   const { colors, styles } = useUITheme();
-  const { state: s, actor } = useLearning();
+  const { state: s, actor, dispatch, saving } = useLearning();
   const groups = teachingGroups(s, actor);
   const group = groups.find((c) => c.id === value);
+  const [name, setName] = useState("");
+  const [schedule, setSchedule] = useState("");
+  const [message, setMessage] = useState("");
   return (
     <Card>
       {group ? (
@@ -53,13 +68,119 @@ export function GroupPicker({
           ))}
           {!groups.length && (
             <Txt>
-              У вас пока нет групп. Попросите администратора добавить вас в
-              группу.
+              {actor.role === "admin"
+                ? "У вас пока нет групп. Создайте группу на вкладке «Manage»."
+                : "У вас пока нет групп. Создайте свою первую группу ниже."}
             </Txt>
+          )}
+          {actor.role === "teacher" && (
+            <View style={{ gap: 10, marginTop: 8 }}>
+              <Txt weight="600">Создать группу</Txt>
+              <Field
+                label="Название группы"
+                value={name}
+                onChangeText={setName}
+              />
+              <Field
+                label="Расписание"
+                value={schedule}
+                onChangeText={setSchedule}
+                placeholder="Например: Пн, Ср 18:00"
+              />
+              <Button
+                disabled={saving || !name.trim()}
+                onPress={() => {
+                  setMessage("");
+                  void dispatch({
+                    type: "createGroup",
+                    id: uid(),
+                    name: name.trim(),
+                    schedule: schedule.trim(),
+                  })
+                    .then(() => {
+                      setName("");
+                      setSchedule("");
+                    })
+                    .catch((e) => setMessage(errorMessage(e)));
+                }}
+              >
+                Создать группу
+              </Button>
+              {!!message && <Notice tone="error">{message}</Notice>}
+            </View>
           )}
         </>
       )}
     </Card>
+  );
+}
+
+export function GroupCodeAndSchedule({ classId }: { classId: string }) {
+  const { state: s, dispatch, saving } = useLearning();
+  const { colors } = useUITheme();
+  const group = s.classes.find((c) => c.id === classId);
+  const [schedule, setSchedule] = useState(group?.schedule ?? "");
+  const [message, setMessage] = useState("");
+  const [failed, setFailed] = useState(false);
+  if (!group) return null;
+  return (
+    <Disclosure title="Код группы и расписание" icon="calendar">
+      <Txt color={colors.muted}>
+        Этот код даёт ученику возможность самостоятельно вступить в группу при
+        регистрации.
+      </Txt>
+      <Txt selectable size={20} weight="700">
+        {group.joinCode}
+      </Txt>
+      <Button
+        small
+        secondary
+        disabled={saving}
+        onPress={() => {
+          setMessage("");
+          void dispatch({ type: "regenerateGroupCode", classId })
+            .then(() =>
+              setMessage("Код обновлён. Старый код больше не действует."),
+            )
+            .catch((e) => {
+              setFailed(true);
+              setMessage(errorMessage(e));
+            });
+        }}
+      >
+        Получить новый код
+      </Button>
+      <Field
+        label="Расписание"
+        value={schedule}
+        onChangeText={setSchedule}
+        placeholder="Например: Пн, Ср 18:00"
+      />
+      <Button
+        disabled={saving || schedule === group.schedule}
+        onPress={() => {
+          setMessage("");
+          void dispatch({
+            type: "updateGroupSchedule",
+            classId,
+            schedule: schedule.trim(),
+          })
+            .then(() => {
+              setFailed(false);
+              setMessage("Расписание сохранено.");
+            })
+            .catch((e) => {
+              setFailed(true);
+              setMessage(errorMessage(e));
+            });
+        }}
+      >
+        Сохранить расписание
+      </Button>
+      {!!message && (
+        <Notice tone={failed ? "error" : "success"}>{message}</Notice>
+      )}
+    </Disclosure>
   );
 }
 
@@ -157,9 +278,16 @@ export function MyGroups() {
             {groups.length > 1 ? "Мои группы" : "Моя группа"}
           </Txt>
           {groups.map((c) => (
-            <Txt key={c.id} size={15} weight="600">
-              {c.name}
-            </Txt>
+            <View key={c.id}>
+              <Txt size={15} weight="600">
+                {c.name}
+              </Txt>
+              {!!c.schedule && (
+                <Txt size={12} color={colors.muted}>
+                  {c.schedule}
+                </Txt>
+              )}
+            </View>
           ))}
         </View>
       </View>

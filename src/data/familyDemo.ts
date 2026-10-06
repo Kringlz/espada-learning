@@ -1,5 +1,5 @@
 import { State } from "../core/types";
-import { fixedId } from "../core/ids";
+import { fixedId, generateUniqueCode } from "../core/ids";
 export function upgradeFamilyDemo(s: State): State {
   if (s.familyDemoVersion) return s;
   const parentId = fixedId(450),
@@ -14,7 +14,13 @@ export function upgradeFamilyDemo(s: State): State {
     familyDemoVersion: 1,
     profiles: [
       ...s.profiles,
-      { id: parentId, name: "Елена Морозова", role: "parent", active: true },
+      {
+        id: parentId,
+        name: "Елена Морозова",
+        role: "parent",
+        active: true,
+        code: generateUniqueCode(s.profiles.map((p) => p.code)),
+      },
     ],
     parentLinks: [
       ...(s.parentLinks ?? []),

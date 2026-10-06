@@ -7,7 +7,7 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002'
 select pg_temp.assert_true((select count(*)=0 from public.assessments),'Sam cannot read Alex assessments');
 select pg_temp.assert_true((select count(*)=1 from public.profiles),'student sees only own profile');
 select pg_temp.assert_true(jsonb_array_length(public.load_learning_state()->'assessments')=0,'RPC scopes students');
-select pg_temp.assert_denied($q$insert into public.profiles values('00000000-0000-4000-8000-000000000099','intruder','admin',true)$q$);
+select pg_temp.assert_denied($q$insert into public.profiles (id,name,role,active) values('00000000-0000-4000-8000-000000000099','intruder','admin',true)$q$);
 select pg_temp.assert_denied($q$select public.learning_command('{"type":"publishAssessment","id":"00000000-0000-4000-8000-000000000020","expectedRevision":1,"reason":"spoof"}')$q$);
 select pg_temp.assert_denied($q$select public.learning_command('{"type":"submitAttempt","attempt":{"id":"00000000-0000-4000-8000-000000000090","studentId":"00000000-0000-4000-8000-000000000001","topicId":"equivalent","answers":[]}}')$q$);
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000005',true);

@@ -55,3 +55,16 @@ export async function remoteDispatch(cmd: Command): Promise<State> {
   if (error) throw Error(error.message);
   return remoteRead();
 }
+export async function remoteRegister(
+  name: string,
+  role: string,
+  code?: string,
+): Promise<void> {
+  if (!backend) throw Error("Backend not configured.");
+  const { error } = await backend.rpc("register_profile", {
+    p_name: name,
+    p_role: role,
+    p_code: code ?? null,
+  });
+  if (error) throw Error(error.message);
+}

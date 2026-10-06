@@ -42,8 +42,9 @@ export function Parent({ tab }: { tab: string }) {
           Будьте рядом с его открытиями
         </Txt>
         <Txt color={colors.muted}>
-          Передайте учителю код из своего профиля. После подтверждения связи
-          здесь появятся результаты ребёнка.
+          Чтобы увидеть прогресс ребёнка, укажите код его профиля при
+          регистрации нового аккаунта, или попросите учителя привязать
+          аккаунт по этому коду вручную.
         </Txt>
       </Card>
     );
@@ -98,7 +99,11 @@ export function Parent({ tab }: { tab: string }) {
             ))}
           </View>
         )}
-        <Txt color={colors.muted}>{groups.map((g) => g.name).join(" · ")}</Txt>
+        <Txt color={colors.muted}>
+          {groups
+            .map((g) => (g.schedule ? `${g.name} (${g.schedule})` : g.name))
+            .join(" · ")}
+        </Txt>
       </View>
       {tab === "FamilyProgress" && (
         <Progress key={child.id} studentId={child.id} openTopic={setTopicId} />
@@ -209,33 +214,34 @@ export function Parent({ tab }: { tab: string }) {
 export function GroupEnrollment({ classId }: { classId: string }) {
   const { dispatch, saving, state: s } = useLearning();
   const { colors } = useUITheme();
-  const [studentId, setStudentId] = useState("");
+  const [studentCode, setStudentCode] = useState("");
   const [message, setMessage] = useState("");
   const [failed, setFailed] = useState(false);
   const group = s.classes.find((c) => c.id === classId);
   return (
     <Disclosure title="Добавить ученика" icon="user-plus">
       <Txt color={colors.muted}>
-        Попросите ученика передать код из его профиля.
+        Попросите ученика передать код из его профиля (или он может сам
+        вступить в группу по коду группы при регистрации).
       </Txt>
       <Field
         label="Код ученика"
-        value={studentId}
-        onChangeText={setStudentId}
+        value={studentCode}
+        onChangeText={setStudentCode}
       />
       <Button
-        disabled={saving || !studentId.trim()}
+        disabled={saving || !studentCode.trim()}
         onPress={() => {
           setMessage("");
           void dispatch({
             type: "enrollStudent",
             classId,
-            studentId: studentId.trim(),
+            studentCode: studentCode.trim(),
           })
             .then(() => {
               setFailed(false);
               setMessage(`Ученик добавлен в группу «${group?.name}».`);
-              setStudentId("");
+              setStudentCode("");
             })
             .catch((e) => {
               setFailed(true);
@@ -255,15 +261,14 @@ export function GroupEnrollment({ classId }: { classId: string }) {
 export function ParentLinkEditor({ studentId }: { studentId: string }) {
   const { dispatch, state: s, saving } = useLearning();
   const { colors } = useUITheme();
-  const [parentId, setParentId] = useState("");
-  const [verified, setVerified] = useState(false);
+  const [parentCode, setParentCode] = useState("");
   const [message, setMessage] = useState("");
   const [failed, setFailed] = useState(false);
-  const act = async (id: string, remove = false) => {
+  const act = async (parentCodeValue: string, remove = false) => {
     try {
       await dispatch({
         type: "linkParent",
-        parentId: id.trim(),
+        parentCode: parentCodeValue.trim(),
         studentId,
         remove,
       });
@@ -271,8 +276,7 @@ export function ParentLinkEditor({ studentId }: { studentId: string }) {
       setMessage(
         remove ? "Доступ родителя закрыт." : "Родитель привязан к ученику.",
       );
-      setParentId("");
-      setVerified(false);
+      setParentCode("");
     } catch (e) {
       setFailed(true);
       setMessage(errorMessage(e));
@@ -281,50 +285,39 @@ export function ParentLinkEditor({ studentId }: { studentId: string }) {
   return (
     <Disclosure title="Доступ родителя" icon="heart">
       <Txt color={colors.muted}>
-        Проверьте, что аккаунт принадлежит родителю этого ученика, и введите код
-        из профиля родителя.
+        Родитель может сам привязать аккаунт при регистрации, указав код
+        ученика. Здесь это можно сделать вручную — введите код из профиля
+        родителя.
       </Txt>
       <Field
         label="Код родителя"
-        value={parentId}
-        onChangeText={(v) => {
-          setParentId(v);
-          setVerified(false);
-        }}
+        value={parentCode}
+        onChangeText={setParentCode}
       />
       <Button
-        small
-        secondary
-        selected={verified}
-        onPress={() => setVerified(!verified)}
-      >
-        {verified
-          ? "✓ Связь с ребёнком подтверждена"
-          : "Подтверждаю связь с ребёнком"}
-      </Button>
-      <Button
-        disabled={saving || !verified || !parentId.trim()}
-        onPress={() => void act(parentId)}
+        disabled={saving || !parentCode.trim()}
+        onPress={() => void act(parentCode)}
       >
         Открыть доступ родителю
       </Button>
       {(s.parentLinks ?? [])
         .filter((l) => l.studentId === studentId)
-        .map((l) => (
-          <View key={l.parentId} style={{ gap: 8 }}>
-            <Txt>
-              {s.profiles.find((p) => p.id === l.parentId)?.name ?? "Родитель"}
-            </Txt>
-            <Button
-              small
-              secondary
-              disabled={saving}
-              onPress={() => void act(l.parentId, true)}
-            >
-              Закрыть доступ
-            </Button>
-          </View>
-        ))}
+        .map((l) => {
+          const parent = s.profiles.find((p) => p.id === l.parentId);
+          return (
+            <View key={l.parentId} style={{ gap: 8 }}>
+              <Txt>{parent?.name ?? "Родитель"}</Txt>
+              <Button
+                small
+                secondary
+                disabled={saving}
+                onPress={() => void act(parent?.code ?? "", true)}
+              >
+                Закрыть доступ
+              </Button>
+            </View>
+          );
+        })}
       {!!message && (
         <Notice tone={failed ? "error" : "success"}>{message}</Notice>
       )}

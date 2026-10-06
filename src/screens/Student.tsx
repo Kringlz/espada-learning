@@ -67,10 +67,12 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
             {actor.role === "student" ? "Код ученика" : "Код родителя"}
           </Txt>
           <Txt color={colors.muted}>
-            Передайте этот код учителю для привязки аккаунта.
+            {actor.role === "student"
+              ? "Этот код понадобится родителю, чтобы увидеть ваш прогресс, или учителю — чтобы добавить вас в группу."
+              : "Этот код — ваш личный идентификатор аккаунта."}
           </Txt>
-          <Txt selectable size={13}>
-            {actor.id}
+          <Txt selectable size={20} weight="700">
+            {actor.code}
           </Txt>
         </Card>
       )}
