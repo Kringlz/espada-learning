@@ -1,3 +1,5 @@
+import { AuthFlowError } from "./src/services/authFlow";
+import { Disclosure } from "./src/components/ui";
 import { StreakProvider } from "./src/engagement/StreakContext";
 import { ClarityControls } from "./src/components/ClarityControls";
 import { LessonFocus, FocusedLesson } from "./src/components/LessonFocus";
@@ -101,6 +103,7 @@ function Welcome({
   registerProfile,
   confirmEmail,
   resendConfirmation,
+  emailCooldown,
 }: {
   loading: boolean;
   error: string | null;
@@ -122,19 +125,35 @@ function Welcome({
   }) => Promise<"ready" | "confirmEmail">;
   confirmEmail: (email: string, token: string) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
+  emailCooldown: (email: string) => Promise<number>;
 }) {
   const { colors, styles } = useUITheme();
   const [screen, setScreen] = useState<"login" | "register" | "confirm">(
     "login",
   );
   const [otp, setOtp] = useState("");
-  const [resendIn, setResendIn] = useState(0);
-  useEffect(() => {
-    if (resendIn <= 0) return;
-    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendIn]);
   const [email, setEmail] = useState("");
+  const [resendIn, setResendIn] = useState(0);
+  const deadline = useRef(0);
+  const syncCooldown = useCallback(async () => {
+    const seconds = await emailCooldown(email);
+    deadline.current = Date.now() + seconds * 1000;
+    setResendIn(seconds);
+  }, [email, emailCooldown]);
+  useEffect(() => {
+    void syncCooldown();
+  }, [syncCooldown]);
+  useEffect(() => {
+    const timer = setInterval(
+      () =>
+        setResendIn(
+          Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)),
+        ),
+      1000,
+    );
+    return () => clearInterval(timer);
+  }, []);
+  const [notice, setNotice] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<Exclude<Role, "admin">>("teacher");
@@ -176,12 +195,15 @@ function Welcome({
       .then((outcome) => {
         if (outcome === "confirmEmail") {
           setOtp("");
-          setResendIn(60);
+          void syncCooldown();
           setScreen("confirm");
         }
       })
       .catch((e) => setMessage(errorMessage(e)))
-      .finally(() => setBusy(false));
+      .finally(() => {
+        void syncCooldown();
+        setBusy(false);
+      });
   };
   const registerDisabled =
     busy || !name.trim() || (role !== "teacher" && !code.trim());
@@ -217,7 +239,12 @@ function Welcome({
               <>
                 {Boolean(error || message) && (
                   <Txt color={colors.red} accessibilityRole="alert">
-                    {error || message}
+                    {message || error}
+                  </Txt>
+                )}
+                {!!notice && (
+                  <Txt color={colors.green} accessibilityRole="status">
+                    {notice}
                   </Txt>
                 )}
                 {mode === "supabase" ? (
@@ -243,7 +270,7 @@ function Welcome({
                     {screen === "confirm" && !hasSession ? (
                       <>
                         <Txt color={colors.muted}>
-                          {`Мы отправили код подтверждения на ${email}. Введите его ниже. Если письма нет — проверьте «Спам» и «Промоакции».`}
+                          {`Код подтверждения для ${email}`}
                         </Txt>
                         <Field
                           label="Код из письма"
@@ -270,23 +297,34 @@ function Welcome({
                           onPress={() => {
                             setBusy(true);
                             setMessage("");
+                            setNotice("");
                             void resendConfirmation(email.trim())
                               .then(() => {
-                                setResendIn(60);
-                                setMessage("Новый код отправлен.");
+                                setNotice("Запрос принят. Проверьте почту.");
                               })
                               .catch((e) => setMessage(errorMessage(e)))
-                              .finally(() => setBusy(false));
+                              .finally(() => {
+                                void syncCooldown();
+                                setBusy(false);
+                              });
                           }}
                         >
                           {resendIn > 0
                             ? `Отправить код ещё раз (${resendIn} с)`
                             : "Отправить код ещё раз"}
                         </Button>
+                        <Disclosure title="Письмо не пришло?" icon="mail">
+                          <Txt color={colors.muted}>
+                            Проверьте адрес и папку «Спам». Если кодов
+                            несколько, используйте последний. Повторная отправка
+                            доступна через минуту.
+                          </Txt>
+                        </Disclosure>
                         <Button
                           secondary
                           disabled={busy}
                           onPress={() => {
+                            setNotice("");
                             setMessage("");
                             setOtp("");
                             setScreen("register");
@@ -299,6 +337,7 @@ function Welcome({
                       <>
                         <Field
                           label="Email"
+                          email
                           value={email}
                           onChangeText={setEmail}
                         />
@@ -316,9 +355,14 @@ function Welcome({
                             void login(email.trim(), password)
                               .catch((e) => {
                                 const m = errorMessage(e);
-                                if (m === errorMessage("Email not confirmed")) {
+                                if (
+                                  e instanceof AuthFlowError &&
+                                  e.code === "email_not_confirmed"
+                                ) {
                                   setOtp("");
                                   setScreen("confirm");
+                                  void syncCooldown();
+                                  return;
                                 }
                                 setMessage(m);
                               })
@@ -349,6 +393,7 @@ function Welcome({
                           <>
                             <Field
                               label="Email"
+                              email
                               value={email}
                               onChangeText={setEmail}
                             />
@@ -377,7 +422,8 @@ function Welcome({
                         <Button
                           disabled={
                             registerDisabled ||
-                            (!hasSession && (!email || !password))
+                            (!hasSession &&
+                              (!email || !password || resendIn > 0))
                           }
                           onPress={() =>
                             submitRegister(
@@ -389,7 +435,9 @@ function Welcome({
                         >
                           {hasSession
                             ? "Завершить регистрацию"
-                            : "Зарегистрироваться"}
+                            : resendIn > 0
+                              ? `Повторить через ${resendIn} с`
+                              : "Зарегистрироваться"}
                         </Button>
                       </>
                     )}

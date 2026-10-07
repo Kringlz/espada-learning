@@ -238,6 +238,7 @@ export function Field({
   placeholder,
   multiline = false,
   numeric = false,
+  email = false,
   secure = false,
   editable = true,
   maxLength,
@@ -248,6 +249,7 @@ export function Field({
   placeholder?: string;
   multiline?: boolean;
   numeric?: boolean;
+  email?: boolean;
   secure?: boolean;
   editable?: boolean;
   maxLength?: number;
@@ -275,9 +277,13 @@ export function Field({
         placeholder={placeholder ? translate(placeholder) : undefined}
         placeholderTextColor="#7B857F"
         multiline={multiline}
-        keyboardType={numeric ? "decimal-pad" : "default"}
+        keyboardType={
+          email ? "email-address" : numeric ? "decimal-pad" : "default"
+        }
+        autoCorrect={!email && !secure}
+        autoComplete={email ? "email" : undefined}
         secureTextEntry={secure}
-        autoCapitalize={secure ? "none" : "sentences"}
+        autoCapitalize={secure || email ? "none" : "sentences"}
         style={[
           styles.input,
           clarity && { minHeight: 56, fontSize: 18 },

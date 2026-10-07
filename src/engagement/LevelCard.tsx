@@ -1,3 +1,4 @@
+import { PointsDetails } from "../components/PointsDetails";
 import { AtlasImage } from "../components/AtlasImage";
 import { sectionIllustrations } from "../components/SectionIllustrations";
 import React from "react";
@@ -14,13 +15,7 @@ import { SoftReveal } from "../components/Motion";
 import { useRewards } from "./RewardContext";
 import { levels, levelFor } from "./rewards";
 
-export function LevelCard({
-  compact = false,
-  onPress,
-}: {
-  compact?: boolean;
-  onPress?: () => void;
-}) {
+export function LevelCard({ compact = false }: { compact?: boolean }) {
   const { colors } = useUITheme();
   const { points, ready, error, retry } = useRewards();
   const index = levelFor(points),
@@ -34,56 +29,70 @@ export function LevelCard({
     : 100;
   if (compact)
     return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${level.name}, ${ready ? points : "загрузка"} очков. Мой прогресс`}
-        onPress={onPress}
-        style={({ pressed }) => ({
-          minHeight: 164,
-          padding: 24,
-          borderRadius: 24,
-          borderWidth: 1,
-          borderColor: colors.line,
-          backgroundColor: colors.warning,
-          gap: 20,
-          opacity: pressed ? 0.8 : 1,
-        })}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Icon name="star" size={28} color={colors.green} />
-          <View style={{ flex: 1, gap: 2 }}>
-            <Txt size={15} color={colors.muted}>
-              {level.name}
-            </Txt>
-            <Txt size={26} weight="700">
-              {ready ? points : "…"} очков
-            </Txt>
-          </View>
-          <Icon name="arrow-right" size={20} />
-        </View>
-        <View
-          accessibilityRole="progressbar"
-          accessibilityLabel={
-            next ? `До уровня ${next.name}` : "Все уровни открыты"
-          }
-          accessibilityValue={{ min: 0, max: 100, now: Math.round(percent) }}
-          style={{ height: 7, borderRadius: 7, backgroundColor: colors.line }}
-        >
-          <View
-            style={{
-              width: `${percent}%`,
-              height: 7,
-              borderRadius: 7,
-              backgroundColor: colors.green,
-            }}
-          />
-        </View>
-        {!!error && (
-          <Txt accessibilityRole="alert" size={14} color={colors.red}>
-            Не удалось загрузить очки. Открой прогресс для повтора.
-          </Txt>
+      <PointsDetails>
+        {(open) => (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${level.name}, ${ready ? points : "загрузка"} очков. Как получить очки`}
+            onPress={open}
+            style={({ pressed }) => ({
+              minHeight: 164,
+              padding: 24,
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: colors.line,
+              backgroundColor: colors.warning,
+              gap: 20,
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+            >
+              <Icon name="star" size={28} color={colors.green} />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Txt size={15} color={colors.muted}>
+                  {level.name}
+                </Txt>
+                <Txt size={26} weight="700">
+                  {ready ? points : "…"} очков
+                </Txt>
+              </View>
+              <Icon name="arrow-right" size={20} />
+            </View>
+            <View
+              accessibilityRole="progressbar"
+              accessibilityLabel={
+                next ? `До уровня ${next.name}` : "Все уровни открыты"
+              }
+              accessibilityValue={{
+                min: 0,
+                max: 100,
+                now: Math.round(percent),
+              }}
+              style={{
+                height: 7,
+                borderRadius: 7,
+                backgroundColor: colors.line,
+              }}
+            >
+              <View
+                style={{
+                  width: `${percent}%`,
+                  height: 7,
+                  borderRadius: 7,
+                  backgroundColor: colors.green,
+                }}
+              />
+            </View>
+            {!!error && (
+              <Txt accessibilityRole="alert" size={14} color={colors.red}>
+                Не удалось загрузить очки. Нажми, чтобы повторить.
+              </Txt>
+            )}
+          </Pressable>
         )}
-      </Pressable>
+      </PointsDetails>
     );
   return (
     <Card style={{ gap: 14 }}>

@@ -124,13 +124,6 @@ export function StreakButton() {
                 <Txt size={32} weight="700">
                   {streak.current} {dayWord(streak.current)} подряд
                 </Txt>
-                <Txt size={16} color={colors.muted}>
-                  {streak.todayDone
-                    ? "Сегодня уже есть маленькая победа."
-                    : streak.current
-                      ? "Позанимайся сегодня, чтобы продолжить серию."
-                      : "Одно занятие — начало новой серии."}
-                </Txt>
               </View>
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
@@ -229,14 +222,6 @@ export function StreakButton() {
                   ))}
                 </View>
               </View>
-              <Txt size={15} color={colors.muted}>
-                Рекорд: {streak.best} {dayWord(streak.best)} · Зелёным отмечены
-                занятия.
-              </Txt>
-              <Txt size={14} color={colors.muted}>
-                Прочитай раздел, проверь ответ или посмотри видео. Дни считаются
-                по времени устройства.
-              </Txt>
               {!!streak.error && (
                 <>
                   <Txt accessibilityRole="alert" color={colors.red}>

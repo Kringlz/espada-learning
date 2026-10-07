@@ -293,7 +293,7 @@ export function Home({
         }}
       >
         <View style={{ flex: 1 }}>
-          <LevelCard compact onPress={() => navigate("Progress")} />
+          <LevelCard compact />
         </View>
         <View style={{ flex: 1 }}>
           <KnowledgePreview compact onPress={() => navigate("Progress")} />

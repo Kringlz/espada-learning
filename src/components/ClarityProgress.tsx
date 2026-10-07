@@ -1,3 +1,4 @@
+import { PointsDetails } from "./PointsDetails";
 import { StreakButton } from "./StreakButton";
 import { MyGroups } from "./Groups";
 import { AtlasImage } from "./AtlasImage";
@@ -34,7 +35,7 @@ export function ClarityProgress({
   details: () => void;
   children?: React.ReactNode;
 }) {
-  const { colors } = useUITheme();
+  const { colors, styles } = useUITheme();
   const wide = useWindowDimensions().width >= 760;
   const { actor, state } = useLearning();
   const rewards = useRewards();
@@ -77,47 +78,61 @@ export function ClarityProgress({
       </View>
       <MyGroups />
       <View style={{ flexDirection: "row", gap: 14 }}>
-        <Card
-          style={{
-            flex: 1,
-            minWidth: 0,
-            backgroundColor: colors.warning,
-            padding: wide ? 26 : 18,
-            gap: 8,
-          }}
-        >
-          <Icon name="star" size={26} color={colors.green} />
-          <Txt size={38} weight="700">
-            {rewards.ready ? rewards.points : "…"}
-          </Txt>
-          <Txt size={16} color={colors.muted}>
-            Очки
-          </Txt>
-          <View
-            accessibilityRole="progressbar"
-            accessibilityLabel={
-              next ? `До уровня ${next.name}` : "Все уровни открыты"
-            }
-            accessibilityValue={{
-              min: 0,
-              max: 100,
-              now: Math.round(levelPercent),
-            }}
-            style={{ height: 6, borderRadius: 6, backgroundColor: colors.line }}
-          >
-            <View
-              style={{
-                width: `${levelPercent}%`,
-                height: 6,
-                borderRadius: 6,
-                backgroundColor: colors.green,
-              }}
-            />
-          </View>
-          <Txt size={14} color={colors.muted}>
-            {current.name}
-          </Txt>
-        </Card>
+        <PointsDetails>
+          {(open) => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Очки: ${rewards.points}. Как получить очки`}
+              onPress={open}
+              style={[
+                styles.card,
+                {
+                  flex: 1,
+                  minWidth: 0,
+                  backgroundColor: colors.warning,
+                  padding: wide ? 26 : 18,
+                  gap: 8,
+                },
+              ]}
+            >
+              <Icon name="star" size={26} color={colors.green} />
+              <Txt size={38} weight="700">
+                {rewards.ready ? rewards.points : "…"}
+              </Txt>
+              <Txt size={16} color={colors.muted}>
+                Очки
+              </Txt>
+              <View
+                accessibilityRole="progressbar"
+                accessibilityLabel={
+                  next ? `До уровня ${next.name}` : "Все уровни открыты"
+                }
+                accessibilityValue={{
+                  min: 0,
+                  max: 100,
+                  now: Math.round(levelPercent),
+                }}
+                style={{
+                  height: 6,
+                  borderRadius: 6,
+                  backgroundColor: colors.line,
+                }}
+              >
+                <View
+                  style={{
+                    width: `${levelPercent}%`,
+                    height: 6,
+                    borderRadius: 6,
+                    backgroundColor: colors.green,
+                  }}
+                />
+              </View>
+              <Txt size={14} color={colors.muted}>
+                {current.name}
+              </Txt>
+            </Pressable>
+          )}
+        </PointsDetails>
         <Card
           style={{
             flex: 1,
@@ -324,15 +339,7 @@ export function ClarityProgress({
           })}
         </View>
       )}
-      <Disclosure title="Подробнее" icon="plus">
-        <Txt size={16}>
-          +10 за просмотр видео · +20 за правильный ответ. За каждый — один раз.
-        </Txt>
-        {next && (
-          <Txt size={16} color={colors.muted}>
-            До уровня «{next.name}»: {next.points - rewards.points} очков.
-          </Txt>
-        )}
+      <Disclosure title="История работ" icon="clock">
         {reports.map((r) => (
           <Button key={r.id} secondary small onPress={() => openResult(r.id)}>
             Работа · {dateText(r.date)}

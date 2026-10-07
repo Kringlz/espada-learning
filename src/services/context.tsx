@@ -1,3 +1,10 @@
+import {
+  authFailure,
+  AuthFlowError,
+  createConfirmationMailer,
+  normalizeEmail,
+  pendingMatches,
+} from "./authFlow";
 import { errorMessage } from "../i18n/errors";
 import React, {
   createContext,
@@ -24,6 +31,7 @@ import { demoStudentId } from "../data/seed";
 import { LearningOutbox } from "./outbox";
 const repo = new LocalRepository(AsyncStorage);
 const outbox = new LearningOutbox(secureStorage, remoteDispatch);
+const confirmationMailer = createConfirmationMailer(secureStorage);
 const PENDING_KEY = "espada.pendingRegistration";
 type PendingRegistration = {
   name: string;
@@ -77,6 +85,7 @@ export function LearningProvider({
     }) => Promise<"ready" | "confirmEmail">;
     confirmEmail: (email: string, token: string) => Promise<void>;
     resendConfirmation: (email: string) => Promise<void>;
+    emailCooldown: (email: string) => Promise<number>;
   }) => React.ReactNode;
 }) {
   const [state, setState] = useState<State | null>(null);
@@ -121,8 +130,8 @@ export function LearningProvider({
           s = await remoteRead();
         } catch (e) {
           const pending = await readPendingRegistration();
-          if (!pending) throw e;
-          await remoteRegister(pending.name, pending.role, pending.code);
+          if (!pendingMatches(pending, data.session.user.email)) throw e;
+          await remoteRegister(pending!.name, pending!.role, pending!.code);
           await secureStorage.removeItem(PENDING_KEY);
           s = await remoteRead();
         }
@@ -133,7 +142,8 @@ export function LearningProvider({
       }
       setError(null);
     } catch (e) {
-      if (mode === "supabase") setPendingRegistration(await readPendingRegistration());
+      if (mode === "supabase")
+        setPendingRegistration(await readPendingRegistration());
       setError(errorMessage(e));
     } finally {
       setLoading(false);
@@ -187,10 +197,10 @@ export function LearningProvider({
   async function login(email: string, password: string) {
     if (!backend) throw Error("Backend is not configured.");
     const { error } = await backend.auth.signInWithPassword({
-      email,
+      email: normalizeEmail(email),
       password,
     });
-    if (error) throw Error(errorMessage(error));
+    if (error) throw authFailure(error);
     await refresh();
   }
   async function registerProfile(input: {
@@ -210,17 +220,25 @@ export function LearningProvider({
     if (!existing.session) {
       if (!input.email || !input.password)
         throw Error("Укажите email и пароль.");
-      const { data, error } = await backend.auth.signUp({
-        email: input.email,
-        password: input.password,
+      const data = await confirmationMailer.send(input.email, async (email) => {
+        const { data, error } = await backend!.auth.signUp({
+          email,
+          password: input.password!,
+        });
+        if (error) throw error;
+        if (!data.session && data.user?.identities?.length === 0)
+          throw new AuthFlowError(
+            "Если у вас уже есть аккаунт, войдите в него. Новый код не отправлен.",
+            "user_already_exists",
+          );
+        return data;
       });
-      if (error) throw Error(errorMessage(error));
       if (!data.session) {
         const pending: PendingRegistration = {
           name: input.name,
           role: input.role,
           code: input.code,
-          email: input.email,
+          email: normalizeEmail(input.email),
         };
         await secureStorage.setItem(PENDING_KEY, JSON.stringify(pending));
         setPendingRegistration(pending);
@@ -238,20 +256,22 @@ export function LearningProvider({
   async function confirmEmail(email: string, token: string) {
     if (!backend) throw Error("Backend is not configured.");
     const { error } = await backend.auth.verifyOtp({
-      email,
-      token,
+      email: normalizeEmail(email),
+      token: token.trim(),
       type: "signup",
     });
-    if (error) throw Error(errorMessage(error));
+    if (error) throw authFailure(error);
     await refresh();
   }
   async function resendConfirmation(email: string) {
     if (!backend) throw Error("Backend is not configured.");
-    const { error } = await backend.auth.resend({
-      type: "signup",
-      email,
+    await confirmationMailer.send(email, async (address) => {
+      const { error } = await backend!.auth.resend({
+        type: "signup",
+        email: address,
+      });
+      if (error) throw error;
     });
-    if (error) throw Error(errorMessage(error));
   }
   const actor = state?.profiles.find((p) => p.id === actorId && p.active);
   if (!state || !actor)
@@ -267,6 +287,7 @@ export function LearningProvider({
           registerProfile,
           confirmEmail,
           resendConfirmation,
+          emailCooldown: confirmationMailer.remaining,
         })}
       </>
     );

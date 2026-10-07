@@ -5,7 +5,7 @@ const messages: Record<string, string> = {
   "Failed to fetch":
     "Нет соединения с сервером. Проверьте интернет и повторите попытку.",
   "email rate limit exceeded":
-    "Превышен лимит на отправку писем подтверждения. Подождите или настройте свой SMTP в Supabase (Project Settings → Auth → SMTP Settings), затем попробуйте снова.",
+    "Отправка писем временно ограничена. Подождите и попробуйте снова.",
   "Token has expired or is invalid":
     "Код неверный или устарел. Запросите новый код и попробуйте снова.",
   "User already registered":
