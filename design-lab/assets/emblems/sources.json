@@ -1,0 +1,48 @@
+{
+  "collection": "Game-icons.net",
+  "license": "CC BY 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+  "modifications": "Removed square background; displayed foreground in Espada green or ivory. Paths unchanged.",
+  "assets": {
+    "numbers": {
+      "author": "delapouite",
+      "page": "https://game-icons.net/1x1/delapouite/abacus.html",
+      "original": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/abacus.svg"
+    },
+    "algebra": {
+      "author": "lorc",
+      "page": "https://game-icons.net/1x1/lorc/scales.html",
+      "original": "https://raw.githubusercontent.com/game-icons/icons/master/lorc/scales.svg"
+    },
+    "geometry": {
+      "author": "delapouite",
+      "page": "https://game-icons.net/1x1/delapouite/pencil-ruler.html",
+      "original": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/pencil-ruler.svg"
+    },
+    "fractions": {
+      "author": "delapouite",
+      "page": "https://game-icons.net/1x1/delapouite/pie-chart.html",
+      "original": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/pie-chart.svg"
+    },
+    "graphs": {
+      "author": "delapouite",
+      "page": "https://game-icons.net/1x1/delapouite/chart.html",
+      "original": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/chart.svg"
+    },
+    "probability": {
+      "author": "delapouite",
+      "page": "https://game-icons.net/1x1/delapouite/dice-six-faces-five.html",
+      "original": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/dice-six-faces-five.svg"
+    },
+    "ratio": {
+      "author": "delapouite",
+      "page": "https://game-icons.net/1x1/delapouite/resize.html",
+      "original": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/resize.svg"
+    },
+    "compass": {
+      "author": "lorc",
+      "page": "https://game-icons.net/1x1/lorc/compass.html",
+      "original": "https://raw.githubusercontent.com/game-icons/icons/master/lorc/compass.svg"
+    }
+  }
+}

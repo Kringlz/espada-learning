@@ -1,45 +1,46 @@
 import { ImageSourcePropType } from "react-native";
+import { emblemSource } from "./SectionEmblems";
 
-/** Historical engravings from Bion / Stone (1758), restored by Nicholas Rougeux (CC0). */
+/** Recognizable mathematical objects from Game-icons.net, CC BY 3.0. */
 const sectionArt = {
   numbers: {
-    image: require("../../assets/illustrations/atlas/numbers.jpg"),
+    image: emblemSource("numbers"),
     color: "#EFEADE",
   },
   fractions: {
-    image: require("../../assets/illustrations/atlas/fractions.jpg"),
+    image: emblemSource("fractions"),
     color: "#EFEADE",
   },
   geometry: {
-    image: require("../../assets/illustrations/atlas/geometry.jpg"),
+    image: emblemSource("geometry"),
     color: "#EFEADE",
   },
   algebra: {
-    image: require("../../assets/illustrations/atlas/algebra.jpg"),
+    image: emblemSource("algebra"),
     color: "#EFEADE",
   },
   graphs: {
-    image: require("../../assets/illustrations/atlas/graphs.jpg"),
+    image: emblemSource("graphs"),
     color: "#EFEADE",
   },
   probability: {
-    image: require("../../assets/illustrations/atlas/probability.jpg"),
+    image: emblemSource("probability"),
     color: "#EFEADE",
   },
   ratio: {
-    image: require("../../assets/illustrations/atlas/ratio.jpg"),
+    image: emblemSource("ratio"),
     color: "#EFEADE",
   },
   learning: {
-    image: require("../../assets/illustrations/atlas/ratio.jpg"),
+    image: emblemSource("compass"),
     color: "#EFEADE",
   },
   practice: {
-    image: require("../../assets/illustrations/atlas/practice.jpg"),
+    image: emblemSource("geometry"),
     color: "#EFEADE",
   },
   league: {
-    image: require("../../assets/illustrations/atlas/ratio.jpg"),
+    image: emblemSource("compass"),
     color: "#EFEADE",
   },
 } satisfies Record<string, { image: ImageSourcePropType; color: string }>;

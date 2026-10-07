@@ -113,10 +113,10 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
             color={colors.muted}
             accessibilityRole="link"
             onPress={() =>
-              void Linking.openURL("https://www.c82.net/math-instruments/about")
+              void Linking.openURL("https://game-icons.net/")
             }
           >
-            Гравюры: Бион и Стоун · реставрация Nicholas Rougeux
+            Иллюстрации: Game-icons · Delapouite и Lorc
           </Txt>
           <Txt
             size={12}
@@ -124,11 +124,11 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
             accessibilityRole="link"
             onPress={() =>
               void Linking.openURL(
-                "https://creativecommons.org/publicdomain/zero/1.0/",
+                "https://creativecommons.org/licenses/by/3.0/",
               )
             }
           >
-            Исторический атлас · CC0
+            CC BY 3.0 · цвета адаптированы
           </Txt>
         </View>
       </Disclosure>

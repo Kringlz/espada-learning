@@ -78,3 +78,9 @@ body[data-variant=m] .i-story-banner img{padding:8px}
  body[data-variant=m] .m-tree-topic-end>.m-atlas-art{width:100%;height:180px}
  body[data-variant=m] .m-tree-topic-end>span:last-of-type{position:absolute;right:8px;bottom:8px;padding:3px 7px;border-radius:8px;background:var(--surface);color:var(--ink)}
 }
+
+/* Solid object silhouettes stay legible at thumbnail size. */
+body[data-variant=m] .m-emblem-art{display:grid;place-items:center;background:#efeade}
+body[data-variant=m] .m-emblem-shape{display:block;width:86%;height:86%;background:#294638;mask:var(--emblem) center/contain no-repeat;-webkit-mask:var(--emblem) center/contain no-repeat}
+body.dark[data-variant=m] .m-emblem-art{background:#000}
+body.dark[data-variant=m] .m-emblem-shape{background:#f2e8cf}
