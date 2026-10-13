@@ -1,3 +1,4 @@
+import { DuoHome } from "../components/DuoHome";
 import { StreakButton } from "../components/StreakButton";
 import { AtlasImage } from "../components/AtlasImage";
 import { ClarityProgress } from "../components/ClarityProgress";
@@ -139,208 +140,12 @@ export function Home({
   openResult: (id: string) => void;
   openCourse: (id: string) => void;
 }) {
-  const { colors, styles } = useUITheme();
-  const { state: s, actor } = useLearning();
-  const storage = useCourseProgress(actor.id);
-  const homework = s.assignments
-    .filter((a) => a.studentId === actor.id && !a.completedAt)
-    .sort((a, b) => Number(b.override) - Number(a.override));
-  const done = s.assignments.filter(
-    (a) => a.studentId === actor.id && a.completedAt,
-  );
-  const activity = s.activities
-    .filter(
-      (a) =>
-        a.studentId === actor.id &&
-        a.stage !== "complete" &&
-        s.topics.some((t) => t.id === a.topicId && hasMaterial(t)),
-    )
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
-  const last = course
-    .filter((t) => storage.progress[t.id]?.updatedAt)
-    .sort((a, b) =>
-      storage.progress[b.id].updatedAt.localeCompare(
-        storage.progress[a.id].updatedAt,
-      ),
-    )[0];
-  const useCourse =
-    last &&
-    (!activity || storage.progress[last.id].updatedAt >= activity.updatedAt);
-  const first = homework[0];
-  const title = first
-    ? s.topics.find((t) => t.id === first.topicId)?.title
-    : useCourse
-      ? courseContent[last.id].pages[0].title
-      : activity
-        ? s.topics.find((t) => t.id === activity.topicId)?.title
-        : "Начнём с небольшой темы?";
-  const start = () =>
-    first
-      ? openTopic(first.topicId)
-      : useCourse
-        ? openCourse(last.id)
-        : activity
-          ? openTopic(activity.topicId)
-          : navigate("Learn");
-  const wide = useWindowDimensions().width >= 760;
   return (
-    <View
-      style={{ gap: 24, maxWidth: 1040, width: "100%", alignSelf: "center" }}
-    >
-      <View
-        style={{
-          flexDirection: wide ? "row" : "column",
-          alignItems: wide ? "center" : "flex-start",
-          justifyContent: "space-between",
-          gap: 20,
-        }}
-      >
-        <View style={{ gap: 12, flex: 1, width: "100%" }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              width: "100%",
-            }}
-          >
-            <Txt
-              size={15}
-              weight="600"
-              color={colors.muted}
-              style={{ flex: 1 }}
-            >
-              ✦ Сегодня будет интересно
-            </Txt>
-            <StreakButton />
-          </View>
-          <Txt
-            accessibilityRole="header"
-            size={wide ? 44 : 33}
-            weight="700"
-            style={{ letterSpacing: -1 }}
-          >
-            Привет, {actor.name.split(" ")[0]}!
-          </Txt>
-        </View>
-      </View>
-      <View
-        style={{
-          backgroundColor: colors.light,
-          borderWidth: 1,
-          borderColor: colors.line,
-          borderRadius: 28,
-          padding: wide ? 36 : 24,
-          flexDirection: wide ? "row" : "column",
-          gap: 24,
-          alignItems: "center",
-        }}
-      >
-        <View
-          style={{
-            flex: wide ? 1 : undefined,
-            width: wide ? undefined : "100%",
-            gap: 20,
-          }}
-        >
-          <Txt
-            size={13}
-            weight="700"
-            color={colors.muted}
-            style={{ letterSpacing: 1.2 }}
-          >
-            {first ? "ЗАДАНИЕ ОТ УЧИТЕЛЯ" : "ТВОЁ СЛЕДУЮЩЕЕ ОТКРЫТИЕ"}
-          </Txt>
-          <Txt
-            accessibilityRole="header"
-            size={wide ? 38 : 29}
-            weight="700"
-            style={{ lineHeight: wide ? 46 : 36, letterSpacing: -0.7 }}
-          >
-            {last || activity || first
-              ? title?.split(":")[0]
-              : "Большие открытия.\nМаленькими шагами."}
-          </Txt>
-          <Button onPress={start} icon="arrow-right">
-            {first
-              ? "Открыть задание"
-              : last || activity
-                ? "Вернуться к уроку"
-                : "Начать открытие"}
-          </Button>
-        </View>
-        <AtlasImage
-          source={
-            title
-              ? topicCover(title).image
-              : sectionIllustrations.learning.image
-          }
-          accessible={false}
-          resizeMode="contain"
-          style={{
-            width: wide ? "40%" : "100%",
-            height: wide ? 220 : 120,
-            borderRadius: 24,
-          }}
-        />
-      </View>
-      <View
-        style={{
-          flexDirection: wide ? "row" : "column",
-          alignItems: "stretch",
-          gap: 20,
-        }}
-      >
-        <View style={{ flex: 1 }}>
-          <LevelCard compact />
-        </View>
-        <View style={{ flex: 1 }}>
-          <KnowledgePreview compact onPress={() => navigate("Progress")} />
-        </View>
-      </View>
-      <Button
-        fullWidth
-        secondary
-        icon="book-open"
-        onPress={() => navigate("Learn")}
-      >
-        Все темы
-      </Button>
-      {(homework.length > 0 || !!done.length) && (
-        <Disclosure
-          title={`Мои задания · ${homework.length + done.length}`}
-          icon="check-square"
-        >
-          {homework.map((a) => (
-            <View key={a.id} style={{ gap: 8 }}>
-              <Txt weight="600">
-                {s.topics.find((t) => t.id === a.topicId)?.title}
-              </Txt>
-              <Txt size={14} color={colors.muted}>
-                {a.reason}
-              </Txt>
-              <Button small secondary onPress={() => openTopic(a.topicId)}>
-                Открыть задание
-              </Button>
-            </View>
-          ))}
-          {done.map((a) => (
-            <View key={a.id} style={{ gap: 8 }}>
-              <Txt weight="600">
-                ✓ {s.topics.find((t) => t.id === a.topicId)?.title}
-              </Txt>
-              <Button small secondary onPress={() => openTopic(a.topicId)}>
-                Посмотреть
-              </Button>
-            </View>
-          ))}
-        </Disclosure>
-      )}
-      <Disclosure title="Что повторить" icon="refresh-cw">
-        <Suggestions studentId={actor.id} openTopic={openTopic} />
-      </Disclosure>
-    </View>
+    <DuoHome
+      openCourse={openCourse}
+      openTopic={openTopic}
+      navigate={navigate}
+    />
   );
 }
 
@@ -361,7 +166,7 @@ export function Learn({
     >
       {!reading && (
         <Txt size={34} weight="700" style={{ letterSpacing: -0.8 }}>
-          Твой маршрут
+          Все уроки
         </Txt>
       )}
       <CourseLibrary

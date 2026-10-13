@@ -50,7 +50,7 @@ export function authFailure(error: unknown): AuthFlowError {
     email_not_confirmed: "Подтвердите адрес электронной почты.",
     email_address_invalid: "Проверьте адрес электронной почты.",
     validation_failed: "Проверьте почту и пароль.",
-    weak_password: "Придумайте более надёжный пароль — не короче 6 символов.",
+    weak_password: "Выберите более надёжный пароль.",
     user_already_exists: "Этот email уже зарегистрирован. Войдите в аккаунт.",
     email_exists: "Этот email уже зарегистрирован. Войдите в аккаунт.",
     invalid_credentials: "Неверная почта или пароль.",

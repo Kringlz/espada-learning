@@ -1,4 +1,5 @@
 import { ClarityReading } from "./ClarityReading";
+import { supplemental } from "./supplemental";
 import { ClarityRoute } from "./ClarityRoute";
 import { useLessonFocus } from "../components/LessonFocus";
 import { SectionTabs } from "../components/SectionTabs";
@@ -567,6 +568,13 @@ function CourseReader({
             приложении; математические обозначения и чертежи сохранены.
           </Txt>
           <Txt size={13}>{topic.practice.source}</Txt>
+          {(supplemental[topic.id] ?? []).slice(0, 1).map(({ source }) => (
+            <Txt size={13} key={source.file}>
+              Дополнительные упражнения — авторские аналоги:{" "}
+              {source.file.replace(".pdf", "").replaceAll("_", " ")}, с.{" "}
+              {source.page}. {source.section}.
+            </Txt>
+          ))}
           {Platform.OS === "web" && (
             <Button
               secondary

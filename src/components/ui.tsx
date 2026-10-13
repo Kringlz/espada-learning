@@ -135,8 +135,14 @@ export function Button({
               ? colors.selected
               : colors.subtle
             : colors.primary,
-          borderWidth: 1,
-          borderColor: selected ? colors.green : "transparent",
+          borderWidth: 2,
+          borderBottomWidth: pressed ? 2 : 5,
+          transform: [{ translateY: pressed ? 3 : 0 }],
+          borderColor: secondary
+            ? selected
+              ? colors.green
+              : colors.line
+            : colors.green,
           opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
           alignSelf: fullWidth ? "stretch" : "flex-start",
           minHeight: clarity ? (small ? 48 : 58) : 48,
@@ -165,7 +171,7 @@ export function Button({
         <Txt
           style={{ flexShrink: 1, textAlign: "center" }}
           size={clarity ? (small ? 16 : 19) : small ? 14 : 16}
-          weight="600"
+          weight="700"
           color={secondary ? colors.green : colors.onPrimary}
         >
           {children}
@@ -540,8 +546,8 @@ const createStyles = (colors: Palette) =>
     row: { flexDirection: "row", alignItems: "center", gap: 12 },
     card: {
       backgroundColor: colors.white,
-      borderRadius: 28,
-      borderWidth: 1,
+      borderRadius: 20,
+      borderWidth: 2,
       borderColor: colors.line,
       padding: 20,
       gap: 14,
@@ -558,7 +564,7 @@ const createStyles = (colors: Palette) =>
       maxWidth: "100%",
     },
     input: {
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: colors.line,
       borderRadius: 16,
       padding: 14,

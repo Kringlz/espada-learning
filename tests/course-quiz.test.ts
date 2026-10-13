@@ -10,7 +10,7 @@ import {
   quizStats,
 } from "../src/course/quiz";
 
-test("all 458 source questions have three distinct choices and two authored hints", () => {
+test("all 575 source questions have three distinct choices and two authored hints", () => {
   const correctPositions = new Set<number>();
   let count = 0;
   for (const topic of course) {
@@ -33,7 +33,7 @@ test("all 458 source questions have three distinct choices and two authored hint
       count++;
     }
   }
-  assert.equal(count, 458);
+  assert.equal(count, 575);
   assert.equal(correctPositions.size, 3);
 });
 

@@ -1,5 +1,15 @@
 # Project log
 
+## 2026-10-14 — learning path, registration safeguards and additional practice
+
+- Preserved the preceding deployed source with remote tag `pre-duo-2026-10-14` before changing the interface.
+- Duolingo-inspired green path with flat icons, dotted connections, pressed buttons, dark/light palettes and a desktop sidebar. Bottom navigation contains icons only in every role, with accessible names. Espada name and knight remain.
+- Home uses real saved progress, homework, groups, streak and points; details remain collapsible. Completing a lesson requires reading and submitted practice. Exiting a lesson returns to the screen that opened it.
+- Added 117 original analogous exercises to 39 existing lessons in grades 5–9, based on all seven newly supplied collections. Total: 575. Each has three choices, two staged hints and a worked answer. Source/page mapping is in `supplemental.json`; original exercise IDs and all 458 previous questions/answers are unchanged.
+- Public signup now offers student and parent only, validates invite codes and an 8-character minimum password, rejects obsolete staff drafts, safely ignores corrupt drafts and handles confirmation-link sessions. Added a way to leave an unfinished registration and use another account. Existing staff login remains.
+- Migration `009_registration_policy.sql` rejects staff signup in the RPC and makes same-role completion retries idempotent. Tested locally; **hosted application still requires an authenticated Supabase operator**. SMTP configuration and real email delivery are not verified; no test mail was sent to users.
+- Validation: TypeScript, 111 automated tests, PostgreSQL permission suites and 19 lesson flow/security checks, web exports, browser checks at desktop and narrow widths. Native devices and end-to-end hosted signup remain unverified.
+
 ## 2026-10-07 — «Ясно» across Espada
 
 - Unified light/dark design, Espada branding, icon navigation and Atlas engravings across student, teacher, parent, administrator and authentication screens.

@@ -18,10 +18,10 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000900',true);
 select pg_temp.assert_denied($q$select public.load_learning_state()$q$);
 
--- Teacher self-registration needs no code.
-select public.register_profile('Новый учитель','teacher',null);
-select pg_temp.assert_true((select role='teacher' and active and code is not null from public.profiles where id='00000000-0000-4000-8000-000000000900'),'teacher self-registers');
-select pg_temp.assert_denied($q$select public.register_profile('Опять','teacher',null)$q$);
+-- Staff signup is blocked on the server, including direct RPC calls.
+select pg_temp.assert_denied($q$select public.register_profile('Новый учитель','teacher',null)$q$);
+select pg_temp.assert_denied($q$select public.register_profile('Без роли',null,null)$q$);
+select pg_temp.assert_true((select count(*)=0 from public.profiles where id='00000000-0000-4000-8000-000000000900'),'staff signup leaves no profile');
 
 -- Nobody can self-register as admin.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000903',true);
@@ -32,6 +32,9 @@ select pg_temp.assert_true((select count(*)=0 from public.profiles where id='000
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000901',true);
 select pg_temp.assert_denied($q$select public.register_profile('Новый ученик','student','ZZZZZZZ')$q$);
 select public.register_profile('Новый ученик','student',current_setting('test.group_code'));
+-- Retrying after a lost response must not duplicate membership or escalate the role.
+select public.register_profile('Повтор','student',current_setting('test.group_code'));
+select pg_temp.assert_denied($q$select public.register_profile('Повышение','teacher',null)$q$);
 select pg_temp.assert_true((select count(*)=1 from public.class_memberships where class_id='00000000-0000-4000-8000-000000000006' and profile_id='00000000-0000-4000-8000-000000000901'),'student joins group by code');
 
 -- Parent self-registration by a bad student code is rejected; a good one links them.

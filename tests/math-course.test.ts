@@ -17,7 +17,7 @@ test("all 55 supplied topics and 317 content pages are reachable, with no missin
   assert.equal(course.filter((t) => t.subject === "algebra").length, 41);
   assert.equal(
     course.reduce((sum, t) => sum + t.practice.count, 0),
-    458,
+    575,
   );
   assert.equal(
     course.reduce((sum, t) => sum + t.pages.length + 1, 0),
@@ -29,9 +29,9 @@ test("all 55 supplied topics and 317 content pages are reachable, with no missin
         .filter((t) => t.grade === grade)
         .reduce((sum, t) => sum + t.practice.count, 0),
     ),
-    [54, 66, 80, 64, 66, 72, 56],
+    [72, 87, 110, 88, 90, 72, 56],
   );
-  assert.equal(course.find((t) => t.id === "A05-01")!.practice.count, 9);
+  assert.equal(course.find((t) => t.id === "A05-01")!.practice.count, 12);
   for (const source of sources) {
     const topics = course.filter((t) => t.grade === source.grade);
     assert.equal(topics.length, source.topics);
@@ -51,7 +51,7 @@ test("all 55 supplied topics and 317 content pages are reachable, with no missin
         ),
       );
       assert.ok(t.title.length > 10);
-      assert.ok(t.practice.count >= 8 && t.practice.count <= 12);
+      assert.ok(t.practice.count >= 8 && t.practice.count <= 15);
       expected = t.endPage + 1;
     }
     assert.equal(expected, source.pages + 1);

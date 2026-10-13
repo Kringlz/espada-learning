@@ -1,4 +1,6 @@
 import raw from "../../content/math-course/structured.json";
+import { supplemental } from "./supplemental";
+import rawCatalog from "../../content/math-course/catalog.json";
 export type TextRun = {
   text: string;
   bold?: boolean;
@@ -33,4 +35,34 @@ export type TopicContent = {
     answers: ContentBlock[];
   };
 };
-export const courseContent = raw as unknown as Record<string, TopicContent>;
+const original = raw as unknown as Record<string, TopicContent>;
+export const courseContent: Record<string, TopicContent> = Object.fromEntries(
+  rawCatalog.map((topic) => {
+    const content = original[topic.id];
+    const extra = supplemental[topic.id] ?? [];
+    const numbered = (text: string, index: number): ContentBlock => ({
+      kind: "paragraph",
+      runs: [
+        { text: `${topic.practice.count + index + 1}.`, bold: true },
+        { text: ` ${text}` },
+      ],
+    });
+    return [
+      topic.id,
+      {
+        ...content,
+        practice: {
+          ...content.practice,
+          questions: [
+            ...content.practice.questions,
+            ...extra.map((q, i) => numbered(q.question, i)),
+          ],
+          answers: [
+            ...content.practice.answers,
+            ...extra.map((q, i) => numbered(q.answer, i)),
+          ],
+        },
+      },
+    ];
+  }),
+);

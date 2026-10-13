@@ -1,3 +1,8 @@
+import {
+  registrationRoles,
+  RegistrationRole,
+  isRegistrationRole,
+} from "./src/services/registration";
 import { AuthFlowError } from "./src/services/authFlow";
 import { Disclosure } from "./src/components/ui";
 import { StreakProvider } from "./src/engagement/StreakContext";
@@ -88,8 +93,7 @@ function Workspace() {
     </StreakProvider>
   );
 }
-const roleLabels: Record<Exclude<Role, "admin">, string> = {
-  teacher: "Учитель",
+const roleLabels: Record<RegistrationRole, string> = {
   student: "Ученик",
   parent: "Родитель",
 };
@@ -104,6 +108,7 @@ function Welcome({
   confirmEmail,
   resendConfirmation,
   emailCooldown,
+  leaveRegistration,
 }: {
   loading: boolean;
   error: string | null;
@@ -126,6 +131,7 @@ function Welcome({
   confirmEmail: (email: string, token: string) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
   emailCooldown: (email: string) => Promise<number>;
+  leaveRegistration: () => Promise<void>;
 }) {
   const { colors, styles } = useUITheme();
   const [screen, setScreen] = useState<"login" | "register" | "confirm">(
@@ -156,7 +162,7 @@ function Welcome({
   const [notice, setNotice] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<Exclude<Role, "admin">>("teacher");
+  const [role, setRole] = useState<RegistrationRole>("student");
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -166,7 +172,11 @@ function Welcome({
   useEffect(() => {
     if (pendingRegistration) {
       setName(pendingRegistration.name);
-      setRole(pendingRegistration.role as Exclude<Role, "admin">);
+      setRole(
+        isRegistrationRole(pendingRegistration.role)
+          ? pendingRegistration.role
+          : "student",
+      );
       setCode(pendingRegistration.code ?? "");
       if (pendingRegistration.email && !hasSession) {
         setEmail(pendingRegistration.email);
@@ -176,8 +186,14 @@ function Welcome({
   }, [pendingRegistration, hasSession]);
   const roleButtons = (
     <View style={[styles.row, { flexWrap: "wrap" }]}>
-      {(Object.keys(roleLabels) as (keyof typeof roleLabels)[]).map((r) => (
-        <Button key={r} small secondary={role !== r} onPress={() => setRole(r)}>
+      {registrationRoles.map((r) => (
+        <Button
+          key={r}
+          small
+          disabled={busy}
+          secondary={role !== r}
+          onPress={() => setRole(r)}
+        >
           {roleLabels[r]}
         </Button>
       ))}
@@ -185,11 +201,12 @@ function Welcome({
   );
   const submitRegister = (extra: { email?: string; password?: string }) => {
     setBusy(true);
+    setNotice("");
     setMessage("");
     void registerProfile({
       name: name.trim(),
       role,
-      code: role === "teacher" ? undefined : code.trim(),
+      code: code.trim(),
       ...extra,
     })
       .then((outcome) => {
@@ -205,8 +222,7 @@ function Welcome({
         setBusy(false);
       });
   };
-  const registerDisabled =
-    busy || !name.trim() || (role !== "teacher" && !code.trim());
+  const registerDisabled = busy || !name.trim() || !code.trim();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
       <ScrollView
@@ -247,6 +263,28 @@ function Welcome({
                     {notice}
                   </Txt>
                 )}
+                {hasSession && (
+                  <Button
+                    small
+                    secondary
+                    disabled={busy}
+                    onPress={() => {
+                      setBusy(true);
+                      void leaveRegistration()
+                        .then(() => {
+                          setScreen("login");
+                          setEmail("");
+                          setPassword("");
+                          setMessage("");
+                          setNotice("");
+                        })
+                        .catch((e) => setMessage(errorMessage(e)))
+                        .finally(() => setBusy(false));
+                    }}
+                  >
+                    Другой аккаунт
+                  </Button>
+                )}
                 {mode === "supabase" ? (
                   <>
                     {!hasSession && screen !== "confirm" && (
@@ -254,14 +292,22 @@ function Welcome({
                         <Button
                           small
                           secondary={screen !== "login"}
-                          onPress={() => setScreen("login")}
+                          onPress={() => {
+                            setMessage("");
+                            setNotice("");
+                            setScreen("login");
+                          }}
                         >
                           Войти
                         </Button>
                         <Button
                           small
                           secondary={screen !== "register"}
-                          onPress={() => setScreen("register")}
+                          onPress={() => {
+                            setMessage("");
+                            setNotice("");
+                            setScreen("register");
+                          }}
                         >
                           Создать аккаунт
                         </Button>
@@ -273,6 +319,7 @@ function Welcome({
                           {`Код подтверждения для ${email}`}
                         </Txt>
                         <Field
+                          editable={!busy}
                           label="Код из письма"
                           numeric
                           maxLength={10}
@@ -280,9 +327,11 @@ function Welcome({
                           onChangeText={(s) => setOtp(s.replace(/\D/g, ""))}
                         />
                         <Button
+                          fullWidth
                           disabled={busy || otp.length < 6}
                           onPress={() => {
                             setBusy(true);
+                            setNotice("");
                             setMessage("");
                             void confirmEmail(email.trim(), otp)
                               .catch((e) => setMessage(errorMessage(e)))
@@ -296,8 +345,8 @@ function Welcome({
                           disabled={busy || resendIn > 0}
                           onPress={() => {
                             setBusy(true);
-                            setMessage("");
                             setNotice("");
+                            setMessage("");
                             void resendConfirmation(email.trim())
                               .then(() => {
                                 setNotice("Запрос принят. Проверьте почту.");
@@ -336,21 +385,25 @@ function Welcome({
                     ) : screen === "login" ? (
                       <>
                         <Field
+                          editable={!busy}
                           label="Email"
                           email
                           value={email}
                           onChangeText={setEmail}
                         />
                         <Field
+                          editable={!busy}
                           label="Пароль"
                           secure
                           value={password}
                           onChangeText={setPassword}
                         />
                         <Button
+                          fullWidth
                           disabled={busy || !email || !password}
                           onPress={() => {
                             setBusy(true);
+                            setNotice("");
                             setMessage("");
                             void login(email.trim(), password)
                               .catch((e) => {
@@ -385,6 +438,7 @@ function Welcome({
                         </Txt>
                         {roleButtons}
                         <Field
+                          editable={!busy}
                           label="Имя"
                           value={name}
                           onChangeText={setName}
@@ -392,13 +446,15 @@ function Welcome({
                         {!hasSession && (
                           <>
                             <Field
+                              editable={!busy}
                               label="Email"
                               email
                               value={email}
                               onChangeText={setEmail}
                             />
                             <Field
-                              label="Пароль"
+                              editable={!busy}
+                              label="Пароль · минимум 8 символов"
                               secure
                               value={password}
                               onChangeText={setPassword}
@@ -407,6 +463,7 @@ function Welcome({
                         )}
                         {role === "student" && (
                           <Field
+                            editable={!busy}
                             label="Код группы"
                             value={code}
                             onChangeText={setCode}
@@ -414,12 +471,14 @@ function Welcome({
                         )}
                         {role === "parent" && (
                           <Field
+                            editable={!busy}
                             label="Код ученика"
                             value={code}
                             onChangeText={setCode}
                           />
                         )}
                         <Button
+                          fullWidth
                           disabled={
                             registerDisabled ||
                             (!hasSession &&
@@ -445,7 +504,14 @@ function Welcome({
                 ) : screen === "login" ? (
                   <>
                     <Button onPress={retry}>Retry loading local demo</Button>
-                    <Button secondary onPress={() => setScreen("register")}>
+                    <Button
+                      secondary
+                      onPress={() => {
+                        setMessage("");
+                        setNotice("");
+                        setScreen("register");
+                      }}
+                    >
                       Зарегистрироваться (демо)
                     </Button>
                   </>
@@ -459,6 +525,7 @@ function Welcome({
                     <Field label="Имя" value={name} onChangeText={setName} />
                     {role === "student" && (
                       <Field
+                        editable={!busy}
                         label="Код группы"
                         value={code}
                         onChangeText={setCode}
@@ -466,6 +533,7 @@ function Welcome({
                     )}
                     {role === "parent" && (
                       <Field
+                        editable={!busy}
                         label="Код ученика"
                         value={code}
                         onChangeText={setCode}
@@ -477,7 +545,14 @@ function Welcome({
                     >
                       Зарегистрироваться
                     </Button>
-                    <Button secondary onPress={() => setScreen("login")}>
+                    <Button
+                      secondary
+                      onPress={() => {
+                        setMessage("");
+                        setNotice("");
+                        setScreen("login");
+                      }}
+                    >
                       Назад
                     </Button>
                   </>
@@ -534,7 +609,17 @@ function Shell() {
   );
   const clarity = true;
   const focused = clarity && (!!topic || !!focusedLesson);
-  const leaveLesson = () => (topic ? setTopic(null) : focusedLesson?.exit());
+  const courseOrigin = useRef<string | null>(null);
+  const leaveLesson = () => {
+    if (topic) setTopic(null);
+    else {
+      focusedLesson?.exit();
+      if (courseOrigin.current) {
+        setTab(courseOrigin.current);
+        courseOrigin.current = null;
+      }
+    }
+  };
 
   const offsets = useRef<Record<string, number>>({});
   const routeKey = `${actor.id}:${topic ? `topic:${topic}` : result ? `result:${result}` : tab}`;
@@ -597,7 +682,7 @@ function Shell() {
         return true;
       }
       if (focusedLesson) {
-        focusedLesson.exit();
+        leaveLesson();
         return true;
       }
       if (result) {
@@ -635,6 +720,7 @@ function Shell() {
           }[name] ?? translate(name))
         : translate(name);
   function openCourse(id: string) {
+    courseOrigin.current = tab;
     setCourseRequest({ id, key: Date.now() });
     navigate("Learn");
   }
@@ -642,7 +728,7 @@ function Shell() {
     <View
       style={{
         gap: mobile ? 4 : 7,
-        flexDirection: mobile || (student && desktop) ? "row" : "column",
+        flexDirection: mobile ? "row" : "column",
         justifyContent: mobile ? "space-around" : undefined,
       }}
     >
@@ -663,6 +749,8 @@ function Shell() {
               paddingVertical: clarity ? 12 : mobile ? 8 : 10,
               minHeight: clarity ? 56 : undefined,
               borderRadius: 16,
+              borderWidth: 2,
+              borderColor: selectedTab === t ? colors.line : "transparent",
               backgroundColor:
                 selectedTab === t
                   ? student
@@ -689,7 +777,7 @@ function Shell() {
                 : colors.muted
             }
           />
-          {!clarity && (
+          {!mobile && (
             <Txt
               size={clarity ? 16 : mobile ? 11 : 16}
               weight={selectedTab === t ? "600" : "400"}
@@ -717,7 +805,7 @@ function Shell() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={{ flex: 1, flexDirection: "row" }}>
-          {desktop && !student && !clarity && (
+          {desktop && !focused && (
             <View
               style={{
                 width: 220,
@@ -729,19 +817,12 @@ function Shell() {
               }}
             >
               <Brand />
-              <View style={{ gap: 14 }}>
-                <Txt style={styles.label}>
-                  {actor.role === "student" ? "MY LEARNING" : "STAFF WORKSPACE"}
-                </Txt>
-                {nav()}
-              </View>
+              {nav()}
               <View style={{ flex: 1 }} />
-              <View>
-                <Txt size={11} color={colors.muted}>
-                  Small steps. Lasting understanding.
-                </Txt>
-                <Txt size={10} color="#87907F" style={{ marginTop: 8 }}>
-                  ESPADA LEARNING
+              <View style={{ gap: 8 }}>
+                <Icon name="book-open" color={colors.green} />
+                <Txt size={14} weight="700">
+                  Каждый шаг считается
                 </Txt>
               </View>
             </View>
@@ -749,11 +830,7 @@ function Shell() {
           <View style={{ flex: 1, minWidth: 0 }}>
             <View
               style={{
-                paddingHorizontal: desktop
-                  ? Math.max(28, (width - 1040) / 2)
-                  : desktop
-                    ? 24
-                    : 18,
+                paddingHorizontal: desktop ? 32 : 18,
                 paddingVertical: 16,
                 borderBottomWidth: 1,
                 borderColor: colors.line,
@@ -775,6 +852,19 @@ function Shell() {
                     Выйти
                   </Button>
                   <Brand compact={width < 600} />
+                </View>
+              ) : desktop ? (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 10,
+                    alignItems: "center",
+                  }}
+                >
+                  <Icon name="book-open" color={colors.green} />
+                  <Txt size={16} weight="700">
+                    Математика
+                  </Txt>
                 </View>
               ) : clarity || student ? (
                 <Brand />
@@ -1059,7 +1149,7 @@ function Shell() {
               </ScreenScroll.Provider>
             </LessonFocus.Provider>
             {student && <RewardNotice />}
-            {(!desktop || clarity) && !focused && (
+            {!desktop && !focused && (
               <View
                 style={{
                   backgroundColor: colors.white,

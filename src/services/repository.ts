@@ -1,3 +1,4 @@
+import { validateRegistration } from "./registration";
 import { upgradeFamilyDemo } from "../data/familyDemo";
 import { upgradeVisualReportDemo } from "../data/visualReportDemo";
 import { upgradeReportDemo } from "../data/reportDemo";
@@ -59,7 +60,9 @@ export class LocalRepository {
       return upgraded;
     }
     const seed = upgradeCodes(
-      upgradeFamilyDemo(upgradeVisualReportDemo(upgradeReportDemo(createSeed()))),
+      upgradeFamilyDemo(
+        upgradeVisualReportDemo(upgradeReportDemo(createSeed())),
+      ),
     );
     await this.storage.setItem(STORAGE_KEY, JSON.stringify(seed));
     return seed;
@@ -77,7 +80,8 @@ export class LocalRepository {
   registerProfile(name: string, role: Role, code?: string): Promise<string> {
     const task = this.queue.then(async () => {
       const s = await this.read();
-      const cleanName = name.trim();
+      const validated = validateRegistration({ name, role, code });
+      const cleanName = validated.name;
       if (!cleanName) throw Error("Укажите имя.");
       if (!["teacher", "student", "parent"].includes(role))
         throw Error("Недопустимая роль.");

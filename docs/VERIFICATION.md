@@ -1,3 +1,13 @@
+# 2026-10-14 web release verification
+
+- `npm run check`: TypeScript and 111 tests passed. Registration tests reject teacher/admin/invalid roles and corrupt or obsolete pending drafts, preserve existing teacher access, and check valid student/parent linking in the local repository.
+- Course tests cover all 575 questions, distinct answer options, hints, answers, exact numbering and saved attempt compatibility. The 458 original questions and answer choices are compared with the unchanged original bank. Supplemental tests include independently worked answer keys and substitution/boundary checks.
+- Local disposable PostgreSQL: migration 009 and all permission/group/family/self-service suites passed, plus 19 lesson flow/security checks. Includes denied teacher signup, missing/null role denial, repeated registration completion, role escalation denial and staff group ownership.
+- Browser: student home, winding path, class selection, unified lesson, video player, new exercise 9 in A09-01, hint, correct answer, worked solution, reward persistence, return to originating home; teacher groups and roster search; parent linked-child report. Bottom tabs have icons with accessible names. Narrow widths 320/390 and desktop checked. Supabase-mode signup shows only student/parent and adapts the join-code field.
+- Public auth settings confirm email confirmation is enabled. Dashboard is signed out, so SMTP/logs, hosted migration 009 and real mailbox receipt remain pending. No SMTP cause has been inferred from the settings alone. Hosted role enforcement must not be claimed until migration 009 is applied.
+- Previous deployed source is recoverable through Git tag `pre-duo-2026-10-14`. The old Pages build artifact had expired; this tag is a source rollback point, not an archived binary build.
+- Course practice, points and streak still use the existing per-profile device storage; this release does not introduce server synchronisation for them. Teacher reports, groups and assigned lessons retain their existing server-backed flows.
+
 # Compact interface verification — 2026-09-24
 
 - Shared visual density reduced while keeping 44 px minimum action targets. No core/repository/database behavior changed.

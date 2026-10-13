@@ -1,4 +1,9 @@
 import {
+  validateRegistration,
+  isRegistrationRole,
+  parsePendingRegistration,
+} from "./registration";
+import {
   authFailure,
   AuthFlowError,
   createConfirmationMailer,
@@ -41,7 +46,7 @@ type PendingRegistration = {
 };
 async function readPendingRegistration(): Promise<PendingRegistration | null> {
   const raw = await secureStorage.getItem(PENDING_KEY);
-  return raw ? JSON.parse(raw) : null;
+  return parsePendingRegistration(raw);
 }
 type Context = {
   state: State;
@@ -86,6 +91,7 @@ export function LearningProvider({
     confirmEmail: (email: string, token: string) => Promise<void>;
     resendConfirmation: (email: string) => Promise<void>;
     emailCooldown: (email: string) => Promise<number>;
+    leaveRegistration: () => Promise<void>;
   }) => React.ReactNode;
 }) {
   const [state, setState] = useState<State | null>(null);
@@ -116,7 +122,8 @@ export function LearningProvider({
           throw Error(
             "Supabase is not configured. Set the public URL and publishable key.",
           );
-        const { data } = await backend.auth.getSession();
+        const { data, error: sessionError } = await backend.auth.getSession();
+        if (sessionError) throw authFailure(sessionError);
         if (!data.session) {
           setState(null);
           setActorId(null);
@@ -130,7 +137,11 @@ export function LearningProvider({
           s = await remoteRead();
         } catch (e) {
           const pending = await readPendingRegistration();
-          if (!pendingMatches(pending, data.session.user.email)) throw e;
+          if (
+            !pendingMatches(pending, data.session.user.email) ||
+            !isRegistrationRole(pending?.role)
+          )
+            throw e;
           await remoteRegister(pending!.name, pending!.role, pending!.code);
           await secureStorage.removeItem(PENDING_KEY);
           s = await remoteRead();
@@ -143,7 +154,9 @@ export function LearningProvider({
       setError(null);
     } catch (e) {
       if (mode === "supabase")
-        setPendingRegistration(await readPendingRegistration());
+        setPendingRegistration(
+          await readPendingRegistration().catch(() => null),
+        );
       setError(errorMessage(e));
     } finally {
       setLoading(false);
@@ -195,6 +208,7 @@ export function LearningProvider({
     setError(null);
   }
   async function login(email: string, password: string) {
+    setError(null);
     if (!backend) throw Error("Backend is not configured.");
     const { error } = await backend.auth.signInWithPassword({
       email: normalizeEmail(email),
@@ -210,6 +224,8 @@ export function LearningProvider({
     email?: string;
     password?: string;
   }): Promise<"ready" | "confirmEmail"> {
+    setError(null);
+    input = validateRegistration(input);
     if (mode === "demo") {
       const id = await repo.registerProfile(input.name, input.role, input.code);
       await switchAccount(id);
@@ -218,6 +234,7 @@ export function LearningProvider({
     if (!backend) throw Error("Backend is not configured.");
     const { data: existing } = await backend.auth.getSession();
     if (!existing.session) {
+      input = validateRegistration(input, true);
       if (!input.email || !input.password)
         throw Error("Укажите email и пароль.");
       const data = await confirmationMailer.send(input.email, async (email) => {
@@ -288,6 +305,16 @@ export function LearningProvider({
           confirmEmail,
           resendConfirmation,
           emailCooldown: confirmationMailer.remaining,
+          leaveRegistration: async () => {
+            const result = await backend?.auth.signOut();
+            if (result?.error) throw authFailure(result.error);
+            await secureStorage.removeItem(PENDING_KEY);
+            setPendingRegistration(null);
+            setHasSession(false);
+            setError(null);
+            setState(null);
+            setActorId(null);
+          },
         })}
       </>
     );

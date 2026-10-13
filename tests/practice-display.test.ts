@@ -9,7 +9,7 @@ function tokens(blocks: ContentBlock[]): string[] {
     "runs" in b ? b.runs.map((r) => JSON.stringify(r)) : [JSON.stringify(b)],
   );
 }
-test("all 458 exercises retain matching answers, every text run, formula and figure", () => {
+test("all 575 exercises retain matching answers, every text run, formula and figure", () => {
   let count = 0;
   for (const topic of course) {
     for (const kind of ["questions", "answers"] as const) {
@@ -28,5 +28,5 @@ test("all 458 exercises retain matching answers, every text run, formula and fig
     }
     count += topic.practice.count;
   }
-  assert.equal(count, 458);
+  assert.equal(count, 575);
 });

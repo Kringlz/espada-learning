@@ -1,6 +1,13 @@
-import bank from "../../content/math-course/quiz.json";
+import originalBank from "../../content/math-course/quiz.json";
+import { supplemental } from "./supplemental";
 
 type AuthoredQuestion = { choices: string[]; hints: string[] };
+const bank: Record<string, AuthoredQuestion[]> = Object.fromEntries(
+  Object.entries(originalBank).map(([id, questions]) => [
+    id,
+    [...questions, ...(supplemental[id] ?? [])],
+  ]),
+);
 export type QuizAttempt = {
   selected: number | null;
   hintsShown: number;

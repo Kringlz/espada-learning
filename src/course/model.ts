@@ -1,5 +1,6 @@
 import rawCatalog from "../../content/math-course/catalog.json";
 import { QuizAttempts, parseQuizAttempts } from "./quiz";
+import { supplemental } from "./supplemental";
 
 export type CourseTopic = {
   id: string;
@@ -15,7 +16,15 @@ export type CourseTopic = {
     source: string;
   };
 };
-export const course = rawCatalog as CourseTopic[];
+export const course: CourseTopic[] = (rawCatalog as CourseTopic[]).map(
+  (topic) => ({
+    ...topic,
+    practice: {
+      ...topic.practice,
+      count: topic.practice.count + (supplemental[topic.id]?.length ?? 0),
+    },
+  }),
+);
 export const grades = [5, 6, 7, 8, 9, 10, 11];
 export function subjectName(grade: number, subject: string) {
   if (grade <= 6) return "Математика";

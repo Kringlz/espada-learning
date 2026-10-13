@@ -1,10 +1,8 @@
-import { AtlasImage } from "../components/AtlasImage";
 import React from "react";
-import { Image, Pressable, View, useWindowDimensions } from "react-native";
-import Svg, { Line } from "react-native-svg";
+import { Pressable, View } from "react-native";
 import { CourseTopic, CourseProgress } from "./model";
 import { courseContent } from "./content";
-import { topicCover } from "../components/TopicCover";
+import { lessonStatus } from "./journey";
 import { Icon, Txt, useUITheme } from "../components/ui";
 import { useSounds } from "../engagement/Sounds";
 export function ClarityRoute({
@@ -20,110 +18,84 @@ export function ClarityRoute({
 }) {
   const { colors } = useUITheme();
   const { play } = useSounds();
-  const narrow = useWindowDimensions().width < 500;
-  const node = narrow ? 42 : 56;
   return (
-    <View testID="clarity-topic-route">
-      {topics.map((topic, index) => {
-        const p = progress[topic.id];
-        const read = p?.readPages.length ?? 0;
-        const done = read === topic.pages.length;
+    <View testID="clarity-topic-route" style={{ gap: 14 }}>
+      {topics.map((topic) => {
+        const state = lessonStatus(topic, progress);
         const title = courseContent[topic.id].pages[0].title;
         return (
-          <View
+          <Pressable
             key={topic.id}
-            style={{ flexDirection: "row", gap: narrow ? 12 : 24 }}
+            accessibilityRole="button"
+            accessibilityLabel={`${videos ? "Видео" : state.complete ? "Повторить" : state.started ? "Продолжить" : "Начать"}: ${title}, ${topic.grade} класс`}
+            onPress={() => {
+              play("open");
+              open(topic);
+            }}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              gap: 18,
+              alignItems: "center",
+              padding: 20,
+              borderRadius: 20,
+              borderWidth: 2,
+              borderBottomWidth: pressed ? 2 : 4,
+              borderColor: state.started ? colors.green : colors.line,
+              backgroundColor: state.started ? colors.light : colors.white,
+              opacity: pressed ? 0.85 : 1,
+            })}
           >
-            <View style={{ width: node, alignItems: "center" }}>
-              {index < topics.length - 1 && (
-                <View
-                  pointerEvents="none"
-                  style={{
-                    position: "absolute",
-                    top: 48,
-                    bottom: -48,
-                    width: 4,
-                  }}
-                >
-                  <Svg width="4" height="100%">
-                    <Line
-                      x1="2"
-                      x2="2"
-                      y1="0"
-                      y2="100%"
-                      stroke={colors.line}
-                      strokeWidth={3}
-                      strokeDasharray="4 9"
-                      strokeLinecap="round"
-                    />
-                  </Svg>
-                </View>
-              )}
-              <View
-                style={{
-                  marginTop: 30,
-                  width: node,
-                  height: node,
-                  borderRadius: node / 2,
-                  borderWidth: 2,
-                  borderColor:
-                    done || p?.updatedAt ? colors.green : colors.line,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: done ? colors.primary : colors.paper,
-                }}
-              >
-                <Icon
-                  name={done ? "check" : p?.updatedAt ? "play" : "book-open"}
-                  size={narrow ? 20 : 24}
-                  color={done ? colors.onPrimary : colors.green}
-                />
-              </View>
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`${videos ? "Видео" : p?.updatedAt ? "Продолжить" : "Начать"}: ${title}, ${topic.grade} класс. Прочитано ${read} из ${topic.pages.length}`}
-              onPress={() => {
-                play("open");
-                open(topic);
+            <View
+              style={{
+                width: 56,
+                height: 60,
+                borderRadius: 16,
+                backgroundColor:
+                  topic.subject === "geometry" ? colors.warning : colors.light,
+                alignItems: "center",
+                justifyContent: "center",
               }}
-              style={({ pressed }) => ({
-                flex: 1,
-                minWidth: 0,
-                marginBottom: 24,
-                padding: narrow ? 18 : 28,
-                minHeight: narrow ? 126 : 158,
-                borderRadius: 26,
-                borderWidth: 1.5,
-                borderColor: p?.updatedAt ? colors.green : colors.line,
-                backgroundColor: p?.updatedAt ? colors.light : colors.white,
-                opacity: pressed ? 0.8 : 1,
-                flexDirection: narrow ? "column" : "row",
-                alignItems: narrow ? "flex-start" : "center",
-                gap: 16,
-              })}
             >
-              <AtlasImage
-                source={topicCover(topic.title, topic.subject).image}
-                accessible={false}
-                resizeMode="contain"
-                style={{
-                  width: narrow ? "100%" : 164,
-                  height: narrow ? 170 : 132,
-                }}
+              <Icon
+                name={
+                  state.complete
+                    ? "check"
+                    : topic.subject === "geometry"
+                      ? "triangle"
+                      : "book-open"
+                }
+                color={colors.green}
+                size={28}
               />
-              <Txt
-                size={narrow ? 22 : 28}
-                weight="700"
-                style={{
-                  flex: narrow ? undefined : 1,
-                  lineHeight: narrow ? 29 : 36,
-                }}
-              >
+            </View>
+            <View style={{ flex: 1, gap: 10 }}>
+              <Txt size={20} weight="700">
                 {title}
               </Txt>
-            </Pressable>
-          </View>
+              {state.started && (
+                <View
+                  accessibilityRole="progressbar"
+                  accessibilityLabel="Прогресс урока"
+                  accessibilityValue={{ min: 0, max: 100, now: state.percent }}
+                  style={{
+                    height: 6,
+                    backgroundColor: colors.line,
+                    borderRadius: 4,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: `${state.percent}%`,
+                      height: 6,
+                      borderRadius: 4,
+                      backgroundColor: colors.green,
+                    }}
+                  />
+                </View>
+              )}
+            </View>
+            <Icon name="chevron-right" color={colors.muted} />
+          </Pressable>
         );
       })}
     </View>
