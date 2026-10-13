@@ -1,3 +1,4 @@
+import { AuthSessionStorage, memoryStorage } from "./authSessionStorage";
 import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
@@ -29,11 +30,29 @@ export const mode =
   process.env.EXPO_PUBLIC_DATA_MODE === "supabase" ? "supabase" : "demo";
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const authKey = `sb-${url ? new URL(url).hostname.split(".")[0] : "espada"}-auth-token`;
+const persistentWebStorage = {
+  getItem: async (key: string) =>
+    typeof localStorage === "undefined" ? null : localStorage.getItem(key),
+  setItem: async (key: string, value: string) => {
+    localStorage.setItem(key, value);
+  },
+  removeItem: async (key: string) => {
+    if (typeof localStorage !== "undefined") localStorage.removeItem(key);
+  },
+};
+export const authSessionStorage = new AuthSessionStorage(
+  Platform.OS === "web" ? secureStorage : memoryStorage(),
+  Platform.OS === "web" ? persistentWebStorage : nativePrivateStorage,
+  authKey,
+);
+
 export const backend =
   mode === "supabase" && url && key
     ? createClient(url, key, {
         auth: {
-          storage: secureStorage,
+          storage: authSessionStorage,
+          storageKey: authKey,
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: Platform.OS === "web",

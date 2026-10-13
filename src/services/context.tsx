@@ -1,3 +1,5 @@
+import { authSessionStorage } from "./supabase";
+import { singleFlight } from "./authSessionStorage";
 import {
   validateRegistration,
   isRegistrationRole,
@@ -78,7 +80,11 @@ export function LearningProvider({
     loading: boolean;
     error: string | null;
     retry: () => void;
-    login: (email: string, password: string) => Promise<void>;
+    login: (
+      email: string,
+      password: string,
+      remember: boolean,
+    ) => Promise<void>;
     hasSession: boolean;
     pendingRegistration: PendingRegistration | null;
     registerProfile: (input: {
@@ -87,6 +93,7 @@ export function LearningProvider({
       code?: string;
       email?: string;
       password?: string;
+      passwordConfirmation?: string;
     }) => Promise<"ready" | "confirmEmail">;
     confirmEmail: (email: string, token: string) => Promise<void>;
     resendConfirmation: (email: string) => Promise<void>;
@@ -207,15 +214,19 @@ export function LearningProvider({
     setActorId(id);
     setError(null);
   }
-  async function login(email: string, password: string) {
-    setError(null);
-    if (!backend) throw Error("Backend is not configured.");
-    const { error } = await backend.auth.signInWithPassword({
-      email: normalizeEmail(email),
-      password,
+  const loginOnce = useRef(singleFlight<void>()).current;
+  function login(email: string, password: string, remember: boolean) {
+    return loginOnce(async () => {
+      setError(null);
+      if (!backend) throw Error("Backend is not configured.");
+      await authSessionStorage.choose(remember);
+      const { error } = await backend.auth.signInWithPassword({
+        email: normalizeEmail(email),
+        password,
+      });
+      if (error) throw authFailure(error);
+      await refresh();
     });
-    if (error) throw authFailure(error);
-    await refresh();
   }
   async function registerProfile(input: {
     name: string;
@@ -223,6 +234,7 @@ export function LearningProvider({
     code?: string;
     email?: string;
     password?: string;
+    passwordConfirmation?: string;
   }): Promise<"ready" | "confirmEmail"> {
     setError(null);
     input = validateRegistration(input);
@@ -235,6 +247,7 @@ export function LearningProvider({
     const { data: existing } = await backend.auth.getSession();
     if (!existing.session) {
       input = validateRegistration(input, true);
+      await authSessionStorage.choose(false);
       if (!input.email || !input.password)
         throw Error("Укажите email и пароль.");
       const data = await confirmationMailer.send(input.email, async (email) => {
@@ -308,6 +321,7 @@ export function LearningProvider({
           leaveRegistration: async () => {
             const result = await backend?.auth.signOut();
             if (result?.error) throw authFailure(result.error);
+            await authSessionStorage.clear();
             await secureStorage.removeItem(PENDING_KEY);
             setPendingRegistration(null);
             setHasSession(false);
@@ -329,7 +343,9 @@ export function LearningProvider({
         switchAccount,
         refresh,
         signOut: async () => {
-          await backend?.auth.signOut();
+          const result = await backend?.auth.signOut();
+          if (result?.error) throw authFailure(result.error);
+          await authSessionStorage.clear();
           // После выхода — чистый экран входа: email и пароль заново.
           await secureStorage.removeItem(PENDING_KEY);
           setPendingRegistration(null);

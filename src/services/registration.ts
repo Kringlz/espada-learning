@@ -11,6 +11,7 @@ export function validateRegistration(
     code?: string;
     email?: string;
     password?: string;
+    passwordConfirmation?: string;
   },
   needsCredentials = false,
 ) {
@@ -39,6 +40,11 @@ export function validateRegistration(
       throw new AuthFlowError(
         "Проверьте адрес электронной почты.",
         "email_address_invalid",
+      );
+    if (input.password !== input.passwordConfirmation)
+      throw new AuthFlowError(
+        "Пароли не совпадают. Повторите пароль точно так же.",
+        "password_mismatch",
       );
     if (!input.password || input.password.length < 8)
       throw new AuthFlowError(

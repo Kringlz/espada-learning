@@ -12,6 +12,7 @@ const student = {
   code: " abc2345 ",
   email: " Test@Example.COM ",
   password: "long-password",
+  passwordConfirmation: "long-password",
 };
 test("public registration only allows student and parent, including old drafts", () => {
   assert.deepEqual(registrationRoles, ["student", "parent"]);
