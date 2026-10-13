@@ -238,3 +238,50 @@ test("password confirmation is exact, required only for new credentials and neve
     ),
   );
 });
+
+test("logout network failure reports an error but still removes the saved device session", async () => {
+  const temporary = memoryStorage(),
+    persistent = memoryStorage();
+  const storage = new AuthSessionStorage(temporary, persistent, key);
+  await storage.choose(true);
+  const working = sdk(storage);
+  await working.client.auth.signInWithPassword({
+    email: user.email,
+    password: "  unchanged-password  ",
+  });
+  const failing = sdk(storage, "logout");
+  assert.ok((await failing.client.auth.signOut()).error);
+  assert.equal(await persistent.getItem(key), null);
+  assert.equal(await temporary.getItem(key), null);
+  assert.equal(
+    (
+      await sdk(
+        new AuthSessionStorage(memoryStorage(), persistent, key),
+      ).client.auth.getSession()
+    ).data.session,
+    null,
+  );
+});
+
+test("session persistence uses keys compatible with native SecureStore", async () => {
+  const values = memoryStorage();
+  const native = {
+    getItem: async (k: string) => {
+      assert.match(k, /^[A-Za-z0-9._-]+$/);
+      return values.getItem(k);
+    },
+    setItem: async (k: string, v: string) => {
+      assert.match(k, /^[A-Za-z0-9._-]+$/);
+      return values.setItem(k, v);
+    },
+    removeItem: async (k: string) => {
+      assert.match(k, /^[A-Za-z0-9._-]+$/);
+      return values.removeItem(k);
+    },
+  };
+  const storage = new AuthSessionStorage(memoryStorage(), native, key);
+  await storage.choose(true);
+  await storage.setItem(key, "fixture-session");
+  assert.equal(await storage.getItem(key), "fixture-session");
+  await storage.clear();
+});

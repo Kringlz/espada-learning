@@ -303,6 +303,21 @@ export function LearningProvider({
       if (error) throw error;
     });
   }
+  async function endSession() {
+    const result = await backend?.auth.signOut();
+    await authSessionStorage.clear();
+    await secureStorage.removeItem(PENDING_KEY);
+    setPendingRegistration(null);
+    setHasSession(false);
+    setState(null);
+    setActorId(null);
+    setError(
+      result?.error
+        ? "Выход на этом устройстве выполнен. Сервер не подтвердил завершение сеанса из-за ошибки соединения."
+        : null,
+    );
+    if (result?.error) throw authFailure(result.error);
+  }
   const actor = state?.profiles.find((p) => p.id === actorId && p.active);
   if (!state || !actor)
     return (
@@ -318,17 +333,7 @@ export function LearningProvider({
           confirmEmail,
           resendConfirmation,
           emailCooldown: confirmationMailer.remaining,
-          leaveRegistration: async () => {
-            const result = await backend?.auth.signOut();
-            if (result?.error) throw authFailure(result.error);
-            await authSessionStorage.clear();
-            await secureStorage.removeItem(PENDING_KEY);
-            setPendingRegistration(null);
-            setHasSession(false);
-            setError(null);
-            setState(null);
-            setActorId(null);
-          },
+          leaveRegistration: endSession,
         })}
       </>
     );
@@ -342,18 +347,7 @@ export function LearningProvider({
         dispatch,
         switchAccount,
         refresh,
-        signOut: async () => {
-          const result = await backend?.auth.signOut();
-          if (result?.error) throw authFailure(result.error);
-          await authSessionStorage.clear();
-          // После выхода — чистый экран входа: email и пароль заново.
-          await secureStorage.removeItem(PENDING_KEY);
-          setPendingRegistration(null);
-          setHasSession(false);
-          setError(null);
-          setState(null);
-          setActorId(null);
-        },
+        signOut: endSession,
         saving,
         pendingCount,
         retryPending: async () => {

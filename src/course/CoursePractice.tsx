@@ -1,3 +1,6 @@
+import { submitStudyAnswer, groupLeagueEnabled } from "../groups/service";
+import { useLearning } from "../services/context";
+import { uid } from "../core/ids";
 import { resumeQuestionIndex } from "./resume";
 import { AtlasImage } from "../components/AtlasImage";
 import { useSounds } from "../engagement/Sounds";
@@ -48,6 +51,11 @@ export function CoursePractice({
 }) {
   const { colors, styles, clarity } = useUITheme();
   const { award } = useRewards();
+  const { actor } = useLearning();
+  const [checking, setChecking] = useState(false);
+  const [checkError, setCheckError] = useState("");
+  const submitting = useRef(false);
+  const request = useRef<{ key: string; id: string } | null>(null);
   const { play } = useSounds();
   const p = storage.progress[topic.id] ?? emptyProgress();
   const content = courseContent[topic.id].practice;
@@ -87,6 +95,42 @@ export function CoursePractice({
     }
   }, [index, summary, embedded]);
   function act(action: QuizAction) {
+    if (submitting.current) return;
+    if (
+      action.type === "submit" &&
+      groupLeagueEnabled &&
+      actor.role === "student" &&
+      !attempt.submitted &&
+      attempt.selected !== null
+    ) {
+      submitting.current = true;
+      setChecking(true);
+      setCheckError("");
+      const key = `${topic.id}:${question.number}:${attempt.selected}`;
+      if (request.current?.key !== key) request.current = { key, id: uid() };
+      void submitStudyAnswer(
+        actor.id,
+        topic.id,
+        Number(question.number),
+        attempt.selected,
+        request.current.id,
+        p.readPages,
+      )
+        .then(() => applyAction(action))
+        .catch(() =>
+          setCheckError(
+            "Не удалось проверить ответ для лиги. Ответ сохранён в форме; повторите проверку.",
+          ),
+        )
+        .finally(() => {
+          submitting.current = false;
+          setChecking(false);
+        });
+      return;
+    }
+    applyAction(action);
+  }
+  function applyAction(action: QuizAction) {
     if (
       storage.ready &&
       action.type === "submit" &&
@@ -118,6 +162,8 @@ export function CoursePractice({
     }));
   }
   function turn(n: number) {
+    if (submitting.current) return;
+    setCheckError("");
     setBurst(0);
     setIndex(n);
     setSummary(false);
@@ -248,6 +294,12 @@ export function CoursePractice({
     );
   return (
     <SoftReveal changeKey={`${index}`} style={{ gap: 18 }}>
+      {!!checkError && (
+        <Txt color={colors.red} accessibilityRole="alert">
+          {checkError}
+        </Txt>
+      )}
+      {checking && <Txt accessibilityRole="status">Проверяем ответ…</Txt>}
       <Card style={{ gap: 20 }}>
         <View
           style={[
@@ -291,9 +343,9 @@ export function CoursePractice({
                 accessibilityLabel={`Вариант ${position + 1}: ${choice.text}`}
                 accessibilityState={{
                   checked: selected,
-                  disabled: attempt.submitted,
+                  disabled: attempt.submitted || checking,
                 }}
-                disabled={attempt.submitted}
+                disabled={attempt.submitted || checking}
                 onPress={() => act({ type: "select", choice: choice.id })}
                 style={({ pressed }) => ({
                   borderWidth: 2,
@@ -365,7 +417,7 @@ export function CoursePractice({
             <Button
               fullWidth={clarity}
               icon="check"
-              disabled={attempt.selected === null}
+              disabled={checking || attempt.selected === null}
               onPress={() => act({ type: "submit" })}
             >
               Проверить ответ
@@ -374,7 +426,7 @@ export function CoursePractice({
               small={clarity}
               secondary
               icon="help-circle"
-              disabled={attempt.hintsShown === quiz.hints.length}
+              disabled={checking || attempt.hintsShown === quiz.hints.length}
               onPress={() => act({ type: "hint" })}
             >
               {attempt.hintsShown === 0
@@ -429,14 +481,14 @@ export function CoursePractice({
       >
         <Button
           secondary
-          disabled={index === 0}
+          disabled={checking || index === 0}
           onPress={() => turn(index - 1)}
         >
           Назад
         </Button>
         <Button
           icon="arrow-right"
-          disabled={!attempt.submitted}
+          disabled={checking || !attempt.submitted}
           onPress={() =>
             index + 1 === questions.length ? setSummary(true) : turn(index + 1)
           }
@@ -456,6 +508,7 @@ export function CoursePractice({
               small
               secondary
               selected={index === i}
+              disabled={checking}
               label={`Перейти к заданию ${q.number}`}
               onPress={() => turn(i)}
             >
@@ -478,7 +531,13 @@ export function CoursePractice({
             maxLength={12000}
           />
         </Disclosure>
-        <Button secondary onPress={() => setSummary(true)}>
+        <Button
+          secondary
+          disabled={checking}
+          onPress={() => {
+            if (!submitting.current) setSummary(true);
+          }}
+        >
           Посмотреть результат
         </Button>
       </Disclosure>

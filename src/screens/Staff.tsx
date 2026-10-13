@@ -1,3 +1,4 @@
+import { GroupActivity } from "../groups/GroupActivity";
 import { GroupRoster } from "../components/GroupRoster";
 import {
   WorkspaceOverview,
@@ -136,6 +137,13 @@ export function Staff({
                 </Button>
               )}
               <View style={{ display: selectedStudent ? "none" : "flex" }}>
+                <GroupActivity
+                  groupId={group.id}
+                  onSelect={(id) => {
+                    setStudentId(id);
+                    onScreenChange();
+                  }}
+                />
                 <GroupRoster
                   key={group.id}
                   classId={group.id}

@@ -28,6 +28,7 @@ jobs:
       EXPO_PUBLIC_DATA_MODE: ${{ vars.EXPO_PUBLIC_DATA_MODE || 'supabase' }}
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://anugktopawgukdxhqvze.supabase.co' }}
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_JePCMPnuVbjTg6ZmGmVfLg_6Hq7SjO1' }}
+      EXPO_PUBLIC_GROUP_LEAGUE_ENABLED: ${{ vars.EXPO_PUBLIC_GROUP_LEAGUE_ENABLED || 'false' }}
       APP_ENV: github-pages
     steps:
       - uses: actions/checkout@v6

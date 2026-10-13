@@ -331,6 +331,7 @@ function Welcome({
                       <View style={[styles.row, { gap: 8, flexWrap: "wrap" }]}>
                         <Button
                           small
+                          disabled={busy}
                           secondary={screen !== "login"}
                           onPress={() => {
                             setMessage("");
@@ -342,6 +343,7 @@ function Welcome({
                         </Button>
                         <Button
                           small
+                          disabled={busy}
                           secondary={screen !== "register"}
                           onPress={() => {
                             setMessage("");
@@ -465,7 +467,8 @@ function Welcome({
                         </Pressable>
                         <Txt size={13} color={colors.muted}>
                           Оставайтесь в аккаунте после закрытия браузера. На
-                          общем устройстве оставьте выключенным.
+                          общем устройстве оставьте выключенным и завершайте
+                          сеанс кнопкой «Выйти».
                         </Txt>
                         <Button
                           fullWidth

@@ -8,7 +8,7 @@ export class AuthSessionStorage implements PrivateStorage {
     private readonly persistent: PrivateStorage,
     private readonly sessionKey: string,
   ) {
-    this.preferenceKey = `${sessionKey}:remember`;
+    this.preferenceKey = `${sessionKey}.remember`;
   }
 
   async remember() {
