@@ -141,11 +141,9 @@ function CourseBrowser({
           <Txt color={colors.red} accessibilityRole="alert">
             {storage.error}
           </Txt>
-          {storage.ready && (
-            <Button secondary onPress={storage.retry}>
-              Повторить сохранение
-            </Button>
-          )}
+          <Button secondary onPress={storage.retry}>
+            {storage.ready ? "Повторить сохранение" : "Повторить загрузку"}
+          </Button>
         </Card>
       )}
       {selected ? (

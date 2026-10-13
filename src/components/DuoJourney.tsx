@@ -91,8 +91,8 @@ export function DuoJourney({
                   height: 92,
                   padding: 6,
                   borderRadius: 46,
-                  borderWidth: active ? 3 : 0,
-                  borderColor: colors.primary,
+                  borderWidth: 3,
+                  borderColor: active ? colors.primary : "transparent",
                   backgroundColor: colors.paper,
                 }}
               >
@@ -105,7 +105,7 @@ export function DuoJourney({
                     backgroundColor:
                       state.complete || active ? colors.primary : colors.subtle,
                     borderWidth: 2,
-                    borderBottomWidth: 7,
+                    boxShadow: `0px 5px 0px ${state.complete || active ? colors.green : colors.line}`,
                     borderColor:
                       state.complete || active ? colors.green : colors.line,
                   }}
