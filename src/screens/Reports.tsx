@@ -488,6 +488,7 @@ export function Progress({
   if (personal && view === "activity")
     return (
       <ClarityProgress
+        active={active}
         openCourse={openCourse}
         openResult={openResult ?? setLocalDetail}
         details={() => setView("topics")}

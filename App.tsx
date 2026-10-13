@@ -113,7 +113,7 @@ function Welcome({
   loading: boolean;
   error: string | null;
   retry: () => void;
-  login: (e: string, p: string) => Promise<void>;
+  login: (e: string, p: string, remember: boolean) => Promise<void>;
   hasSession: boolean;
   pendingRegistration: {
     name: string;
@@ -127,6 +127,7 @@ function Welcome({
     code?: string;
     email?: string;
     password?: string;
+    passwordConfirmation?: string;
   }) => Promise<"ready" | "confirmEmail">;
   confirmEmail: (email: string, token: string) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
@@ -161,6 +162,9 @@ function Welcome({
   }, []);
   const [notice, setNotice] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [remember, setRemember] = useState(false);
+  const submitting = useRef(false);
   const [name, setName] = useState("");
   const [role, setRole] = useState<RegistrationRole>("student");
   const [code, setCode] = useState("");
@@ -199,7 +203,20 @@ function Welcome({
       ))}
     </View>
   );
-  const submitRegister = (extra: { email?: string; password?: string }) => {
+  const submitRegister = (extra: {
+    email?: string;
+    password?: string;
+    passwordConfirmation?: string;
+  }) => {
+    if (submitting.current) return;
+    if (
+      extra.password !== undefined &&
+      extra.password !== extra.passwordConfirmation
+    ) {
+      setMessage("Пароли не совпадают. Повторите пароль точно так же.");
+      return;
+    }
+    submitting.current = true;
     setBusy(true);
     setNotice("");
     setMessage("");
@@ -219,6 +236,29 @@ function Welcome({
       .catch((e) => setMessage(errorMessage(e)))
       .finally(() => {
         void syncCooldown();
+        submitting.current = false;
+        setBusy(false);
+      });
+  };
+  const submitLogin = () => {
+    if (submitting.current || !email || !password) return;
+    submitting.current = true;
+    setBusy(true);
+    setNotice("");
+    setMessage("");
+    void login(email.trim(), password, remember)
+      .catch((e) => {
+        const m = errorMessage(e);
+        if (e instanceof AuthFlowError && e.code === "email_not_confirmed") {
+          setOtp("");
+          setScreen("confirm");
+          void syncCooldown();
+          return;
+        }
+        setMessage(m);
+      })
+      .finally(() => {
+        submitting.current = false;
         setBusy(false);
       });
   };
@@ -291,6 +331,7 @@ function Welcome({
                       <View style={[styles.row, { gap: 8, flexWrap: "wrap" }]}>
                         <Button
                           small
+                          disabled={busy}
                           secondary={screen !== "login"}
                           onPress={() => {
                             setMessage("");
@@ -302,6 +343,7 @@ function Welcome({
                         </Button>
                         <Button
                           small
+                          disabled={busy}
                           secondary={screen !== "register"}
                           onPress={() => {
                             setMessage("");
@@ -393,33 +435,46 @@ function Welcome({
                         />
                         <Field
                           editable={!busy}
+                          key="login-password"
                           label="Пароль"
                           secure
+                          passwordKind="current-password"
+                          onSubmitEditing={submitLogin}
                           value={password}
                           onChangeText={setPassword}
                         />
+                        <Pressable
+                          accessibilityRole="checkbox"
+                          accessibilityLabel="Запомнить меня"
+                          accessibilityState={{
+                            checked: remember,
+                            disabled: busy,
+                          }}
+                          disabled={busy}
+                          onPress={() => setRemember((v) => !v)}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 12,
+                            minHeight: 48,
+                          }}
+                        >
+                          <Icon
+                            name={remember ? "check-square" : "square"}
+                            color={colors.green}
+                          />
+                          <Txt weight="600">Запомнить меня</Txt>
+                        </Pressable>
+                        <Txt size={13} color={colors.muted}>
+                          Оставайтесь в аккаунте после закрытия браузера. На
+                          общем устройстве оставьте выключенным и завершайте
+                          сеанс кнопкой «Выйти».
+                        </Txt>
                         <Button
                           fullWidth
                           disabled={busy || !email || !password}
                           onPress={() => {
-                            setBusy(true);
-                            setNotice("");
-                            setMessage("");
-                            void login(email.trim(), password)
-                              .catch((e) => {
-                                const m = errorMessage(e);
-                                if (
-                                  e instanceof AuthFlowError &&
-                                  e.code === "email_not_confirmed"
-                                ) {
-                                  setOtp("");
-                                  setScreen("confirm");
-                                  void syncCooldown();
-                                  return;
-                                }
-                                setMessage(m);
-                              })
-                              .finally(() => setBusy(false));
+                            submitLogin();
                           }}
                         >
                           Войти
@@ -454,10 +509,21 @@ function Welcome({
                             />
                             <Field
                               editable={!busy}
+                              key="register-password"
                               label="Пароль · минимум 8 символов"
                               secure
+                              passwordKind="new-password"
                               value={password}
                               onChangeText={setPassword}
+                            />
+                            <Field
+                              key="confirm-password"
+                              editable={!busy}
+                              label="Повторите пароль"
+                              secure
+                              passwordKind="new-password"
+                              value={passwordConfirmation}
+                              onChangeText={setPasswordConfirmation}
                             />
                           </>
                         )}
@@ -482,13 +548,20 @@ function Welcome({
                           disabled={
                             registerDisabled ||
                             (!hasSession &&
-                              (!email || !password || resendIn > 0))
+                              (!email ||
+                                !password ||
+                                !passwordConfirmation ||
+                                resendIn > 0))
                           }
                           onPress={() =>
                             submitRegister(
                               hasSession
                                 ? {}
-                                : { email: email.trim(), password },
+                                : {
+                                    email: email.trim(),
+                                    password,
+                                    passwordConfirmation,
+                                  },
                             )
                           }
                         >

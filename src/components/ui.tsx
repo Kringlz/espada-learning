@@ -248,6 +248,8 @@ export function Field({
   secure = false,
   editable = true,
   maxLength,
+  passwordKind = "current-password",
+  onSubmitEditing,
 }: {
   label: string;
   value: string;
@@ -259,8 +261,11 @@ export function Field({
   secure?: boolean;
   editable?: boolean;
   maxLength?: number;
+  passwordKind?: "current-password" | "new-password";
+  onSubmitEditing?: () => void;
 }) {
   const { colors, styles, clarity } = useUITheme();
+  const [visible, setVisible] = useState(false);
   return (
     <View style={{ gap: 7 }}>
       {!!label && (
@@ -268,34 +273,72 @@ export function Field({
           {label}
         </Txt>
       )}
-      <TextInput
-        accessibilityLabel={
-          label
-            ? translate(label)
-            : placeholder
-              ? translate(placeholder)
-              : undefined
-        }
-        editable={editable}
-        maxLength={maxLength}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder ? translate(placeholder) : undefined}
-        placeholderTextColor="#7B857F"
-        multiline={multiline}
-        keyboardType={
-          email ? "email-address" : numeric ? "decimal-pad" : "default"
-        }
-        autoCorrect={!email && !secure}
-        autoComplete={email ? "email" : undefined}
-        secureTextEntry={secure}
-        autoCapitalize={secure || email ? "none" : "sentences"}
-        style={[
-          styles.input,
-          clarity && { minHeight: 56, fontSize: 18 },
-          multiline && { minHeight: 110, textAlignVertical: "top" },
-        ]}
-      />
+      <View style={{ position: "relative" }}>
+        <TextInput
+          accessibilityLabel={
+            label
+              ? translate(label)
+              : placeholder
+                ? translate(placeholder)
+                : undefined
+          }
+          editable={editable}
+          maxLength={maxLength}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder ? translate(placeholder) : undefined}
+          placeholderTextColor="#7B857F"
+          multiline={multiline}
+          keyboardType={
+            email ? "email-address" : numeric ? "decimal-pad" : "default"
+          }
+          autoCorrect={!email && !secure}
+          autoComplete={secure ? passwordKind : email ? "email" : undefined}
+          textContentType={
+            secure
+              ? passwordKind === "new-password"
+                ? "newPassword"
+                : "password"
+              : email
+                ? "emailAddress"
+                : undefined
+          }
+          onSubmitEditing={onSubmitEditing}
+          secureTextEntry={secure && !visible}
+          autoCapitalize={secure || email ? "none" : "sentences"}
+          style={[
+            styles.input,
+            secure && { paddingRight: 56 },
+            clarity && { minHeight: 56, fontSize: 18 },
+            multiline && { minHeight: 110, textAlignVertical: "top" },
+          ]}
+        />
+        {secure && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${visible ? "Скрыть" : "Показать"}: ${label}`}
+            accessibilityState={{ disabled: !editable, expanded: visible }}
+            disabled={!editable}
+            onPress={() => setVisible((v) => !v)}
+            style={{
+              position: "absolute",
+              right: 4,
+              top: 0,
+              bottom: 0,
+              width: 48,
+              minHeight: 44,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon
+              name={visible ? "eye-off" : "eye"}
+              color={colors.muted}
+              size={21}
+            />
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }

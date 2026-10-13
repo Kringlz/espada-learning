@@ -19,6 +19,8 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
   const { colors, styles, preference, setPreference } = useUITheme();
   const { actor, mode, state: s, dispatch, signOut, refresh } = useLearning();
   const [confirm, setConfirm] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
   const requested = s.deletionRequests.some((r) => r.studentId === actor.id);
   return (
     <View style={{ gap: 16, maxWidth: 800 }}>
@@ -112,9 +114,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
             size={12}
             color={colors.muted}
             accessibilityRole="link"
-            onPress={() =>
-              void Linking.openURL("https://game-icons.net/")
-            }
+            onPress={() => void Linking.openURL("https://game-icons.net/")}
           >
             Иллюстрации: Game-icons · Delapouite и Lorc
           </Txt>
@@ -169,8 +169,28 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
             </Button>
           ))}
       </Disclosure>
+      {!!logoutError && (
+        <Txt accessibilityRole="alert" color={colors.red}>
+          {logoutError}
+        </Txt>
+      )}
       {mode === "supabase" && (
-        <Button secondary onPress={() => void signOut()}>
+        <Button
+          secondary
+          disabled={loggingOut}
+          onPress={() => {
+            if (loggingOut) return;
+            setLoggingOut(true);
+            setLogoutError("");
+            void signOut()
+              .catch(() =>
+                setLogoutError(
+                  "Не удалось завершить выход. Проверьте соединение и повторите.",
+                ),
+              )
+              .finally(() => setLoggingOut(false));
+          }}
+        >
           Sign out
         </Button>
       )}

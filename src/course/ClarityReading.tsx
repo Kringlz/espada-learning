@@ -1,3 +1,5 @@
+import { submitStudyRead, groupLeagueEnabled } from "../groups/service";
+import { useLearning } from "../services/context";
 import React, { useContext, useRef, useState } from "react";
 import { View, Pressable } from "react-native";
 import { ScreenAnchor } from "../components/ScreenScroll";
@@ -22,6 +24,10 @@ export function ClarityReading({
   next?: () => void;
 }) {
   const { colors } = useUITheme();
+  const { actor } = useLearning();
+  const [readError, setReadError] = useState("");
+  const [savingRead, setSavingRead] = useState(false);
+  const reading = useRef(false);
   const jump = useContext(ScreenAnchor);
   const active = useContext(MotionActiveContext);
   const [playingPart, setPlayingPart] = useState<number | null>(null);
@@ -35,16 +41,38 @@ export function ClarityReading({
       .flatMap((_, page) =>
         videosForPage(topic.id, page).map((video) => video.id),
       );
-  const markRead = (index: number) =>
-    storage.update(topic.id, (current) => ({
-      readPages: [...new Set([...current.readPages, index])],
-      page: index,
-    }));
+  const markRead = async (index: number) => {
+    if (reading.current) return;
+    reading.current = true;
+    setSavingRead(true);
+    setReadError("");
+    try {
+      if (groupLeagueEnabled && actor.role === "student")
+        await submitStudyRead(actor.id, topic.id, index);
+      storage.update(topic.id, (current) => ({
+        readPages: [...new Set([...current.readPages, index])],
+        page: index,
+      }));
+    } catch {
+      setReadError(
+        "Не удалось сохранить чтение для группы. Повторите отметку.",
+      );
+    } finally {
+      reading.current = false;
+      setSavingRead(false);
+    }
+  };
   return (
     <View
       style={{ gap: 36, maxWidth: 800, width: "100%", alignSelf: "center" }}
       testID="clarity-continuous-lesson"
     >
+      {savingRead && <Txt accessibilityRole="status">Сохраняем чтение…</Txt>}
+      {!!readError && (
+        <Txt color={colors.red} accessibilityRole="alert">
+          {readError}
+        </Txt>
+      )}
       <View style={{ gap: 16 }}>
         <Txt accessibilityRole="header" size={32} weight="700">
           {content.pages[0].title}
@@ -181,9 +209,12 @@ export function ClarityReading({
                 : "Отметить раздел прочитанным"
             }
             accessibilityState={{
-              disabled: !storage.ready || p.readPages.includes(index),
+              disabled:
+                !storage.ready || savingRead || p.readPages.includes(index),
             }}
-            disabled={!storage.ready || p.readPages.includes(index)}
+            disabled={
+              !storage.ready || savingRead || p.readPages.includes(index)
+            }
             onPress={() => markRead(index)}
             style={{
               minHeight: 48,

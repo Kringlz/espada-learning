@@ -1,3 +1,4 @@
+import { StudentGroupLeague } from "../groups/GroupActivity";
 import { PointsDetails } from "./PointsDetails";
 import { StreakButton } from "./StreakButton";
 import { MyGroups } from "./Groups";
@@ -29,11 +30,13 @@ export function ClarityProgress({
   openResult,
   details,
   children,
+  active = true,
 }: {
   openCourse?: (id: string) => void;
   openResult: (id: string) => void;
   details: () => void;
   children?: React.ReactNode;
+  active?: boolean;
 }) {
   const { colors, styles } = useUITheme();
   const wide = useWindowDimensions().width >= 760;
@@ -77,6 +80,7 @@ export function ClarityProgress({
         <StreakButton />
       </View>
       <MyGroups />
+      <StudentGroupLeague active={active} />
       <View style={{ flexDirection: "row", gap: 14 }}>
         <PointsDetails>
           {(open) => (
