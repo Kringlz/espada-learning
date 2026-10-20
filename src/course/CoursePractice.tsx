@@ -1,3 +1,4 @@
+import { resumeQuestionIndex } from "./resume";
 import { AtlasImage } from "../components/AtlasImage";
 import { useSounds } from "../engagement/Sounds";
 import { sectionIllustrations } from "../components/SectionIllustrations";
@@ -53,11 +54,16 @@ export function CoursePractice({
   const questions = splitPractice(content.questions).items;
   const answers = splitPractice(content.answers).items;
   const [index, setIndex] = useState(() =>
-    Math.max(
-      0,
-      questions.findIndex((q) => !p.quiz[q.number]?.submitted),
-    ),
+    resumeQuestionIndex(questions, p.quiz),
   );
+  // Initial rendering may precede asynchronous storage hydration.
+  const resumed = useRef(storage.ready);
+  useEffect(() => {
+    if (storage.ready && !resumed.current) {
+      resumed.current = true;
+      setIndex(resumeQuestionIndex(questions, p.quiz));
+    }
+  }, [storage.ready, questions, p.quiz]);
   const [burst, setBurst] = useState(0);
   const [summary, setSummary] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
