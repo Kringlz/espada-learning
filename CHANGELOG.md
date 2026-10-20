@@ -1,5 +1,12 @@
 # Project log
 
+## 2026-10-20 — Web release
+
+- Published the arena interface, visual reference, calculator and remembered-session update to GitHub Pages (`6921485`).
+- Merged the existing course-progress recovery and lesson-ring alignment fixes. Kept the purple design reviewed in the current preview.
+- Verified the combined release with 124 tests, the full database CI suite and successful Pages deployment. Confirmed the new interface opens in an existing signed-in session and retains the visible course progress.
+- Remote arena installation still requires access to the existing Supabase project. Publishing the web client does not apply database migrations.
+
 ## 2026-10-20 — Visual reference and persistent login
 
 - Removed labels from bottom navigation across roles, retaining accessible names. Simplified home and arena, separated play/practice/ranking and calculator/reference/history into compact tabs.

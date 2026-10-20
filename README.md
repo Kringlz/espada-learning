@@ -4,7 +4,7 @@ A working first version of a tutoring learning app. One Expo / React Native / Ty
 
 **Without environment configuration: a persistent demo with synthetic records stored in each visitor's browser. Demo account switching is not authentication.** The existing Pages workflow and connected EAS profiles use the configured Supabase project; a local `.env.local` can do the same.
 
-- [Web demo on GitHub Pages](https://kringlz.github.io/espada-learning/)
+- [Published app on GitHub Pages](https://kringlz.github.io/espada-learning/)
 - [Source repository](https://github.com/Kringlz/espada-learning)
 - [Project log](CHANGELOG.md) and [deployment guide](docs/GITHUB_PAGES.md)
 
