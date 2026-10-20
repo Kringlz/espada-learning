@@ -2,13 +2,19 @@
 
 A working first version of a tutoring learning app. One Expo / React Native / TypeScript codebase runs on iOS, Android and the web. The web experience includes a responsive teacher/admin console.
 
-**Default: a persistent demo with synthetic records stored in each visitor's browser. Demo account switching is not authentication.**
+**Without environment configuration: a persistent demo with synthetic records stored in each visitor's browser. Demo account switching is not authentication.** The existing Pages workflow and connected EAS profiles use the configured Supabase project; a local `.env.local` can do the same.
 
 - [Web demo on GitHub Pages](https://kringlz.github.io/espada-learning/)
 - [Source repository](https://github.com/Kringlz/espada-learning)
 - [Project log](CHANGELOG.md) and [deployment guide](docs/GITHUB_PAGES.md)
 
 Updates pushed to `main` are checked and automatically deployed through GitHub Actions.
+
+## Арена, калькулятор и новое оформление
+
+Студентам доступны **Главная / Темы / Арена / Успехи / Калькулятор**. Добавлены фиолетовая светлая и тёмная темы, калькулятор с историей и справочником, одиночная тренировка и ежедневная разминка. Сетевые комнаты по коду, общий таймер и рейтинг очков внутри выбранной группы работают с Supabase после миграции **010_math_arena.sql**. Демо явно ограничено тренировкой; локальные учебные очки не смешиваются с серверным рейтингом. [Инструкция по игре и подключению](docs/ARENA_RU.md).
+
+Мобильная навигация содержит только иконки с доступными названиями для озвучивания. В справочнике — шесть рисунков, крупные математические формулы и пошаговые примеры. Калькулятор, справочник и история разделены вкладками; правила игры раскрываются по запросу. «Запомнить меня» сохраняет сеанс входа без хранения пароля. Проверка подключения: `npm run check:backend`. [Что осталось для Google Play](docs/PLAY_MARKET_RU.md).
 
 ## Run it
 

@@ -18,6 +18,7 @@ import React, {
   useState,
   useCallback,
   useRef,
+  useMemo,
 } from "react";
 import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -31,6 +32,7 @@ import {
   remoteRead,
   remoteRegister,
   secureStorage,
+  setRememberMe,
 } from "./supabase";
 import { demoStudentId } from "../data/seed";
 import { LearningOutbox } from "./outbox";
@@ -78,7 +80,11 @@ export function LearningProvider({
     loading: boolean;
     error: string | null;
     retry: () => void;
-    login: (email: string, password: string) => Promise<void>;
+    login: (
+      email: string,
+      password: string,
+      remember: boolean,
+    ) => Promise<void>;
     hasSession: boolean;
     pendingRegistration: PendingRegistration | null;
     registerProfile: (input: {
@@ -87,6 +93,7 @@ export function LearningProvider({
       code?: string;
       email?: string;
       password?: string;
+      remember?: boolean;
     }) => Promise<"ready" | "confirmEmail">;
     confirmEmail: (email: string, token: string) => Promise<void>;
     resendConfirmation: (email: string) => Promise<void>;
@@ -207,9 +214,10 @@ export function LearningProvider({
     setActorId(id);
     setError(null);
   }
-  async function login(email: string, password: string) {
+  async function login(email: string, password: string, remember: boolean) {
     setError(null);
     if (!backend) throw Error("Backend is not configured.");
+    await setRememberMe(remember);
     const { error } = await backend.auth.signInWithPassword({
       email: normalizeEmail(email),
       password,
@@ -223,17 +231,20 @@ export function LearningProvider({
     code?: string;
     email?: string;
     password?: string;
+    remember?: boolean;
   }): Promise<"ready" | "confirmEmail"> {
     setError(null);
     input = validateRegistration(input);
     if (mode === "demo") {
       const id = await repo.registerProfile(input.name, input.role, input.code);
       await switchAccount(id);
+      await refresh();
       return "ready";
     }
     if (!backend) throw Error("Backend is not configured.");
     const { data: existing } = await backend.auth.getSession();
     if (!existing.session) {
+      await setRememberMe(input.remember ?? false);
       input = validateRegistration(input, true);
       if (!input.email || !input.password)
         throw Error("Укажите email и пароль.");
@@ -291,6 +302,10 @@ export function LearningProvider({
     });
   }
   const actor = state?.profiles.find((p) => p.id === actorId && p.active);
+  const visibleState = useMemo(
+    () => (state && actor ? scopedState(state, actor) : null),
+    [state, actor],
+  );
   if (!state || !actor)
     return (
       <>
@@ -321,7 +336,7 @@ export function LearningProvider({
   return (
     <Ctx.Provider
       value={{
-        state: scopedState(state, actor),
+        state: visibleState!,
         actor,
         accounts:
           mode === "demo" ? state.profiles.filter((p) => p.active) : [actor],

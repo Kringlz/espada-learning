@@ -27,13 +27,17 @@ export class LocalRepository {
       // Repair ambiguous original demo distractors from pre-release seeds only.
       // Never rewrite a question with recorded attempts, or unrelated authored content.
       let repaired = false;
+      const originals = new Map(curriculum.map((t) => [t.id, t]));
+      const attemptedQuestions = new Set<string>(
+        data.attempts.flatMap((a: any) =>
+          a.answers.map((x: any) => x.questionId),
+        ),
+      );
       for (const topic of data.topics) {
-        const original = curriculum.find((t) => t.id === topic.id);
+        const original = originals.get(topic.id);
         if (!original) continue;
         topic.checks = topic.checks.map((q: any) => {
-          const attempted = data.attempts.some((a: any) =>
-            a.answers.some((x: any) => x.questionId === q.id),
-          );
+          const attempted = attemptedQuestions.has(q.id);
           const corrected = original.checks.find((x) => x.id === q.id);
           if (
             !attempted &&

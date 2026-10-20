@@ -1,5 +1,6 @@
+import { MathIllustration } from "./MathIllustrations";
 import { reviewSuggestions } from "../core/reports";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 import { course, grades } from "../course/model";
 import { useCourseProgress } from "../course/storage";
@@ -28,13 +29,17 @@ export function DuoHome({
   const storage = useCourseProgress(actor.id);
   const rewards = useRewards();
   const [chosenGrade, setGrade] = useState<number | null>(null);
-  const latest = [...course]
-    .filter((t) => storage.progress[t.id]?.updatedAt)
-    .sort((a, b) =>
-      storage.progress[b.id].updatedAt.localeCompare(
-        storage.progress[a.id].updatedAt,
-      ),
-    )[0];
+  const latest = useMemo(
+    () =>
+      [...course]
+        .filter((t) => storage.progress[t.id]?.updatedAt)
+        .sort((a, b) =>
+          storage.progress[b.id].updatedAt.localeCompare(
+            storage.progress[a.id].updatedAt,
+          ),
+        )[0],
+    [storage.progress],
+  );
   const grade = chosenGrade ?? latest?.grade ?? 5;
   const topics = course.filter((t) => t.grade === grade);
   const next = nextLesson(topics, storage.progress);
@@ -65,7 +70,7 @@ export function DuoHome({
         }}
       >
         <Txt size={28} weight="700" style={{ flex: 1 }}>
-          Твой путь
+          Привет, {actor.name.split(" ")[0]}!
         </Txt>
         <StreakButton />
         <PointsDetails>
@@ -81,6 +86,39 @@ export function DuoHome({
             </Button>
           )}
         </PointsDetails>
+      </View>
+      <View
+        style={{
+          backgroundColor: "#5125AD",
+          borderRadius: 24,
+          padding: 22,
+          gap: 16,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View style={{ flex: 1, gap: 14 }}>
+            <Txt size={wide ? 32 : 26} weight="800" color="#FFFFFF">
+              Время учиться
+            </Txt>
+            <Button
+              small
+              onPress={() => (next ? openCourse(next.id) : navigate("Learn"))}
+            >
+              Продолжить
+            </Button>
+          </View>
+          <View style={{ width: "43%", maxWidth: 240 }}>
+            <MathIllustration kind="learn" height={140} decorative />
+          </View>
+        </View>
+      </View>
+      <View style={{ flexDirection: "row", gap: 12, flexWrap: "wrap" }}>
+        <Button secondary icon="zap" onPress={() => navigate("Arena")}>
+          Арена
+        </Button>
+        <Button secondary icon="hash" onPress={() => navigate("Calculator")}>
+          Инструменты
+        </Button>
       </View>
       <View
         style={{
@@ -286,20 +324,6 @@ export function DuoHome({
           )}
           <KnowledgePreview compact onPress={() => navigate("Progress")} />
           <MyGroups />
-          <Card style={{ gap: 14 }}>
-            <Icon name="compass" size={30} color={colors.green} />
-            <Txt size={21} weight="700">
-              В своём темпе
-            </Txt>
-            <Txt size={16} color={colors.muted}>
-              Выбирай любой урок. Видео, объяснения и задания — вместе.
-            </Txt>
-            {next && (
-              <Button fullWidth onPress={() => openCourse(next.id)}>
-                Продолжить
-              </Button>
-            )}
-          </Card>
         </View>
       </View>
     </View>

@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import { Command, State } from "../core/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SessionPersistence, memorySessionStore } from "./sessionPersistence";
 import { ChunkedPrivateStorage } from "./privateStorage";
 const nativePrivateStorage = new ChunkedPrivateStorage({
   getItem: SecureStore.getItemAsync,
@@ -29,11 +31,37 @@ export const mode =
   process.env.EXPO_PUBLIC_DATA_MODE === "supabase" ? "supabase" : "demo";
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const project = url ? new URL(url).hostname.split(".")[0] : "unconfigured";
+const authStorage = new SessionPersistence({
+  durable:
+    Platform.OS === "web"
+      ? {
+          async getItem(key) {
+            return typeof localStorage === "undefined"
+              ? null
+              : localStorage.getItem(key);
+          },
+          async setItem(key, value) {
+            localStorage.setItem(key, value);
+          },
+          async removeItem(key) {
+            localStorage.removeItem(key);
+          },
+        }
+      : nativePrivateStorage,
+  temporary: Platform.OS === "web" ? secureStorage : memorySessionStore(),
+  preferences: AsyncStorage,
+  preferenceKey: `espada.auth.remember.v1:${project}`,
+  authKey: `sb-${project}-auth-token`,
+  defaultRemember: Platform.OS !== "web",
+});
+export const getRememberMe = () => authStorage.remembers();
+export const setRememberMe = (value: boolean) => authStorage.setRemember(value);
 export const backend =
   mode === "supabase" && url && key
     ? createClient(url, key, {
         auth: {
-          storage: secureStorage,
+          storage: authStorage,
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: Platform.OS === "web",

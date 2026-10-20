@@ -10,7 +10,7 @@ Supabase combines PostgreSQL with managed authentication. Its [React Native guid
 
 No hosted resources have been created. Once an owner has authorized and configured a Supabase project:
 
-1. Apply migrations `001_learning.sql` through `009_registration_policy.sql` in order using the SQL editor or your migration pipeline (`supabase db push` with the Supabase CLI applies the whole `supabase/migrations/` folder). On an existing database apply only the missing migrations. Apply `supabase/seed.sql` for curriculum and template content only. See [Russian video/upgrade guide](UPDATES_RU.md).
+1. Apply migrations `001_learning.sql` through `010_math_arena.sql` in order using the SQL editor or your migration pipeline (`supabase db push` with the Supabase CLI applies the whole `supabase/migrations/` folder). On an existing database apply only the missing migrations. Apply `supabase/seed.sql` for curriculum and template content only. See [Russian video/upgrade guide](UPDATES_RU.md).
 2. Self-service sign-up is enabled for the `teacher`, `student` and `parent` roles via the `register_profile` RPC (migration 008): a teacher signs up with just email/password; a student additionally supplies a group's join code; a parent supplies a student's personal code. Administrator accounts are never self-serve — leave Auth's "Confirm email" setting on so a stranger cannot claim an email they do not own, then do step 3 for the one admin account.
 3. Bootstrap the first administrator by having them sign up as a teacher through the app (or create their Auth user directly in the Supabase dashboard with "Auto Confirm User"), then run `update public.profiles set role='admin' where id='<their auth.users id>'` once. Ordinary clients cannot self-promote to admin through `register_profile` or `learning_command`.
 4. Sign in as that administrator; create app profiles for already-provisioned auth users by pasting their Auth UUID, or let teachers/students/parents self-register by code as above. Teachers can also create their own groups (with a join code and schedule) directly from the Students tab, in addition to the admin's class editor. A teacher gets access only through class membership.
@@ -61,3 +61,7 @@ Migration 003 creates a private 50 MB MP4 bucket and checked `attachVideo` / `sa
 ## Persistent lesson tests
 
 Migration 006 adds a separate server-graded question bank and attempt snapshots. See [LESSONS.md](LESSONS.md) for RPCs, local preview, import semantics and hosted configuration. These results do not silently alter existing teacher reports or topic mastery calculations. New lesson answer saves are online, version-checked operations with explicit retry; the legacy learning-command outbox does not handle them.
+
+## Math arena
+
+Migration 010 adds group-scoped rooms, private server-authored questions, per-participant idempotent answers and a leaderboard of completed matches. Clients poll redacted snapshots; server time alone determines rounds and points. The API intentionally exposes group-member names and arena totals only, not study results or private profile codes. Local study rewards are separate. See [ARENA_RU.md](ARENA_RU.md) for setup and verification.

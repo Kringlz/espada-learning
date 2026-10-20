@@ -1,5 +1,23 @@
 # Project log
 
+## 2026-10-20 — Visual reference and persistent login
+
+- Removed labels from bottom navigation across roles, retaining accessible names. Simplified home and arena, separated play/practice/ranking and calculator/reference/history into compact tabs.
+- Added six matching educational vector diagrams and two decorative illustrations. Rendered quadratic roots and the hypotenuse using mathematical typesetting and separate worked steps.
+- Added “Remember me” to login and registration. Remembered native sessions use SecureStore; remembered web sessions use localStorage. Unselected sessions use native process memory or browser sessionStorage. Passwords are never persisted.
+- Added queued storage tests covering session restart, opt-out, refresh races and sign-out; the suite now contains 120 tests.
+- Configured local and EAS preview/production clients for the existing Supabase project, plus a read-only backend readiness command. Remote Auth responds, but arena RPC installation is blocked by missing administrator authorization.
+- Documented current Google Play requirements and remaining release gaps in `docs/PLAY_MARKET_RU.md`. No signed binary or store submission was produced.
+
+## 2026-10-20 — Mathematical arena and tools
+
+- Added a group multiplayer arena with room codes, server-controlled rounds, speed scoring, reconnect/resume, final explanations and group leaderboards. Migration 010 requires connected accounts; demo offers honest solo practice.
+- Added daily five-question warm-ups with deduplicated local rewards, a safe arithmetic calculator with persistent history and a compact formula reference.
+- Refreshed light/dark palettes and student home; mobile navigation includes Arena and Calculator. Staff can host and observe their groups.
+- Deferred mounting unused study/progress screens, memoized scoped state and indexed legacy question lookups. Timers update rendered state only when the displayed second changes.
+- Fixed demo registration returning to the entry screen without loading the new profile. Protected calculator history from a load/save race and preserved the value of Ans when replaying history.
+- Verified TypeScript, 116 domain tests, local PostgreSQL permissions and a two-client match with concurrent retries; exported web and native JS bundles. Hosted deployment and physical-device validation remain operator work.
+
 ## 2026-10-14 — learning path, registration safeguards and additional practice
 
 - Preserved the preceding deployed source with remote tag `pre-duo-2026-10-14` before changing the interface.

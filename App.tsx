@@ -1,3 +1,5 @@
+import { Arena } from "./src/arena/Arena";
+import { Calculator } from "./src/tools/Calculator";
 import {
   registrationRoles,
   RegistrationRole,
@@ -51,9 +53,11 @@ import {
   colors,
   styles,
 } from "./src/components/ui";
-import { mode } from "./src/services/supabase";
+import { mode, getRememberMe } from "./src/services/supabase";
 const navIcons: Record<string, any> = {
   Home: "home",
+  Arena: "zap",
+  Calculator: "hash",
   FamilyProgress: "bar-chart-2",
   Homework: "book-open",
   Contacts: "phone",
@@ -113,7 +117,7 @@ function Welcome({
   loading: boolean;
   error: string | null;
   retry: () => void;
-  login: (e: string, p: string) => Promise<void>;
+  login: (e: string, p: string, remember: boolean) => Promise<void>;
   hasSession: boolean;
   pendingRegistration: {
     name: string;
@@ -127,6 +131,7 @@ function Welcome({
     code?: string;
     email?: string;
     password?: string;
+    remember?: boolean;
   }) => Promise<"ready" | "confirmEmail">;
   confirmEmail: (email: string, token: string) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
@@ -161,11 +166,47 @@ function Welcome({
   }, []);
   const [notice, setNotice] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
+  const rememberTouched = useRef(false);
+  useEffect(() => {
+    let live = true;
+    void getRememberMe()
+      .then((value) => {
+        if (live && !rememberTouched.current) setRemember(value);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
   const [name, setName] = useState("");
   const [role, setRole] = useState<RegistrationRole>("student");
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const rememberControl = (
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityLabel="Запомнить меня"
+      accessibilityState={{ checked: remember, disabled: busy }}
+      aria-checked={remember}
+      disabled={busy}
+      onPress={() => {
+        rememberTouched.current = true;
+        setRemember((v) => !v);
+      }}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        minHeight: 48,
+      }}
+    >
+      <Icon name={remember ? "check-square" : "square"} color={colors.green} />
+      <Txt size={16}>Запомнить меня</Txt>
+    </Pressable>
+  );
+
   useEffect(() => {
     if (hasSession) setScreen("register");
   }, [hasSession]);
@@ -204,6 +245,7 @@ function Welcome({
     setNotice("");
     setMessage("");
     void registerProfile({
+      remember,
       name: name.trim(),
       role,
       code: code.trim(),
@@ -398,6 +440,7 @@ function Welcome({
                           value={password}
                           onChangeText={setPassword}
                         />
+                        {rememberControl}
                         <Button
                           fullWidth
                           disabled={busy || !email || !password}
@@ -405,7 +448,7 @@ function Welcome({
                             setBusy(true);
                             setNotice("");
                             setMessage("");
-                            void login(email.trim(), password)
+                            void login(email.trim(), password, remember)
                               .catch((e) => {
                                 const m = errorMessage(e);
                                 if (
@@ -459,6 +502,7 @@ function Welcome({
                               value={password}
                               onChangeText={setPassword}
                             />
+                            {rememberControl}
                           </>
                         )}
                         {role === "student" && (
@@ -594,6 +638,8 @@ function Shell() {
   const [courseRequest, setCourseRequest] = useState<
     { id: string; key: number } | undefined
   >();
+  const [learnVisited, setLearnVisited] = useState(false);
+  const [progressVisited, setProgressVisited] = useState(false);
   const [topic, setTopic] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [focusedLesson, setFocusedLesson] = useState<FocusedLesson | null>(
@@ -641,7 +687,7 @@ function Shell() {
   }, []);
   const tabs =
     actor.role === "student"
-      ? ["Home", "Learn", "Progress"]
+      ? ["Home", "Learn", "Arena", "Progress", "Calculator"]
       : actor.role === "parent"
         ? ["FamilyProgress", "Homework", "Contacts"]
         : [
@@ -649,6 +695,8 @@ function Shell() {
             "Assessments",
             "Students",
             "Curriculum",
+            "Arena",
+            "Calculator",
             ...(actor.role === "admin" ? ["Manage"] : []),
           ];
   useEffect(() => {
@@ -701,24 +749,30 @@ function Shell() {
     sounds.play("open");
     setTopic(null);
     setResult(null);
+    if (next === "Learn") setLearnVisited(true);
+    if (next === "Progress") setProgressVisited(true);
     setTab(next);
   }
   const tabLabel = (name: string) =>
-    actor.role === "parent"
-      ? ({
-          FamilyProgress: "Прогресс",
-          Homework: "Задания",
-          Contacts: "Учитель",
-          Profile: "Профиль",
-        }[name] ?? name)
-      : actor.role === "student"
-        ? ({
-            Home: "Главная",
-            Learn: "Темы",
-            Progress: "Успехи",
-            Profile: "Профиль",
-          }[name] ?? translate(name))
-        : translate(name);
+    name === "Arena"
+      ? "Арена"
+      : name === "Calculator"
+        ? "Калькулятор"
+        : actor.role === "parent"
+          ? ({
+              FamilyProgress: "Прогресс",
+              Homework: "Задания",
+              Contacts: "Учитель",
+              Profile: "Профиль",
+            }[name] ?? name)
+          : actor.role === "student"
+            ? ({
+                Home: "Главная",
+                Learn: "Темы",
+                Progress: "Успехи",
+                Profile: "Профиль",
+              }[name] ?? translate(name))
+            : translate(name);
   function openCourse(id: string) {
     courseOrigin.current = tab;
     setCourseRequest({ id, key: Date.now() });
@@ -779,7 +833,7 @@ function Shell() {
           />
           {!mobile && (
             <Txt
-              size={clarity ? 16 : mobile ? 11 : 16}
+              size={mobile ? 10 : clarity ? 16 : 16}
               weight={selectedTab === t ? "600" : "400"}
               color={
                 selectedTab === t
@@ -791,7 +845,7 @@ function Shell() {
                   : colors.muted
               }
             >
-              {tabLabel(t)}
+              {mobile && t === "Calculator" ? "Кальк." : tabLabel(t)}
             </Txt>
           )}
         </Pressable>
@@ -1076,11 +1130,13 @@ function Shell() {
                                   : "none",
                             }}
                           >
-                            <Learn
-                              active={tab === "Learn" && !topic && !result}
-                              openTopic={setTopic}
-                              courseRequest={courseRequest}
-                            />
+                            {learnVisited && (
+                              <Learn
+                                active={tab === "Learn" && !topic && !result}
+                                openTopic={setTopic}
+                                courseRequest={courseRequest}
+                              />
+                            )}
                           </View>
                           <View
                             style={{
@@ -1090,13 +1146,19 @@ function Shell() {
                                   : "none",
                             }}
                           >
-                            <Progress
-                              active={tab === "Progress" && !topic && !result}
-                              openCourse={openCourse}
-                              openResult={setResult}
-                              openTopic={setTopic}
-                            />
+                            {progressVisited && (
+                              <Progress
+                                active={tab === "Progress" && !topic && !result}
+                                openCourse={openCourse}
+                                openResult={setResult}
+                                openTopic={setTopic}
+                              />
+                            )}
                           </View>
+                          {!topic && !result && tab === "Arena" && <Arena />}
+                          {!topic && !result && tab === "Calculator" && (
+                            <Calculator />
+                          )}
                           {!topic && !result && tab === "Profile" && (
                             <Profile switchDemo={() => setAccountOpen(true)} />
                           )}
@@ -1119,6 +1181,10 @@ function Shell() {
                             />
                           )}
                         </SoftReveal>
+                      ) : tab === "Arena" ? (
+                        <Arena />
+                      ) : tab === "Calculator" ? (
+                        <Calculator />
                       ) : tab === "Profile" ? (
                         <Profile switchDemo={() => setAccountOpen(true)} />
                       ) : actor.role === "parent" ? (

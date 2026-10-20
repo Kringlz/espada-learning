@@ -1,1 +1,29 @@
-{"cli":{"version":">= 16.0.0"},"build":{"development":{"developmentClient":true,"distribution":"internal","env":{"APP_ENV":"development","EXPO_PUBLIC_DATA_MODE":"demo"}},"preview":{"distribution":"internal","env":{"APP_ENV":"preview","EXPO_PUBLIC_DATA_MODE":"demo"}},"production":{"env":{"APP_ENV":"production","EXPO_PUBLIC_DATA_MODE":"supabase"}}}}
+{
+  "cli": { "version": ">= 16.0.0", "appVersionSource": "remote" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": { "APP_ENV": "development", "EXPO_PUBLIC_DATA_MODE": "demo" }
+    },
+    "connected": {
+      "env": {
+        "EXPO_PUBLIC_DATA_MODE": "supabase",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://anugktopawgukdxhqvze.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_JePCMPnuVbjTg6ZmGmVfLg_6Hq7SjO1"
+      }
+    },
+    "preview": {
+      "extends": "connected",
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "env": { "APP_ENV": "preview" }
+    },
+    "production": {
+      "extends": "connected",
+      "autoIncrement": true,
+      "android": { "buildType": "app-bundle" },
+      "env": { "APP_ENV": "production" }
+    }
+  }
+}

@@ -100,8 +100,9 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           отдельно. Просмотр урока или видео не подтверждает освоение темы.
         </Txt>
         <Txt color={colors.muted}>
-          No adverts. No public profiles. No student rankings. AI tutoring is
-          disabled; no learning data is sent to an AI provider.
+          Без рекламы и публичных профилей. Рейтинг арены виден только внутри
+          учебной группы и её преподавателям; оценки и освоение тем в нём не
+          участвуют. Учебные данные не передаются ИИ-сервисам.
         </Txt>
         <Txt size={13} color={colors.muted}>
           Need help? Bring a tricky question to your next tutoring session. Your
@@ -112,9 +113,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
             size={12}
             color={colors.muted}
             accessibilityRole="link"
-            onPress={() =>
-              void Linking.openURL("https://game-icons.net/")
-            }
+            onPress={() => void Linking.openURL("https://game-icons.net/")}
           >
             Иллюстрации: Game-icons · Delapouite и Lorc
           </Txt>

@@ -2,15 +2,17 @@
 
 ## Collection and services
 
-All shipped demo records are synthetic. No advertising, public profiles, marketing analytics, student ranking, camera scanning, payment SDK or AI provider is integrated.
+All shipped demo records are synthetic. No advertising, public profiles, marketing analytics, public student ranking, camera scanning, payment SDK or AI provider is integrated.
 
 | Service / storage | Data received | When used |
 | --- | --- | --- |
 | Local demo AsyncStorage / browser localStorage | Synthetic profiles, classes, results, answers, activity and audit | Default mode only; stays on the user's device |
 | Supabase Auth | Account email, authentication credentials/session metadata, network metadata | Only after a backend is configured and a user signs in |
 | Supabase PostgreSQL | Minimal display names, role/class membership, assessments, answers, timestamps, assignments and audit records | Connected mode only |
-| Native SecureStore | Session tokens and pending student commands | Connected mode, native app |
-| Browser sessionStorage | Session tokens and pending student commands | Connected mode; clears with browser tab session |
+| Native SecureStore | Remembered session tokens and pending student commands | Connected mode; without “Remember me”, new auth sessions use process memory |
+| Browser sessionStorage | Non-remembered session tokens and pending student commands | Connected mode; clears with browser tab session |
+| Browser localStorage | Remembered session tokens | Only when “Remember me” is selected; sign-out removes them |
+| AsyncStorage preferences | Remember-me choice, scoped to the Supabase project | Contains no password or session token |
 | Video host | Network/device request metadata and requested media | Only if an administrator/operator supplies an approved asset; none currently supplied |
 | Expo/EAS | Build source, dependency/configuration metadata and signing artifacts as configured | EAS has not been used; local Expo tooling downloads development packages |
 | AI provider | Nothing | Disabled; no provider or key configured |
@@ -39,4 +41,8 @@ There is no canned chatbot pretending to be AI. A later server-only feature shou
 
 ## Security scope
 
-Backend RLS and checked transactions enforce permissions. Local demo role switching is deliberately not security. Native private storage and web session storage reduce unnecessary permanent caching but do not replace device security or browser XSS protection. Review access functions, dependency updates, authentication lifecycle and operational controls before real student use.
+Backend RLS and checked transactions enforce permissions. Local demo role switching is deliberately not security. Session storage does not replace device security or browser XSS protection. “Remember me” stores session tokens, never the password; signing out removes both temporary and remembered tokens. On native upgrades, existing persistent sessions retain their previous behavior until the next explicit choice. Review access functions, dependency updates, authentication lifecycle and operational controls before real student use.
+
+## Group arena
+
+The optional connected arena displays active classmates’ names, profile identifiers and game points to current members of that class, assigned teachers and administrators. It does not expose account codes, assessment history or topic mastery. Parents are not granted arena access. Rankings are confined to the selected class; no public leaderboard is provided. Game answers and server scores are retained in private tables with profile/class deletion cascades. Local calculator history is stored per account on the device; it is not uploaded to the server. See ARENA_RU.md.
