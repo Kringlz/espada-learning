@@ -135,9 +135,9 @@ export function Button({
               ? colors.selected
               : colors.subtle
             : colors.primary,
-          borderWidth: 2,
-          borderBottomWidth: pressed ? 2 : 5,
-          transform: [{ translateY: pressed ? 3 : 0 }],
+          borderWidth: 1,
+          borderBottomWidth: 1,
+          transform: [{ translateY: pressed ? 1 : 0 }],
           borderColor: secondary
             ? selected
               ? colors.green
@@ -145,9 +145,9 @@ export function Button({
             : colors.green,
           opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
           alignSelf: fullWidth ? "stretch" : "flex-start",
-          minHeight: clarity ? (small ? 48 : 58) : 48,
-          borderRadius: clarity ? 16 : 18,
-          paddingVertical: small ? 10 : clarity ? 16 : 14,
+          minHeight: small ? 44 : 50,
+          borderRadius: clarity ? 25 : 18,
+          paddingVertical: small ? 10 : 13,
           paddingHorizontal: small ? 12 : 18,
         },
       ]}
@@ -163,14 +163,14 @@ export function Button({
         <View style={{ flexShrink: 1, minWidth: 0 }}>
           <MathText
             text={children}
-            size={clarity ? (small ? 16 : 19) : small ? 14 : 16}
+            size={small ? 13 : 15}
             color={secondary ? colors.green : colors.onPrimary}
           />
         </View>
       ) : (
         <Txt
           style={{ flexShrink: 1, textAlign: "center" }}
-          size={clarity ? (small ? 16 : 19) : small ? 14 : 16}
+          size={small ? 13 : 15}
           weight="700"
           color={secondary ? colors.green : colors.onPrimary}
         >
@@ -361,7 +361,7 @@ export function Choice({
         clarity && {
           minHeight: 72,
           padding: 18,
-          borderWidth: 2,
+          borderWidth: 1,
           borderRadius: 18,
         },
         selected && {
@@ -547,7 +547,7 @@ const createStyles = (colors: Palette) =>
     card: {
       backgroundColor: colors.white,
       borderRadius: 20,
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: colors.line,
       padding: 20,
       gap: 14,
@@ -564,7 +564,7 @@ const createStyles = (colors: Palette) =>
       maxWidth: "100%",
     },
     input: {
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: colors.line,
       borderRadius: 16,
       padding: 14,

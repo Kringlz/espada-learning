@@ -1,3 +1,4 @@
+import { StarGlyph } from "./Starfield";
 import React from "react";
 import { Pressable, View, useWindowDimensions } from "react-native";
 import { useLearning } from "../services/context";
@@ -62,20 +63,17 @@ export function WorkspaceOverview({
         >
           <View style={{ flex: 1, minWidth: 0, gap: 18 }}>
             <Txt size={compact ? 22 : 30} weight="700">
-              Помогайте расти.
+              Открывайте новые звёзды.
             </Txt>
             <Button icon="plus" onPress={newReport}>
               Добавить результат
             </Button>
           </View>
-          <AtlasImage
-            source={sectionIllustrations.learning.image}
-            accessible={false}
-            style={{
-              width: compact ? 85 : 180,
-              height: compact ? 110 : 150,
-              borderRadius: 18,
-            }}
+          <StarGlyph
+            id="teacher-observatory"
+            size={compact ? 85 : 150}
+            color={colors.green}
+            selected
           />
         </View>
       </Card>
@@ -89,7 +87,10 @@ export function WorkspaceOverview({
             icon: "check-circle" as const,
           },
         ].map((item) => (
-          <Card key={item.label} style={{ flex: 1, minWidth: 78, padding: 12, gap: 8 }}>
+          <Card
+            key={item.label}
+            style={{ flex: 1, minWidth: 78, padding: 12, gap: 8 }}
+          >
             <Icon name={item.icon} color={colors.green} />
             <Txt size={30} weight="700">
               {item.value}

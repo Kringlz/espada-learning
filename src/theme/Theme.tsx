@@ -50,7 +50,7 @@ const Ctx = createContext({
 export const useTheme = () => useContext(Ctx);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const system = useColorScheme();
-  const [preference, setValue] = useState<Preference>("system");
+  const [preference, setValue] = useState<Preference>("dark");
   const [ready, setReady] = useState(false);
   useEffect(() => {
     let live = true;
@@ -93,40 +93,42 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// A single game-inspired system for students, families, staff and authentication.
+// Shared observatory palette across learning, staff, family and authentication.
 const clarityLight: Palette = {
   ...lightColors,
-  paper: "#F6F4FC",
+  paper: "#F1F3F8",
   white: "#FFFFFF",
-  ink: "#251B3D",
-  muted: "#6C637E",
-  green: "#6133B4",
-  primary: "#7140D4",
+  ink: "#1C2942",
+  muted: "#65718A",
+  green: "#455F9B",
+  primary: "#36578F",
   onPrimary: "#FFFFFF",
-  light: "#EEE6FF",
-  subtle: "#F6F4FA",
-  selected: "#E8DBFF",
-  line: "#E7E1F1",
-  warning: "#FFF5D9",
-  error: "#FFF0F0",
-  red: "#B52B39",
+  light: "#E6ECF8",
+  subtle: "#EDF0F7",
+  selected: "#DDE6F7",
+  line: "#D9E0ED",
+  gold: "#927035",
+  warning: "#FAF1DF",
+  error: "#FBECEE",
+  red: "#AA384B",
 };
 const clarityDark: Palette = {
   ...darkColors,
-  paper: "#171123",
-  white: "#231B32",
-  ink: "#F5F0FF",
-  muted: "#BFB1D2",
-  green: "#C5A5FF",
-  primary: "#B994FF",
-  onPrimary: "#25123F",
-  light: "#382650",
-  subtle: "#2C233C",
-  selected: "#493065",
-  line: "#443651",
-  warning: "#3B3320",
-  error: "#462730",
-  red: "#FFAFB6",
+  paper: "#080C15",
+  white: "#101725",
+  ink: "#EDF1FA",
+  muted: "#98A6BF",
+  green: "#B4C8F3",
+  primary: "#D7E2FF",
+  onPrimary: "#15233F",
+  light: "#19243A",
+  subtle: "#141E30",
+  selected: "#23324D",
+  line: "#263149",
+  gold: "#D7BD8B",
+  warning: "#302A20",
+  error: "#35232E",
+  red: "#F1A5B4",
 };
 export function ClarityThemeProvider({
   children,

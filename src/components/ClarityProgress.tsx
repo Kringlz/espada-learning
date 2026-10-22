@@ -1,3 +1,6 @@
+import { StarGlyph } from "./Starfield";
+import { constellations } from "../course/constellation";
+import { lessonStatus, nextLesson } from "../course/journey";
 import { PointsDetails } from "./PointsDetails";
 import { StreakButton } from "./StreakButton";
 import { MyGroups } from "./Groups";
@@ -10,9 +13,8 @@ import { levelFor, levels } from "../engagement/rewards";
 import { latestReportInsights } from "../core/reportInsights";
 import { reportsFor } from "../core/reports";
 import { useCourseProgress } from "../course/storage";
-import { course } from "../course/model";
+import { course, grades } from "../course/model";
 import { courseContent } from "../course/content";
-import { topicCover } from "./TopicCover";
 import { ResultRadar } from "./ResultRadar";
 import {
   Button,
@@ -72,9 +74,59 @@ export function ClarityProgress({
           weight="700"
           style={{ letterSpacing: -1, flex: 1 }}
         >
-          Мои успехи
+          Мои открытия
         </Txt>
         <StreakButton />
+      </View>
+      <Txt size={15} color={colors.muted}>
+        Каждое открытие остаётся с тобой. Здесь видно, какой путь уже пройден.
+      </Txt>
+      <View style={{ gap: 16 }}>
+        <Txt size={11} color={colors.muted} style={{ letterSpacing: 2 }}>
+          ТВОИ СОЗВЕЗДИЯ
+        </Txt>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+          {grades.map((grade) => {
+            const topics = course.filter((t) => t.grade === grade);
+            const completed = topics.filter(
+              (t) => lessonStatus(t, storage.progress).complete,
+            ).length;
+            const resume = nextLesson(topics, storage.progress);
+            return (
+              <Pressable
+                key={grade}
+                accessibilityRole="button"
+                accessibilityLabel={`${constellations[grade].name}, ${grade} класс: ${completed} из ${topics.length} уроков пройдено`}
+                disabled={!openCourse || !storage.ready}
+                onPress={() => resume && openCourse?.(resume.id)}
+                style={({ pressed }) => ({
+                  flexGrow: 1,
+                  flexBasis: wide ? 120 : 130,
+                  padding: 16,
+                  gap: 8,
+                  alignItems: "center",
+                  borderWidth: 1,
+                  borderColor: colors.line,
+                  borderRadius: 18,
+                  backgroundColor: pressed ? colors.light : colors.white,
+                })}
+              >
+                <StarGlyph
+                  id={`grade-${grade}`}
+                  size={70}
+                  color={colors.green}
+                  selected={completed > 0}
+                />
+                <Txt size={14} weight="500">
+                  {constellations[grade].name}
+                </Txt>
+                <Txt size={11} color={colors.muted}>
+                  {grade} класс · {completed}/{topics.length}
+                </Txt>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
       <MyGroups />
       <View style={{ flexDirection: "row", gap: 14 }}>
@@ -89,7 +141,7 @@ export function ClarityProgress({
                 {
                   flex: 1,
                   minWidth: 0,
-                  backgroundColor: colors.warning,
+                  backgroundColor: colors.white,
                   padding: wide ? 26 : 18,
                   gap: 8,
                 },
@@ -227,12 +279,7 @@ export function ClarityProgress({
                         gap: 12,
                       }}
                     >
-                      <AtlasImage
-                        source={topicCover(area.label).image}
-                        accessible={false}
-                        resizeMode="contain"
-                        style={{ width: 32, height: 32 }}
-                      />
+                      <StarGlyph id={area.id} size={38} color={colors.green} />
                       <Txt size={17} style={{ flex: 1 }}>
                         {area.label}
                       </Txt>
@@ -305,12 +352,7 @@ export function ClarityProgress({
                     gap: 16,
                   }}
                 >
-                  <AtlasImage
-                    source={topicCover(t.title, t.subject).image}
-                    accessible={false}
-                    resizeMode="contain"
-                    style={{ width: 48, height: 48 }}
-                  />
+                  <StarGlyph id={t.id} size={58} color={colors.green} />
                   <Txt size={20} weight="600" style={{ flex: 1 }}>
                     {courseContent[t.id].pages[0].title}
                   </Txt>

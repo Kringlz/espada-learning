@@ -1,44 +1,33 @@
 import React from "react";
-import { Image, View, useWindowDimensions } from "react-native";
-import { useTheme } from "../theme/Theme";
-import { Txt } from "./ui";
-
+import { View } from "react-native";
+import Svg, { Circle, Path } from "react-native-svg";
+import { Txt, useUITheme } from "./ui";
 export function Brand({ compact = false }: { compact?: boolean }) {
-  const { dark } = useTheme();
-  const narrow = useWindowDimensions().width < 360;
+  const { colors } = useUITheme();
   return (
     <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: narrow ? 6 : 10,
-      }}
+      accessibilityLabel="Espada"
+      style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
     >
-      <View
-        style={{
-          width: narrow ? 38 : 44,
-          height: 48,
-          borderRadius: 12,
-          overflow: "hidden",
-          backgroundColor: dark ? "#000" : "#fff",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Image
-          accessibilityLabel="Логотип Espada"
-          source={
-            dark
-              ? require("../../assets/brand/knight-dark.jpg")
-              : require("../../assets/brand/knight-light.jpg")
-          }
-          style={{ width: 84, height: 69 }}
-          resizeMode="contain"
+      <Svg width="35" height="40" viewBox="0 0 40 44" aria-hidden={true}>
+        <Path
+          d="M20 2 L23 17 L38 22 L23 25 L20 42 L17 25 L2 22 L17 17 Z"
+          fill="none"
+          stroke={colors.green}
+          strokeWidth="1.2"
         />
-      </View>
+        <Path
+          d="M20 10 L22 20 L30 22 L22 24 L20 34 L18 24 L10 22 L18 20 Z"
+          fill={colors.ink}
+        />
+        <Circle cx="32" cy="9" r="1.5" fill={colors.green} />
+      </Svg>
       {!compact && (
-        <Txt size={narrow ? 23 : 27} weight="700" style={{ letterSpacing: -1 }}>
-          Espada
+        <Txt size={24} weight="500" style={{ letterSpacing: -0.8 }}>
+          espada
+          <Txt size={18} color={colors.green}>
+            .
+          </Txt>
         </Txt>
       )}
     </View>

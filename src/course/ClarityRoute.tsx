@@ -1,3 +1,4 @@
+import { StarGlyph } from "../components/Starfield";
 import React from "react";
 import { Pressable, View } from "react-native";
 import { CourseTopic, CourseProgress } from "./model";
@@ -38,9 +39,9 @@ export function ClarityRoute({
               alignItems: "center",
               padding: 20,
               borderRadius: 20,
-              borderWidth: 2,
-              borderBottomWidth: pressed ? 2 : 4,
-              borderColor: state.started ? colors.green : colors.line,
+              borderWidth: 1,
+              borderBottomWidth: 1,
+              borderColor: colors.line,
               backgroundColor: state.started ? colors.light : colors.white,
               opacity: pressed ? 0.85 : 1,
             })}
@@ -56,17 +57,7 @@ export function ClarityRoute({
                 justifyContent: "center",
               }}
             >
-              <Icon
-                name={
-                  state.complete
-                    ? "check"
-                    : topic.subject === "geometry"
-                      ? "triangle"
-                      : "book-open"
-                }
-                color={colors.green}
-                size={28}
-              />
+              <StarGlyph id={topic.id} size={60} color={colors.green} />
             </View>
             <View style={{ flex: 1, gap: 10 }}>
               <Txt size={20} weight="700">

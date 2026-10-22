@@ -1,5 +1,28 @@
 # Project log
 
+## 2026-10-21 — Quiet lesson navigation
+
+- Removed constellation names, labels around stars, navigation captions, permanent hints and decorative statuses from the student space scene. Only the selected lesson title, position and primary action remain.
+- Replaced textured spheres and corona rings with compact luminous stars, soft bloom and subtle diffraction. Reduced background noise and adapted the camera framing for phones.
+- Consolidated grade selection into one control and placed secondary functions and teacher assignments behind “Ещё”. Clicking the selected star opens its lesson; free flight, keyboard navigation and saved progress remain available.
+- Verified TypeScript, 129 tests, web export and browser navigation on narrow and wide layouts.
+
+## 2026-10-21 — Immersive space flight
+
+- Replaced the student dashboard chrome with a full-window spatial scene. Drag or touch to orbit, use the wheel or pinch to zoom, WASD/QE to fly, and large edge arrows or arrow keys to travel between lessons.
+- Added deterministic spherical plasma textures, coronas, depth, parallax, seven navigable constellations and spatial objects opening the arena, progress and tools. Teacher assignments arrive as signals.
+- Entering a star opens the lesson material directly. Returning preserves the selected star and camera; inactive scenes pause. Search remains accessible from flight help, and the wordmark opens the profile.
+- Shared the renderer between a sandboxed web frame and native WebView, with validated actions and escaped data. Preserved lesson IDs and completion rules.
+- TypeScript and 129 tests pass; the local web preview builds successfully. Browser checks cover narrow/wide layouts, lesson navigation and return. Physical native devices remain untested.
+
+## 2026-10-20 — Constellation learning interface
+
+- Rebuilt the student home around seven grade constellations and 55 stable lesson stars, with animated navigation, pointer parallax, arrow keys, swipe gestures and a full constellation overview.
+- Connected stars to existing lessons and completion records; opening or browsing a star does not complete a lesson. Search and a list view remain available in the course atlas.
+- Added constellation collections to progress, carried star identities into lesson covers, and redesigned shared navigation, branding, controls, palettes and arena graphics. Dark is the default for new installations; existing theme preferences are preserved.
+- Respects reduced motion and pauses hidden starfields. No backend schema or learning-record format changes.
+- Validated with TypeScript, 126 tests, a web export and desktop/mobile browser checks. This is a local design preview, not a published release.
+
 ## 2026-10-20 — Web release
 
 - Published the arena interface, visual reference, calculator and remembered-session update to GitHub Pages (`6921485`).

@@ -1,7 +1,7 @@
+import { Starfield, StarGlyph } from "../components/Starfield";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, TextInput, View, useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MathIllustration } from "../components/MathIllustrations";
 import { ChoiceTabs } from "../components/ChoiceTabs";
 import {
   Button,
@@ -150,7 +150,10 @@ export function Arena() {
     <View style={{ gap: 18 }}>
       <View
         style={{
-          backgroundColor: "#5125AD",
+          backgroundColor: "#0D1424",
+          overflow: "hidden",
+          borderWidth: 1,
+          borderColor: colors.line,
           borderRadius: 26,
           padding: 22,
           flexDirection: "row",
@@ -158,16 +161,17 @@ export function Arena() {
           gap: 10,
         }}
       >
+        <Starfield height={220} />
         <View style={{ flex: 1, gap: 10 }}>
-          <Txt size={wide ? 36 : 27} weight="800" color="#FFFFFF">
+          <Txt size={wide ? 36 : 27} weight="500" color="#FFFFFF">
             Арена
           </Txt>
-          <Txt size={14} color="#E8D9FF">
+          <Txt size={14} color="#AABAD8">
             10 вопросов · 15 секунд
           </Txt>
         </View>
         <View style={{ width: "40%", maxWidth: 240 }}>
-          <MathIllustration kind="arena" height={150} decorative />
+          <StarGlyph id="arena" size={150} color="#E6C894" selected />
         </View>
       </View>
       <ChoiceTabs
@@ -207,24 +211,21 @@ export function Arena() {
                 paddingVertical: 10,
                 paddingHorizontal: 5,
                 borderRadius: 18,
-                borderWidth: 2,
+                borderWidth: 1,
                 borderColor: topic === item.id ? colors.primary : colors.line,
                 backgroundColor:
                   topic === item.id ? colors.light : colors.white,
                 gap: 8,
               }}
             >
-              <MathIllustration
-                kind={
-                  item.id === "arithmetic"
-                    ? "learn"
-                    : item.id === "percent"
-                      ? "percent"
-                      : "quadratic"
-                }
-                height={wide ? 100 : 65}
-                decorative
-              />
+              <View style={{ alignItems: "center" }}>
+                <StarGlyph
+                  id={item.id}
+                  size={wide ? 100 : 65}
+                  color={colors.green}
+                  selected={topic === item.id}
+                />
+              </View>
               <Txt size={12} weight="700" style={{ textAlign: "center" }}>
                 {item.id === "arithmetic" ? "Счёт" : item.title}
               </Txt>
@@ -318,7 +319,7 @@ export function Arena() {
                 autoCorrect={false}
                 accessibilityLabel="Код игровой комнаты"
                 style={{
-                  borderWidth: 2,
+                  borderWidth: 1,
                   borderColor: colors.line,
                   borderRadius: 14,
                   padding: 15,

@@ -51,3 +51,27 @@ test("duplicate and invalid read pages cannot inflate path progress", () => {
   assert.equal(state.complete, false);
   assert(state.percent <= 100);
 });
+
+// Constellation browsing must remain bounded and must not mutate learning records.
+import {
+  adjacentStar,
+  constellations,
+  starIdentity,
+  starPosition,
+} from "../src/course/constellation";
+test("constellation navigation stops at both ends and handles empty results", () => {
+  assert.equal(adjacentStar(0, -1, 6), 0);
+  assert.equal(adjacentStar(5, 1, 6), 5);
+  assert.equal(adjacentStar(2, 1, 6), 3);
+  assert.equal(adjacentStar(0, 1, 0), 0);
+});
+test("every lesson has a stable star identity and every grade has a constellation", () => {
+  const identities = course.map((t) => starIdentity(t.id).seed);
+  assert.equal(new Set(identities).size, course.length);
+  for (const topic of course) {
+    assert.ok(constellations[topic.grade]);
+    assert.deepEqual(starIdentity(topic.id), starIdentity(topic.id));
+    const p = starPosition(course.indexOf(topic), topic.grade);
+    assert.ok(Number.isFinite(p.x) && p.y > 70 && p.y < 260);
+  }
+});

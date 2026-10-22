@@ -8,11 +8,11 @@ export function ClarityControls() {
   const [open, setOpen] = useState(false);
   const narrow = useWindowDimensions().width < 360;
   const style = {
-    width: narrow ? 44 : 52,
-    height: 56,
-    borderWidth: 1.5,
+    width: 44,
+    height: 44,
+    borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 18,
+    borderRadius: 22,
     backgroundColor: colors.white,
     alignItems: "center" as const,
     justifyContent: "center" as const,
@@ -27,7 +27,7 @@ export function ClarityControls() {
         onPress={() => setPreference(dark ? "light" : "dark")}
         style={style}
       >
-        <Icon name={dark ? "sun" : "moon"} size={25} />
+        <Icon name={dark ? "sun" : "moon"} size={18} />
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -42,7 +42,7 @@ export function ClarityControls() {
               ? "volume-2"
               : "volume-x"
           }
-          size={25}
+          size={18}
         />
       </Pressable>
       <Modal
@@ -80,7 +80,7 @@ export function ClarityControls() {
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Txt size={25} weight="700" style={{ flex: 1 }}>
+              <Txt size={18} weight="700" style={{ flex: 1 }}>
                 Звук
               </Txt>
               <Pressable

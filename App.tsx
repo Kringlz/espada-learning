@@ -13,7 +13,7 @@ import { LessonFocus, FocusedLesson } from "./src/components/LessonFocus";
 import { SoundProvider, useSounds } from "./src/engagement/Sounds";
 import { RewardsProvider } from "./src/engagement/RewardContext";
 import { RewardNotice } from "./src/engagement/LevelCard";
-import { SoftReveal } from "./src/components/Motion";
+import { MotionActiveContext, SoftReveal } from "./src/components/Motion";
 import { Parent } from "./src/screens/Family";
 import { useUITheme } from "./src/components/ui";
 import { ClarityThemeProvider, ThemeProvider } from "./src/theme/Theme";
@@ -55,13 +55,13 @@ import {
 } from "./src/components/ui";
 import { mode, getRememberMe } from "./src/services/supabase";
 const navIcons: Record<string, any> = {
-  Home: "home",
+  Home: "compass",
   Arena: "zap",
   Calculator: "hash",
   FamilyProgress: "bar-chart-2",
   Homework: "book-open",
   Contacts: "phone",
-  Learn: "book-open",
+  Learn: "map",
   Progress: "bar-chart-2",
   Profile: "user",
   Overview: "grid",
@@ -671,6 +671,13 @@ function Shell() {
   const routeKey = `${actor.id}:${topic ? `topic:${topic}` : result ? `result:${result}` : tab}`;
   const restoring = useRef(false);
   const selectedTab = topic ? "Learn" : result ? "Progress" : tab;
+  const explorer = actor.role === "student";
+  const inSpace = explorer && tab === "Home" && !topic && !result;
+  function returnToSpace() {
+    focusedLesson?.exit();
+    courseOrigin.current = null;
+    navigate("Home");
+  }
   const [accountOpen, setAccountOpen] = useState(false);
   const scroller = useRef<ScrollView>(null);
   const scrollContent = useRef<View>(null);
@@ -757,7 +764,7 @@ function Shell() {
     name === "Arena"
       ? "Арена"
       : name === "Calculator"
-        ? "Калькулятор"
+        ? "Лаборатория"
         : actor.role === "parent"
           ? ({
               FamilyProgress: "Прогресс",
@@ -767,9 +774,9 @@ function Shell() {
             }[name] ?? name)
           : actor.role === "student"
             ? ({
-                Home: "Главная",
-                Learn: "Темы",
-                Progress: "Успехи",
+                Home: "Вселенная",
+                Learn: "Созвездия",
+                Progress: "Открытия",
                 Profile: "Профиль",
               }[name] ?? translate(name))
             : translate(name);
@@ -802,8 +809,8 @@ function Shell() {
               paddingHorizontal: mobile ? 3 : 12,
               paddingVertical: clarity ? 12 : mobile ? 8 : 10,
               minHeight: clarity ? 56 : undefined,
-              borderRadius: 16,
-              borderWidth: 2,
+              borderRadius: 12,
+              borderWidth: 1,
               borderColor: selectedTab === t ? colors.line : "transparent",
               backgroundColor:
                 selectedTab === t
@@ -820,7 +827,7 @@ function Shell() {
         >
           <Icon
             name={navIcons[t]}
-            size={clarity ? 26 : mobile ? 19 : 20}
+            size={mobile ? 21 : 19}
             color={
               selectedTab === t
                 ? student
@@ -833,7 +840,7 @@ function Shell() {
           />
           {!mobile && (
             <Txt
-              size={mobile ? 10 : clarity ? 16 : 16}
+              size={mobile ? 10 : 14}
               weight={selectedTab === t ? "600" : "400"}
               color={
                 selectedTab === t
@@ -858,34 +865,92 @@ function Shell() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={{ flex: 1, flexDirection: "row" }}>
-          {desktop && !focused && (
+        {explorer && (
+          <View
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: inSpace ? "flex" : "none",
+            }}
+          >
+            <MotionActiveContext.Provider value={inSpace}>
+              <Home
+                openCourse={openCourse}
+                openTopic={setTopic}
+                navigate={navigate}
+                openResult={setResult}
+              />
+            </MotionActiveContext.Provider>
+          </View>
+        )}
+        <View
+          pointerEvents={inSpace ? "box-none" : "auto"}
+          style={{ flex: 1, flexDirection: "row" }}
+        >
+          {desktop && !focused && !explorer && (
             <View
               style={{
-                width: 220,
+                width: 186,
                 borderRightWidth: 1,
                 borderColor: colors.line,
-                padding: 18,
-                gap: 24,
-                backgroundColor: colors.white,
+                padding: 20,
+                gap: 40,
+                backgroundColor: colors.paper,
               }}
             >
               <Brand />
               {nav()}
               <View style={{ flex: 1 }} />
               <View style={{ gap: 8 }}>
-                <Icon name="book-open" color={colors.green} />
-                <Txt size={14} weight="700">
-                  Каждый шаг считается
+                <Icon name="star" size={17} color={colors.green} />
+                <Txt size={12} color={colors.muted}>
+                  Большие открытия начинаются с тебя
                 </Txt>
               </View>
             </View>
           )}
-          <View style={{ flex: 1, minWidth: 0 }}>
+          <View
+            pointerEvents={inSpace ? "box-none" : "auto"}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              backgroundColor: explorer && !inSpace ? colors.paper : undefined,
+            }}
+          >
+            {explorer && !inSpace && (
+              <View
+                style={{
+                  paddingHorizontal: desktop ? 36 : 22,
+                  paddingVertical: 20,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Вернуться в космос"
+                  onPress={returnToSpace}
+                  style={{ minHeight: 44, justifyContent: "center" }}
+                >
+                  <Txt size={14} color={colors.ink}>
+                    ← Вернуться в космос
+                  </Txt>
+                </Pressable>
+                <Txt
+                  size={11}
+                  color={colors.muted}
+                  style={{ letterSpacing: 2 }}
+                >
+                  ESPADA
+                </Txt>
+              </View>
+            )}
             <View
               style={{
+                display: explorer ? "none" : "flex",
                 paddingHorizontal: desktop ? 32 : 18,
-                paddingVertical: 16,
+                paddingVertical: 13,
                 borderBottomWidth: 1,
                 borderColor: colors.line,
                 backgroundColor: colors.paper,
@@ -903,7 +968,7 @@ function Shell() {
                     icon="arrow-left"
                     onPress={leaveLesson}
                   >
-                    Выйти
+                    {actor.role === "student" ? "К созвездию" : "Назад"}
                   </Button>
                   <Brand compact={width < 600} />
                 </View>
@@ -915,9 +980,9 @@ function Shell() {
                     alignItems: "center",
                   }}
                 >
-                  <Icon name="book-open" color={colors.green} />
-                  <Txt size={16} weight="700">
-                    Математика
+                  <Icon name="circle" size={12} color={colors.green} />
+                  <Txt size={12} weight="500" style={{ letterSpacing: 1.2 }}>
+                    ESPADA / МАТЕМАТИКА
                   </Txt>
                 </View>
               ) : clarity || student ? (
@@ -1081,6 +1146,7 @@ function Shell() {
               <ScreenScroll.Provider value={scrollStaffToTop}>
                 <ScreenAnchor.Provider value={scrollToAnchor}>
                   <ScrollView
+                    style={{ display: inSpace ? "none" : "flex" }}
                     ref={scroller}
                     scrollEventThrottle={16}
                     onScroll={(event) => {
@@ -1091,7 +1157,7 @@ function Shell() {
                     keyboardShouldPersistTaps="handled"
                     contentContainerStyle={{
                       paddingHorizontal: desktop ? 32 : 18,
-                      paddingTop: desktop ? 36 : 22,
+                      paddingTop: desktop ? 26 : 20,
                       paddingBottom: 40,
                       alignItems: "center",
                     }}
@@ -1099,7 +1165,7 @@ function Shell() {
                     <View
                       ref={scrollContent}
                       collapsable={false}
-                      style={{ width: "100%", maxWidth: 1100 }}
+                      style={{ width: "100%", maxWidth: 1380 }}
                     >
                       {actor.role === "student" ? (
                         <SoftReveal
@@ -1110,32 +1176,21 @@ function Shell() {
                           <View
                             style={{
                               display:
-                                !topic && !result && tab === "Home"
-                                  ? "flex"
-                                  : "none",
-                            }}
-                          >
-                            <Home
-                              openCourse={openCourse}
-                              openTopic={setTopic}
-                              navigate={navigate}
-                              openResult={setResult}
-                            />
-                          </View>
-                          <View
-                            style={{
-                              display:
                                 !topic && !result && tab === "Learn"
                                   ? "flex"
                                   : "none",
                             }}
                           >
                             {learnVisited && (
-                              <Learn
-                                active={tab === "Learn" && !topic && !result}
-                                openTopic={setTopic}
-                                courseRequest={courseRequest}
-                              />
+                              <MotionActiveContext.Provider
+                                value={tab === "Learn" && !topic && !result}
+                              >
+                                <Learn
+                                  active={tab === "Learn" && !topic && !result}
+                                  openTopic={setTopic}
+                                  courseRequest={courseRequest}
+                                />
+                              </MotionActiveContext.Provider>
                             )}
                           </View>
                           <View
@@ -1215,7 +1270,7 @@ function Shell() {
               </ScreenScroll.Provider>
             </LessonFocus.Provider>
             {student && <RewardNotice />}
-            {!desktop && !focused && (
+            {!desktop && !focused && !explorer && (
               <View
                 style={{
                   backgroundColor: colors.white,

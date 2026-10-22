@@ -6,7 +6,7 @@ import { dayWord, monthCells } from "../engagement/streak";
 import { Button, Icon, Txt, useUITheme } from "./ui";
 function Flame({ size = 24, color }: { size?: number; color: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 28" accessible={false}>
+    <Svg width={size} height={size} viewBox="0 0 24 28" aria-hidden={true}>
       <Path
         d="M13 1c2 7-5 8-3 13 2-1 3-3 3-5 5 4 8 7 8 11a9 9 0 0 1-18 0C3 12 11 10 13 1Z"
         fill={color}
@@ -53,19 +53,19 @@ export function StreakButton() {
           setOpen(true);
         }}
         style={{
-          minHeight: 48,
-          paddingHorizontal: 14,
+          minHeight: 44,
+          paddingHorizontal: 12,
           flexDirection: "row",
           alignItems: "center",
           gap: 8,
           borderRadius: 16,
-          backgroundColor: colors.warning,
+          backgroundColor: colors.white,
           borderWidth: 1,
           borderColor: colors.line,
         }}
       >
-        <Flame color={streak.current ? orange : colors.muted} />
-        <Txt weight="700" size={20}>
+        <Flame size={18} color={streak.current ? orange : colors.muted} />
+        <Txt weight="500" size={14}>
           {streak.ready ? streak.current : "…"}
         </Txt>
       </Pressable>
