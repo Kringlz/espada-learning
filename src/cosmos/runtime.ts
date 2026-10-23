@@ -51,13 +51,9 @@ function updateUI(){
  button.classList.toggle('boundary',!!boundary);button.querySelector('span').textContent=boundary?target.grade+' класс':'';
  button.setAttribute('aria-label',boundary?(direction<0?'Предыдущий класс: ':'Следующий класс: ')+target.grade:(direction<0?'Предыдущая тема':'Следующая тема'));
  });
- $('overview').textContent=overview?'Выбери класс':grade+' класс';
+ $('overview').textContent=overview?'Классы':grade+' класс';
  $('overview').setAttribute('aria-label',overview?'Вернуться к уроку':'Выбрать класс');
  $('sr-status').textContent=selected.title+'. '+grade+' класс. '+(index+1)+' из '+topics.length;
- $('signals-toggle').style.display=data.signals.length?'block':'none';$('signals-toggle').textContent='Задания учителя · '+data.signals.length;
- $('more').classList.toggle('has-signals',data.signals.length>0);
- $('more').setAttribute('aria-label',data.signals.length?'Ещё, есть задания учителя':'Ещё');
- $('signal-items').textContent='';data.signals.forEach(function(s){var b=document.createElement('button');b.textContent=s.title;b.onclick=function(){$('signals').close();send({type:'topic',id:s.id})};$('signal-items').appendChild(b)});
  showError();
 }
 function setFree(){interacted=true;if(!free){free=true;updateUI()}}
@@ -69,11 +65,7 @@ function toggleOverview(){interacted=true;if(overview){selectStar(selected);retu
 function launch(){if(!data.ready||jumpTimer)return;if(reduced){send({type:'lesson',id:selected.id});return}var id=selected.id;aim={x:selected.x,y:selected.y,z:selected.z};destination.distance=100;document.body.classList.add('jumping');jumpTimer=setTimeout(function(){send({type:'lesson',id:id});document.body.classList.remove('jumping');jumpTimer=null;destination.distance=mobile?650:710;},420)}
 data.grades.forEach(function(g){var label=document.createElement('button');label.dataset.grade=g.grade;label.textContent=g.grade+' класс';label.setAttribute('aria-label','Выбрать '+g.grade+' класс');label.onclick=function(){chooseGrade(g.grade)};$('grade-labels').appendChild(label)});
 $('prev').onclick=function(){move(-1)};$('next').onclick=function(){move(1)};$('launch').onclick=launch;$('reset').onclick=function(){selectStar(selected)};$('overview').onclick=toggleOverview;$('profile').onclick=function(){send({type:'navigate',id:'Profile'})};
-$('more').onclick=function(){$('more-panel').showModal()};
-$('signals-toggle').onclick=function(){$('more-panel').close();$('signals').showModal()};
-
-document.querySelectorAll('[data-navigate]').forEach(function(b){b.onclick=function(){$('more-panel').close();send({type:'navigate',id:b.dataset.navigate})}});
-document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=function(){$(b.dataset.close).close()}});
+document.querySelectorAll('[data-navigate]').forEach(function(b){b.onclick=function(){send({type:'navigate',id:b.dataset.navigate})}});
 // Photometric stars: a small white core, a smooth bloom and restrained diffraction.
 // No planet-like rim or noisy surface; deterministic tint and size keep each star distinct.
 function drawSun(star,p,time){
@@ -121,7 +113,7 @@ canvas.addEventListener('pointermove',function(e){if(!pointers.has(e.pointerId))
 canvas.addEventListener('pointerup',function(e){if(drag&&drag.moved<6&&pointers.size===1){var hit=visibleStars.filter(function(v){return Math.hypot(v.p.x-e.clientX,v.p.y-e.clientY)<Math.max(22,v.p.r+8)}).sort(function(a,b){return a.p.depth-b.p.depth})[0];if(hit){if(hit.star.id===selected.id&&!overview){launch()}else selectStar(hit.star)}}pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size){drag=null;canvas.classList.remove('dragging')}else if(drag){var p=Array.from(pointers.values())[0];drag.x=p.x;drag.y=p.y;drag.moved=99}});
 canvas.addEventListener('pointercancel',function(){pointers.clear();drag=null;pinch=null;canvas.classList.remove('dragging')});
 canvas.addEventListener('wheel',function(e){e.preventDefault();destination.distance=clamp(destination.distance*Math.exp(e.deltaY*.0012),200,13000);setFree();wake()},{passive:false});
-window.addEventListener('keydown',function(e){if(document.querySelector('dialog[open]'))return;if(e.key==='Tab')return;var k=e.key.length===1?e.key.toLowerCase():e.key;
+window.addEventListener('keydown',function(e){if(e.key==='Tab')return;var k=e.key.length===1?e.key.toLowerCase():e.key;
  if(['ArrowRight','ArrowLeft','Home','End','w','a','s','d','q','e','r','Shift'].includes(k))e.preventDefault();
  if(k==='ArrowRight')move(1);else if(k==='ArrowLeft')move(-1);else if(k==='Home')selectStar(currentTopics()[0]);else if(k==='End'){var t=currentTopics();selectStar(t[t.length-1])}else if(k==='r')selectStar(selected);else if(k==='Escape'&&overview)selectStar(selected);else if(k==='Enter'&&e.target===canvas)launch();
  keys[k]=true;wake();

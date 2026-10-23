@@ -56,10 +56,12 @@ test("space bridge only accepts known lessons, assignments and supported destina
     validSpaceAction({ type: "topic", id: "foreign-assignment" }, data),
     false,
   );
-  assert.ok(validSpaceAction({ type: "navigate", id: "Arena" }, data));
+  assert.ok(validSpaceAction({ type: "navigate", id: "Progress" }, data));
+  assert.ok(validSpaceAction({ type: "navigate", id: "Calculator" }, data));
   for (const value of [
     null,
     { type: "navigate", id: "Teacher" },
+    { type: "navigate", id: "Arena" },
     { type: "navigate", id: "https://example.com" },
     { type: "lesson", id: 12 },
     { type: "delete", id: "" },
