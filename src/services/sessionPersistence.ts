@@ -21,12 +21,16 @@ export class SessionPersistence implements SessionStore {
       options.authKey,
       `${options.authKey}-code-verifier`,
       `${options.authKey}-user`,
+      `${options.authKey}-recovery`,
     ]);
   }
   private run<T>(action: () => Promise<T>): Promise<T> {
     const job = this.queue.then(action);
     this.queue = job.catch(() => {});
     return job;
+  }
+  get authKey() {
+    return this.options.authKey;
   }
   async remembers() {
     const value = await this.options.preferences.getItem(
@@ -43,12 +47,21 @@ export class SessionPersistence implements SessionStore {
       for (const key of this.keys) {
         const value = await from.getItem(key);
         if (value !== null) await to.setItem(key, value);
-        await other.removeItem(key);
+        else await to.removeItem(key);
       }
       await this.options.preferences.setItem(
         this.options.preferenceKey,
         String(remember),
       );
+      for (const key of this.keys) await other.removeItem(key);
+    });
+  }
+  clear() {
+    return this.run(async () => {
+      for (const key of this.keys) {
+        await this.options.durable.removeItem(key);
+        await this.options.temporary.removeItem(key);
+      }
     });
   }
   getItem(key: string) {

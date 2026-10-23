@@ -51,8 +51,10 @@ export function authFailure(error: unknown): AuthFlowError {
     email_address_invalid: "Проверьте адрес электронной почты.",
     validation_failed: "Проверьте почту и пароль.",
     weak_password: "Выберите более надёжный пароль.",
-    user_already_exists: "Этот email уже зарегистрирован. Войдите в аккаунт.",
-    email_exists: "Этот email уже зарегистрирован. Войдите в аккаунт.",
+    user_already_exists:
+      "Не удалось создать аккаунт. Попробуйте войти или восстановить пароль.",
+    email_exists:
+      "Не удалось создать аккаунт. Попробуйте войти или восстановить пароль.",
     invalid_credentials: "Неверная почта или пароль.",
     email_address_not_authorized:
       "Сервис пока не может отправить письмо на этот адрес. Обратитесь к администратору Espada.",
@@ -60,6 +62,9 @@ export function authFailure(error: unknown): AuthFlowError {
       "Отправка писем временно ограничена. Подождите и попробуйте снова.",
     over_request_rate_limit:
       "Слишком много попыток. Подождите и попробуйте снова.",
+    same_password: "Укажите пароль, который отличается от прежнего.",
+    session_not_found: "Сессия завершилась. Войдите снова.",
+    refresh_token_not_found: "Сессия завершилась. Войдите снова.",
     otp_expired: "Код неверный или устарел. Запросите новый.",
     email_provider_disabled: "Регистрация по почте временно недоступна.",
     signup_disabled: "Регистрация временно недоступна.",

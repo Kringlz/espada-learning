@@ -49,6 +49,11 @@ export async function progressRPC(
     throw Error(
       "История занятий требует подключения к серверу. Локальная демонстрация её не подменяет.",
     );
+  const session = await backend.auth.getSession();
+  if (session.error || session.data.session?.user.id !== actor)
+    throw Error(
+      "Сессия изменилась. Войдите в исходный аккаунт для отправки данных.",
+    );
   const { data, error } = await deadline((signal) =>
     Promise.resolve(backend!.rpc(name, args).abortSignal(signal)),
   );

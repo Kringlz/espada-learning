@@ -19,3 +19,6 @@ supabase/.temp/
 *.mobileprovision
 # Original private project brief remains local; README documents the public project.
 docs/PROJECT_BRIEF.md
+
+# Public release export
+dist-public/

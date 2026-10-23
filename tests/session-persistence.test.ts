@@ -75,3 +75,81 @@ test("storage failures reject login persistence changes and do not poison subseq
   await a.setRemember(false);
   assert.equal(await a.getItem("auth"), "token");
 });
+
+test("a reload reuses tab storage; a new tab does not restore temporary login", async () => {
+  const x = make(),
+    tab = memorySessionStore();
+  const a = x.create(tab);
+  await a.setRemember(false);
+  await a.setItem("auth", "temporary");
+  assert.equal(await x.create(tab).getItem("auth"), "temporary");
+  assert.equal(await x.create().getItem("auth"), null);
+  assert.equal(await x.durable.getItem("auth"), null);
+});
+test("changing mode never resurrects an orphan token from the destination", async () => {
+  const x = make(),
+    tab = memorySessionStore(),
+    a = x.create(tab);
+  await x.durable.setItem("auth", "old-account");
+  await a.setRemember(true);
+  assert.equal(await a.getItem("auth"), null);
+  await a.setItem("auth", "new-account");
+  await a.setRemember(false);
+  assert.equal(await x.durable.getItem("auth"), null);
+  assert.equal(await a.getItem("auth"), "new-account");
+});
+test("explicit clear removes session, verifier, user, recovery and leaves learning outbox intact", async () => {
+  const x = make(),
+    tab = memorySessionStore(),
+    a = x.create(tab);
+  for (const key of [
+    "auth",
+    "auth-code-verifier",
+    "auth-user",
+    "auth-recovery",
+  ]) {
+    await x.durable.setItem(key, "old");
+    await tab.setItem(key, "temporary");
+  }
+  await tab.setItem("espada.pending.alice", "unsent");
+  await a.clear();
+  for (const key of [
+    "auth",
+    "auth-code-verifier",
+    "auth-user",
+    "auth-recovery",
+  ]) {
+    assert.equal(await tab.getItem(key), null);
+    assert.equal(await x.durable.getItem(key), null);
+  }
+  assert.equal(await tab.getItem("espada.pending.alice"), "unsent");
+});
+
+test("a failed preference write keeps the source session readable for retry", async () => {
+  const durable = memorySessionStore(),
+    temporary = memorySessionStore(),
+    preferences = memorySessionStore();
+  let fail = false;
+  const a = new SessionPersistence({
+    durable,
+    temporary,
+    preferences: {
+      ...preferences,
+      async setItem(key, value) {
+        if (fail) throw Error("unavailable");
+        await preferences.setItem(key, value);
+      },
+    },
+    preferenceKey: "remember",
+    authKey: "auth",
+  });
+  await a.setRemember(true);
+  await a.setItem("auth", "token");
+  fail = true;
+  await assert.rejects(a.setRemember(false));
+  assert.equal(await a.getItem("auth"), "token");
+  fail = false;
+  await a.setRemember(false);
+  assert.equal(await durable.getItem("auth"), null);
+  assert.equal(await a.getItem("auth"), "token");
+});

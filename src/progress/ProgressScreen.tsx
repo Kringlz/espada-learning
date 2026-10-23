@@ -106,34 +106,27 @@ function StudentProgressContent({
     [editing, setEditing] = useState<ExternalWork | "new" | null>(null),
     [goal, setGoal] = useState(false);
   if (!data)
-    return (
-      <View style={{ gap: 16 }}>
-        <LoadState loading={loading} error={error} retry={refresh} />
-        {details && (
-          <Disclosure title="Учительские отчёты и освоение тем">
-            {details}
-          </Disclosure>
-        )}
-      </View>
-    );
+    return <LoadState loading={loading} error={error} retry={refresh} />;
   const a = activity(data, period),
     topics = topicSummary(data.runs),
     attention = topics.find((t) => t.attention);
   const adult = actor.role !== "student";
+  const section = { gap: 16, paddingVertical: 12 };
   return (
-    <View testID="student-progress" style={{ gap: 20 }}>
+    <View testID="student-progress" style={{ gap: 28 }}>
       {!!error && (
-        <Notice tone="error">
-          {error} Показаны ранее полученные данные. Нажмите «Обновить» для
-          повторной проверки.
-        </Notice>
+        <Notice tone="error">{error} · Показаны сохранённые данные.</Notice>
       )}
-      {!!previewURL && <Notice>{progressEnvironment}</Notice>}
+      {!!previewURL && (
+        <Txt size={12} color={colors.muted}>
+          Тестовый аккаунт · локальная база
+        </Txt>
+      )}
       <View
         style={{
           flexDirection: "row",
-          alignItems: "center",
           justifyContent: "space-between",
+          alignItems: "center",
           gap: 8,
           flexWrap: "wrap",
         }}
@@ -143,90 +136,72 @@ function StudentProgressContent({
           Обновить
         </Button>
       </View>
-      <Card>
-        <Txt size={24} weight="700">
-          Активность
-        </Txt>
+      <View style={section}>
         <Txt size={13} color={colors.muted}>
-          {date(a.start)} — {date(a.end)} · Бишкек, UTC+6
+          {date(a.start)} — {date(a.end)}
         </Txt>
-        {!data.observedSince ? (
-          <Txt>
-            История занятий ещё не собиралась. Она начнётся при следующем
-            открытии урока учеником.
-          </Txt>
-        ) : (
-          <>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 24 }}>
-              <View style={{ minWidth: 100, flex: 1 }}>
-                <Txt size={30} weight="700">
-                  {a.days.length}
-                  {period === "week" && data.goal?.days
-                    ? ` из ${data.goal.days}`
-                    : ""}
-                </Txt>
-                <Txt size={14}>дней занятий</Txt>
-              </View>
-              <View style={{ minWidth: 100, flex: 1 }}>
-                <Txt size={30} weight="700">
-                  {a.seconds > 0 && a.seconds < 60
-                    ? "< 1"
-                    : `≈ ${Math.round(a.seconds / 60)}`}
-                </Txt>
-                <Txt size={14}>активных минут</Txt>
-              </View>
-              <View style={{ minWidth: 100, flex: 1 }}>
-                <Txt size={30} weight="700">
-                  {a.correct} / {a.completed}
-                </Txt>
-                <Txt size={14}>верно / выполнено самостоятельно</Txt>
-              </View>
-            </View>
-            {a.days.length === 0 && (
-              <Txt>
-                {a.fullHistory
-                  ? "За выбранный период занятий не зафиксировано."
-                  : "В доступной части периода занятий не зафиксировано."}
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 24,
+            paddingVertical: 12,
+          }}
+        >
+          {[
+            {
+              value: data.observedSince
+                ? `${a.days.length}${period === "week" && data.goal?.days ? ` / ${data.goal.days}` : ""}`
+                : "—",
+              label: "дней занятий",
+            },
+            {
+              value: data.observedSince
+                ? a.seconds > 0 && a.seconds < 60
+                  ? "< 1"
+                  : `≈ ${Math.round(a.seconds / 60)}`
+                : "—",
+              label: "минут",
+            },
+            {
+              value: data.observedSince ? `${a.correct} / ${a.completed}` : "—",
+              label: "верных ответов",
+            },
+          ].map((item) => (
+            <View key={item.label} style={{ minWidth: 90, flex: 1, gap: 6 }}>
+              <Txt size={36} weight="500" color={colors.green}>
+                {item.value}
               </Txt>
-            )}
-            {!a.fullHistory && (
               <Txt size={13} color={colors.muted}>
-                Наблюдение с {date(data.observedSince)}. До этой даты активность
-                неизвестна.
+                {item.label}
               </Txt>
-            )}
-            {a.compare && (
-              <Txt size={14}>
-                За первые {a.compare.days} полных дней периода:{" "}
-                {a.compare.current} дней занятий; в предыдущем периоде —{" "}
-                {a.compare.previous}.
-              </Txt>
-            )}
-            <Disclosure title="Что учитывается">
-              <Txt size={14}>
-                Занятие — отправленный ответ или не менее 30 секунд
-                подтверждённой активности за день. Вход и открытие темы не
-                считаются. Время решения оценивается между действиями с паузой
-                не более минуты; просмотр — по воспроизведённым фрагментам без
-                перемотки и фонового простоя.
-              </Txt>
-              <Txt size={14}>
-                Видео: ≈ {Math.round(a.videoSeconds / 60)} мин · решение: ≈{" "}
-                {Math.round((a.seconds - a.videoSeconds) / 60)} мин.
-                Самостоятельные задачи — ответы в завершённых проверках.
-                Повторные наборы отмечены в темах.
-              </Txt>
-            </Disclosure>
-          </>
+            </View>
+          ))}
+        </View>
+        {!data.observedSince && (
+          <Txt color={colors.muted}>
+            Активность появится после первого занятия.
+          </Txt>
         )}
-        <Txt size={14}>
-          {data.goal?.days
-            ? `Цель: ${data.goal.days} дней в неделю · ${data.goal.authorName}`
-            : "Цель по дням не установлена"}
-        </Txt>
+        {data.observedSince && !a.fullHistory && (
+          <Txt size={12} color={colors.muted}>
+            История с {date(data.observedSince)}
+          </Txt>
+        )}
+        {a.compare && (
+          <Txt size={13} color={colors.muted}>
+            За {a.compare.days} полных дней: {a.compare.current} дней занятий ·
+            ранее {a.compare.previous}
+          </Txt>
+        )}
+        {!!data.goal?.days && (
+          <Txt size={13} color={colors.muted}>
+            Цель · {data.goal.days} дней в неделю
+          </Txt>
+        )}
         {adult && (
           <Button small secondary onPress={() => setGoal(!goal)}>
-            {goal ? "Закрыть" : "Изменить цель"}
+            {goal ? "Закрыть" : "Цель на неделю"}
           </Button>
         )}
         {goal && (
@@ -239,173 +214,159 @@ function StudentProgressContent({
             }}
           />
         )}
-      </Card>
-      <Card>
-        <Txt size={24} weight="700">
+        <Disclosure title="Об активности">
+          <Txt size={13}>
+            День занятий — ответ или от 30 секунд активности. Время
+            приблизительное, без фонового простоя. Верные ответы учитываются в
+            завершённых самостоятельных проверках. Даты — по времени Бишкека.
+          </Txt>
+          <Txt size={13}>
+            Видео: ≈ {Math.round(a.videoSeconds / 60)} мин · решение: ≈{" "}
+            {Math.round((a.seconds - a.videoSeconds) / 60)} мин.
+          </Txt>
+          {!!data.goal?.days && (
+            <Txt size={13}>Цель установил(а): {data.goal.authorName}</Txt>
+          )}
+        </Disclosure>
+      </View>
+      <View style={section}>
+        <Txt size={23} weight="500">
           Темы
         </Txt>
         {!topics.length && (
-          <Txt color={colors.muted}>
-            Завершённых проверок новых уроков пока нет.
-          </Txt>
+          <Txt color={colors.muted}>Пройденные проверки появятся здесь.</Txt>
         )}
         {topics.map((t) => (
-          <View key={t.topicId} style={{ gap: 6, paddingVertical: 8 }}>
-            <Txt size={18} weight="600">
-              {title(t.topicId)} · {t.last.correct}/{t.last.total}
-            </Txt>
-            <Txt size={14}>{t.status}</Txt>
-            <Txt size={13} color={colors.muted}>
-              {date(t.last.run.finishedAt!)} ·{" "}
-              {t.previous
-                ? `ранее ${t.previous.correct}/${t.previous.total}`
-                : "нет предыдущей сопоставимой проверки"}
-              {t.overlap ? ` · ${t.overlap} знакомых заданий` : ""}
-            </Txt>
-            <Disclosure title={`История попыток · ${t.history.length}`}>
-              <Txt>{t.status}</Txt>
-              <Txt size={14}>
-                Последняя: {date(t.last.run.finishedAt!)} · набор v
-                {t.last.version}
-                {t.previous
-                  ? ` · предыдущая: ${t.previous.correct}/${t.previous.total}`
-                  : " · сопоставимой предыдущей проверки нет"}
-              </Txt>
-              {!!t.overlap && (
-                <Txt size={14}>
-                  Знакомые задания: {t.overlap} из {t.last.total}. Повтор этого
-                  набора не подтверждает устойчивое освоение.
+          <View
+            key={t.topicId}
+            style={{
+              gap: 8,
+              paddingVertical: 16,
+              borderTopWidth: 1,
+              borderColor: colors.line,
+            }}
+          >
+            <View
+              style={{ flexDirection: "row", gap: 16, alignItems: "center" }}
+            >
+              <View style={{ flex: 1, gap: 6 }}>
+                <Txt size={18} weight="500">
+                  {title(t.topicId)}
                 </Txt>
-              )}
+                <Txt size={13} color={colors.muted}>
+                  {t.status}
+                </Txt>
+              </View>
+              <Txt size={26} weight="500" color={colors.green}>
+                {t.last.correct}/{t.last.total}
+              </Txt>
+            </View>
+            <Disclosure title={`Попытки · ${t.history.length}`}>
               {t.history.map((r) => (
-                <View
-                  key={r.id}
-                  style={{
-                    gap: 4,
-                    paddingVertical: 10,
-                    borderTopWidth: 1,
-                    borderColor: colors.line,
-                  }}
-                >
-                  <Txt weight="600">
-                    {date(r.run.finishedAt!)} · {r.correct}/{r.total} · v
+                <View key={r.id} style={{ gap: 5, paddingVertical: 8 }}>
+                  <Txt size={14}>
+                    {date(r.run.finishedAt!)} · {r.correct}/{r.total} · набор v
                     {r.version}
                   </Txt>
-                  <Txt size={13}>
+                  <Txt size={12} color={colors.muted}>
                     {r.archived
-                      ? "Старый результат; активность не восстановлена."
-                      : "Сохранено на сервере."}{" "}
-                    Тренировка: {Object.keys(r.run.practice).length} ответов, с
+                      ? "Из прежней истории · без данных об активности"
+                      : "Сохранено"}{" "}
+                    · тренировка: {Object.keys(r.run.practice).length} · с
                     подсказками:{" "}
-                    {Object.values(r.run.hints).filter((n) => n > 0).length}.
+                    {Object.values(r.run.hints).filter((n) => n > 0).length}
                   </Txt>
-                  <Txt size={13}>
-                    Первоначальный ответ:{" "}
-                    {r.run.initial
-                      ? `вариант ${r.run.initial.choice + 1}`
-                      : "нет"}
-                    ; повторный:{" "}
-                    {r.run.revisited
-                      ? `вариант ${r.run.revisited.choice + 1}`
-                      : "нет"}
-                    . Повторный вопрос не включён в самостоятельную проверку.
+                  <Txt size={12} color={colors.muted}>
+                    Первый ответ:{" "}
+                    {r.run.initial ? r.run.initial.choice + 1 : "—"} ·
+                    повторный:{" "}
+                    {r.run.revisited ? r.run.revisited.choice + 1 : "—"}
                   </Txt>
                 </View>
               ))}
+              {!!t.overlap && (
+                <Txt size={12} color={colors.muted}>
+                  Знакомых заданий: {t.overlap}. Повтор набора не подтверждает
+                  устойчивое освоение.
+                </Txt>
+              )}
             </Disclosure>
           </View>
         ))}
         {!!data.legacy.length && (
-          <Disclosure
-            title={`Ранее сохранённые проверки · ${data.legacy.length}`}
-          >
-            <Txt size={13}>
-              Сохранённые результаты прежних модулей. По ним не
-              восстанавливаются время и дни занятий.
-            </Txt>
+          <Disclosure title={`Прежние проверки · ${data.legacy.length}`}>
             {data.legacy.map((r) => (
               <Txt key={r.id} size={14}>
-                {date(r.at)} · {r.title} · {r.correct}/{r.total} · {r.source}
+                {date(r.at)} · {r.title} · {r.correct}/{r.total}
               </Txt>
             ))}
           </Disclosure>
         )}
-      </Card>
-      <Card>
-        <View
-          style={{
-            gap: 8,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-          }}
-        >
-          <Txt size={24} weight="700">
-            Работы
-          </Txt>
-          {adult && (
-            <Button small onPress={() => setEditing("new")}>
-              Добавить результат
-            </Button>
+      </View>
+      {(adult || data.works.length > 0) && (
+        <View style={section}>
+          <View
+            style={{
+              gap: 8,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+            }}
+          >
+            <Txt size={23} weight="500">
+              Школьные работы
+            </Txt>
+            {adult && (
+              <Button small onPress={() => setEditing("new")}>
+                Добавить
+              </Button>
+            )}
+          </View>
+          {editing && (
+            <WorkEditor
+              key={typeof editing === "string" ? "new" : editing.id}
+              studentId={studentId}
+              work={editing === "new" ? undefined : editing}
+              close={() => setEditing(null)}
+              done={() => {
+                setEditing(null);
+                refresh();
+              }}
+            />
+          )}
+          {!data.works.length && <Txt color={colors.muted}>Пока нет работ</Txt>}
+          <WorkComparisons works={data.works} />
+          {data.works.slice(0, 5).map((w) => (
+            <WorkRow
+              key={w.id}
+              work={w}
+              edit={() => setEditing(w)}
+              refresh={refresh}
+              data={data}
+            />
+          ))}
+          {data.works.length > 5 && (
+            <Disclosure title={`Все работы · ${data.works.length}`}>
+              {data.works.slice(5).map((w) => (
+                <WorkRow
+                  key={w.id}
+                  work={w}
+                  edit={() => setEditing(w)}
+                  refresh={refresh}
+                  data={data}
+                />
+              ))}
+            </Disclosure>
           )}
         </View>
-        <Txt size={13} color={colors.muted}>
-          Школьные работы · отдельно от проверок приложения
-        </Txt>
-        {editing && (
-          <WorkEditor
-            key={typeof editing === "string" ? "new" : editing.id}
-            studentId={studentId}
-            work={editing === "new" ? undefined : editing}
-            close={() => setEditing(null)}
-            done={() => {
-              setEditing(null);
-              refresh();
-            }}
-          />
-        )}
-        {!data.works.length && (
-          <Txt>Школьные результаты пока не добавлены.</Txt>
-        )}
-        <WorkComparisons works={data.works} />
-        {data.works.slice(0, 5).map((w) => (
-          <WorkRow
-            key={w.id}
-            work={w}
-            edit={() => setEditing(w)}
-            refresh={refresh}
-            data={data}
-          />
-        ))}
-        {data.works.length > 5 && (
-          <Disclosure title={`Все работы · ${data.works.length}`}>
-            {data.works.slice(5).map((w) => (
-              <WorkRow
-                key={w.id}
-                work={w}
-                edit={() => setEditing(w)}
-                refresh={refresh}
-                data={data}
-              />
-            ))}
-          </Disclosure>
-        )}
-      </Card>
+      )}
       {attention && (
-        <Notice>
-          Следующий шаг: повторить «{title(attention.topicId)}». Две последние
-          сопоставимые проверки ниже 70%: {attention.previous!.correct}/
-          {attention.previous!.total} и {attention.last.correct}/
-          {attention.last.total}. Затем стоит проверить себя на другом наборе
-          заданий.
-        </Notice>
+        <Txt size={14} color={colors.green}>
+          Стоит повторить · {title(attention.topicId)}
+        </Txt>
       )}
-      {!!details && (
-        <Disclosure title="Учительские отчёты и освоение тем">
-          {details}
-        </Disclosure>
-      )}
+      {!!details && <Disclosure title="Отчёты учителя">{details}</Disclosure>}
     </View>
   );
 }

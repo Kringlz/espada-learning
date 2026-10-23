@@ -26,8 +26,8 @@ jobs:
       # protects data). Never put service-role keys or SMTP passwords here.
       # Repository variables, if set, override these defaults.
       EXPO_PUBLIC_DATA_MODE: ${{ vars.EXPO_PUBLIC_DATA_MODE || 'supabase' }}
-      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://anugktopawgukdxhqvze.supabase.co' }}
-      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_JePCMPnuVbjTg6ZmGmVfLg_6Hq7SjO1' }}
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://kjijtninzvphymzwnmqm.supabase.co' }}
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable__qM0ZNJti-eZXsQHo87XEA_Oi5QqQTg' }}
       APP_ENV: github-pages
     steps:
       - uses: actions/checkout@v6
@@ -90,7 +90,7 @@ jobs:
       - run: sh scripts/test-database.sh
 
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/codex/unified-local-20261023'))
     needs: [build, database]
     runs-on: ubuntu-latest
     timeout-minutes: 10

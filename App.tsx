@@ -1,14 +1,8 @@
 import { lessonFromHash } from "./src/course/navigation";
 import { SpaceBackdrop } from "./src/components/SpaceBackdrop";
+import { AuthScreen } from "./src/screens/Auth";
 import { Arena } from "./src/arena/Arena";
 import { Calculator } from "./src/tools/Calculator";
-import {
-  registrationRoles,
-  RegistrationRole,
-  isRegistrationRole,
-} from "./src/services/registration";
-import { AuthFlowError } from "./src/services/authFlow";
-import { Disclosure } from "./src/components/ui";
 import { StreakProvider } from "./src/engagement/StreakContext";
 import { ClarityControls } from "./src/components/ClarityControls";
 import { LessonFocus, FocusedLesson } from "./src/components/LessonFocus";
@@ -28,7 +22,6 @@ import { CourseProgressProvider } from "./src/course/storage";
 import { ScreenAnchor, ScreenScroll } from "./src/components/ScreenScroll";
 import { isLessonPreview } from "./src/lessons/service";
 import { ReportDetail } from "./src/screens/Reports";
-import { errorMessage } from "./src/i18n/errors";
 import { translate } from "./src/i18n";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -40,26 +33,13 @@ import {
   Platform,
   KeyboardAvoidingView,
   BackHandler,
-  ActivityIndicator,
-  StatusBar,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { LearningProvider, useLearning } from "./src/services/context";
-import { Role } from "./src/core/types";
 import { Home, Learn, Progress, Profile } from "./src/screens/Student";
 import { Staff } from "./src/screens/Staff";
 import { Lesson } from "./src/screens/Lesson";
-import {
-  Txt,
-  Icon,
-  Button,
-  Card,
-  Pill,
-  Field,
-  colors,
-  styles,
-} from "./src/components/ui";
-import { mode, getRememberMe } from "./src/services/supabase";
+import { Txt, Icon, Button, Card, Pill } from "./src/components/ui";
 const navIcons: Record<string, any> = {
   Home: "compass",
   Arena: "zap",
@@ -82,7 +62,13 @@ export default function App() {
       <ClarityThemeProvider>
         <SoundProvider>
           <SafeAreaProvider>
-            <LearningProvider fallback={(props) => <Welcome {...props} />}>
+            <LearningProvider
+              fallback={(props) => (
+                <VideoLessonTheme>
+                  <AuthScreen {...props} />
+                </VideoLessonTheme>
+              )}
+            >
               <Workspace />
             </LearningProvider>
           </SafeAreaProvider>
@@ -101,518 +87,6 @@ function Workspace() {
         </RewardsProvider>
       </CourseProgressProvider>
     </StreakProvider>
-  );
-}
-const roleLabels: Record<RegistrationRole, string> = {
-  student: "Ученик",
-  parent: "Родитель",
-};
-function Welcome({
-  loading,
-  error,
-  retry,
-  login,
-  hasSession,
-  pendingRegistration,
-  registerProfile,
-  confirmEmail,
-  resendConfirmation,
-  emailCooldown,
-  leaveRegistration,
-}: {
-  loading: boolean;
-  error: string | null;
-  retry: () => void;
-  login: (e: string, p: string, remember: boolean) => Promise<void>;
-  hasSession: boolean;
-  pendingRegistration: {
-    name: string;
-    role: Role;
-    code?: string;
-    email?: string;
-  } | null;
-  registerProfile: (input: {
-    name: string;
-    role: Role;
-    code?: string;
-    email?: string;
-    password?: string;
-    remember?: boolean;
-  }) => Promise<"ready" | "confirmEmail">;
-  confirmEmail: (email: string, token: string) => Promise<void>;
-  resendConfirmation: (email: string) => Promise<void>;
-  emailCooldown: (email: string) => Promise<number>;
-  leaveRegistration: () => Promise<void>;
-}) {
-  const { colors, styles } = useUITheme();
-  const [screen, setScreen] = useState<"login" | "register" | "confirm">(
-    "login",
-  );
-  const [otp, setOtp] = useState("");
-  const [email, setEmail] = useState("");
-  const [resendIn, setResendIn] = useState(0);
-  const deadline = useRef(0);
-  const syncCooldown = useCallback(async () => {
-    const seconds = await emailCooldown(email);
-    deadline.current = Date.now() + seconds * 1000;
-    setResendIn(seconds);
-  }, [email, emailCooldown]);
-  useEffect(() => {
-    void syncCooldown();
-  }, [syncCooldown]);
-  useEffect(() => {
-    const timer = setInterval(
-      () =>
-        setResendIn(
-          Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)),
-        ),
-      1000,
-    );
-    return () => clearInterval(timer);
-  }, []);
-  const [notice, setNotice] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
-  const rememberTouched = useRef(false);
-  useEffect(() => {
-    let live = true;
-    void getRememberMe()
-      .then((value) => {
-        if (live && !rememberTouched.current) setRemember(value);
-      })
-      .catch(() => {});
-    return () => {
-      live = false;
-    };
-  }, []);
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<RegistrationRole>("student");
-  const [code, setCode] = useState("");
-  const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
-  const rememberControl = (
-    <Pressable
-      accessibilityRole="checkbox"
-      accessibilityLabel="Запомнить меня"
-      accessibilityState={{ checked: remember, disabled: busy }}
-      aria-checked={remember}
-      disabled={busy}
-      onPress={() => {
-        rememberTouched.current = true;
-        setRemember((v) => !v);
-      }}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        minHeight: 48,
-      }}
-    >
-      <Icon name={remember ? "check-square" : "square"} color={colors.green} />
-      <Txt size={16}>Запомнить меня</Txt>
-    </Pressable>
-  );
-
-  useEffect(() => {
-    if (hasSession) setScreen("register");
-  }, [hasSession]);
-  useEffect(() => {
-    if (pendingRegistration) {
-      setName(pendingRegistration.name);
-      setRole(
-        isRegistrationRole(pendingRegistration.role)
-          ? pendingRegistration.role
-          : "student",
-      );
-      setCode(pendingRegistration.code ?? "");
-      if (pendingRegistration.email && !hasSession) {
-        setEmail(pendingRegistration.email);
-        setScreen("confirm");
-      }
-    }
-  }, [pendingRegistration, hasSession]);
-  const roleButtons = (
-    <View style={[styles.row, { flexWrap: "wrap" }]}>
-      {registrationRoles.map((r) => (
-        <Button
-          key={r}
-          small
-          disabled={busy}
-          secondary={role !== r}
-          onPress={() => setRole(r)}
-        >
-          {roleLabels[r]}
-        </Button>
-      ))}
-    </View>
-  );
-  const submitRegister = (extra: { email?: string; password?: string }) => {
-    setBusy(true);
-    setNotice("");
-    setMessage("");
-    void registerProfile({
-      remember,
-      name: name.trim(),
-      role,
-      code: code.trim(),
-      ...extra,
-    })
-      .then((outcome) => {
-        if (outcome === "confirmEmail") {
-          setOtp("");
-          void syncCooldown();
-          setScreen("confirm");
-        }
-      })
-      .catch((e) => setMessage(errorMessage(e)))
-      .finally(() => {
-        void syncCooldown();
-        setBusy(false);
-      });
-  };
-  const registerDisabled = busy || !name.trim() || !code.trim();
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 24,
-        }}
-      >
-        <View style={{ maxWidth: 480, width: "100%", gap: 24 }}>
-          <View style={[styles.row, { justifyContent: "space-between" }]}>
-            <Brand />
-            <View style={[styles.row, { gap: 8 }]}>
-              <ClarityControls />
-            </View>
-          </View>
-          <Card style={{ gap: 20, marginTop: 16 }}>
-            <Txt size={30} weight="600">
-              {screen === "confirm"
-                ? "Проверьте почту"
-                : screen === "register"
-                  ? "Начнём знакомство"
-                  : "Рады видеть вас"}
-            </Txt>
-            {loading ? (
-              <ActivityIndicator color={colors.green} />
-            ) : (
-              <>
-                {Boolean(error || message) && (
-                  <Txt color={colors.red} accessibilityRole="alert">
-                    {message || error}
-                  </Txt>
-                )}
-                {!!notice && (
-                  <Txt color={colors.green} accessibilityRole="status">
-                    {notice}
-                  </Txt>
-                )}
-                {hasSession && (
-                  <Button
-                    small
-                    secondary
-                    disabled={busy}
-                    onPress={() => {
-                      setBusy(true);
-                      void leaveRegistration()
-                        .then(() => {
-                          setScreen("login");
-                          setEmail("");
-                          setPassword("");
-                          setMessage("");
-                          setNotice("");
-                        })
-                        .catch((e) => setMessage(errorMessage(e)))
-                        .finally(() => setBusy(false));
-                    }}
-                  >
-                    Другой аккаунт
-                  </Button>
-                )}
-                {mode === "supabase" ? (
-                  <>
-                    {!hasSession && screen !== "confirm" && (
-                      <View style={[styles.row, { gap: 8, flexWrap: "wrap" }]}>
-                        <Button
-                          small
-                          secondary={screen !== "login"}
-                          onPress={() => {
-                            setMessage("");
-                            setNotice("");
-                            setScreen("login");
-                          }}
-                        >
-                          Войти
-                        </Button>
-                        <Button
-                          small
-                          secondary={screen !== "register"}
-                          onPress={() => {
-                            setMessage("");
-                            setNotice("");
-                            setScreen("register");
-                          }}
-                        >
-                          Создать аккаунт
-                        </Button>
-                      </View>
-                    )}
-                    {screen === "confirm" && !hasSession ? (
-                      <>
-                        <Txt color={colors.muted}>
-                          {`Код подтверждения для ${email}`}
-                        </Txt>
-                        <Field
-                          editable={!busy}
-                          label="Код из письма"
-                          numeric
-                          maxLength={10}
-                          value={otp}
-                          onChangeText={(s) => setOtp(s.replace(/\D/g, ""))}
-                        />
-                        <Button
-                          fullWidth
-                          disabled={busy || otp.length < 6}
-                          onPress={() => {
-                            setBusy(true);
-                            setNotice("");
-                            setMessage("");
-                            void confirmEmail(email.trim(), otp)
-                              .catch((e) => setMessage(errorMessage(e)))
-                              .finally(() => setBusy(false));
-                          }}
-                        >
-                          Подтвердить
-                        </Button>
-                        <Button
-                          secondary
-                          disabled={busy || resendIn > 0}
-                          onPress={() => {
-                            setBusy(true);
-                            setNotice("");
-                            setMessage("");
-                            void resendConfirmation(email.trim())
-                              .then(() => {
-                                setNotice("Запрос принят. Проверьте почту.");
-                              })
-                              .catch((e) => setMessage(errorMessage(e)))
-                              .finally(() => {
-                                void syncCooldown();
-                                setBusy(false);
-                              });
-                          }}
-                        >
-                          {resendIn > 0
-                            ? `Отправить код ещё раз (${resendIn} с)`
-                            : "Отправить код ещё раз"}
-                        </Button>
-                        <Disclosure title="Письмо не пришло?" icon="mail">
-                          <Txt color={colors.muted}>
-                            Проверьте адрес и папку «Спам». Если кодов
-                            несколько, используйте последний. Повторная отправка
-                            доступна через минуту.
-                          </Txt>
-                        </Disclosure>
-                        <Button
-                          secondary
-                          disabled={busy}
-                          onPress={() => {
-                            setNotice("");
-                            setMessage("");
-                            setOtp("");
-                            setScreen("register");
-                          }}
-                        >
-                          Изменить email
-                        </Button>
-                      </>
-                    ) : screen === "login" ? (
-                      <>
-                        <Field
-                          editable={!busy}
-                          label="Email"
-                          email
-                          value={email}
-                          onChangeText={setEmail}
-                        />
-                        <Field
-                          editable={!busy}
-                          label="Пароль"
-                          secure
-                          value={password}
-                          onChangeText={setPassword}
-                        />
-                        {rememberControl}
-                        <Button
-                          fullWidth
-                          disabled={busy || !email || !password}
-                          onPress={() => {
-                            setBusy(true);
-                            setNotice("");
-                            setMessage("");
-                            void login(email.trim(), password, remember)
-                              .catch((e) => {
-                                const m = errorMessage(e);
-                                if (
-                                  e instanceof AuthFlowError &&
-                                  e.code === "email_not_confirmed"
-                                ) {
-                                  setOtp("");
-                                  setScreen("confirm");
-                                  void syncCooldown();
-                                  return;
-                                }
-                                setMessage(m);
-                              })
-                              .finally(() => setBusy(false));
-                          }}
-                        >
-                          Войти
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Txt color={colors.muted}>
-                          {hasSession
-                            ? "Почта подтверждена. Завершите регистрацию."
-                            : role === "student"
-                              ? "Код группы можно получить у учителя."
-                              : role === "parent"
-                                ? "Код ученика есть в профиле ребёнка."
-                                : "Создайте свою группу после регистрации."}
-                        </Txt>
-                        {roleButtons}
-                        <Field
-                          editable={!busy}
-                          label="Имя"
-                          value={name}
-                          onChangeText={setName}
-                        />
-                        {!hasSession && (
-                          <>
-                            <Field
-                              editable={!busy}
-                              label="Email"
-                              email
-                              value={email}
-                              onChangeText={setEmail}
-                            />
-                            <Field
-                              editable={!busy}
-                              label="Пароль · минимум 8 символов"
-                              secure
-                              value={password}
-                              onChangeText={setPassword}
-                            />
-                            {rememberControl}
-                          </>
-                        )}
-                        {role === "student" && (
-                          <Field
-                            editable={!busy}
-                            label="Код группы"
-                            value={code}
-                            onChangeText={setCode}
-                          />
-                        )}
-                        {role === "parent" && (
-                          <Field
-                            editable={!busy}
-                            label="Код ученика"
-                            value={code}
-                            onChangeText={setCode}
-                          />
-                        )}
-                        <Button
-                          fullWidth
-                          disabled={
-                            registerDisabled ||
-                            (!hasSession &&
-                              (!email || !password || resendIn > 0))
-                          }
-                          onPress={() =>
-                            submitRegister(
-                              hasSession
-                                ? {}
-                                : { email: email.trim(), password },
-                            )
-                          }
-                        >
-                          {hasSession
-                            ? "Завершить регистрацию"
-                            : resendIn > 0
-                              ? `Повторить через ${resendIn} с`
-                              : "Зарегистрироваться"}
-                        </Button>
-                      </>
-                    )}
-                  </>
-                ) : screen === "login" ? (
-                  <>
-                    <Button onPress={retry}>Retry loading local demo</Button>
-                    <Button
-                      secondary
-                      onPress={() => {
-                        setMessage("");
-                        setNotice("");
-                        setScreen("register");
-                      }}
-                    >
-                      Зарегистрироваться (демо)
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Txt color={colors.muted}>
-                      Демо-регистрация создаёт новый синтетический аккаунт на
-                      этом устройстве.
-                    </Txt>
-                    {roleButtons}
-                    <Field label="Имя" value={name} onChangeText={setName} />
-                    {role === "student" && (
-                      <Field
-                        editable={!busy}
-                        label="Код группы"
-                        value={code}
-                        onChangeText={setCode}
-                      />
-                    )}
-                    {role === "parent" && (
-                      <Field
-                        editable={!busy}
-                        label="Код ученика"
-                        value={code}
-                        onChangeText={setCode}
-                      />
-                    )}
-                    <Button
-                      disabled={registerDisabled}
-                      onPress={() => submitRegister({})}
-                    >
-                      Зарегистрироваться
-                    </Button>
-                    <Button
-                      secondary
-                      onPress={() => {
-                        setMessage("");
-                        setNotice("");
-                        setScreen("login");
-                      }}
-                    >
-                      Назад
-                    </Button>
-                  </>
-                )}
-              </>
-            )}
-          </Card>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
   );
 }
 function Shell() {
@@ -1157,6 +631,11 @@ function Shell() {
                 >
                   Retry pending work
                 </Button>
+                {inSpace && (
+                  <Button small secondary onPress={() => navigate("Profile")}>
+                    Профиль
+                  </Button>
+                )}
               </View>
             )}
             {Boolean(error) && (

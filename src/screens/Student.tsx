@@ -171,7 +171,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           ))}
       </Disclosure>
       {mode === "supabase" && (
-        <Button secondary onPress={() => void signOut()}>
+        <Button secondary onPress={() => void signOut().catch(() => {})}>
           Sign out
         </Button>
       )}

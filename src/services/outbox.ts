@@ -8,7 +8,7 @@ export class LearningOutbox {
   private queue: Promise<unknown> = Promise.resolve();
   constructor(
     private storage: PrivateStorage,
-    private send: (command: Command) => Promise<State>,
+    private send: (command: Command, actorId: string) => Promise<State>,
   ) {}
   private key(actorId: string) {
     return `espada.pending.${actorId}`;
@@ -30,7 +30,7 @@ export class LearningOutbox {
         command.type !== "submitAttempt" &&
         command.type !== "saveVideoPosition"
       )
-        return this.send(command);
+        return this.send(command, actorId);
       const pending = await this.read(actorId);
       const duplicate = pending.some(
         (c) =>
@@ -52,7 +52,7 @@ export class LearningOutbox {
     const pending = await this.read(actorId);
     let state: State | undefined;
     while (pending.length) {
-      state = await this.send(pending[0]);
+      state = await this.send(pending[0], actorId);
       pending.shift();
       if (pending.length)
         await this.storage.setItem(this.key(actorId), JSON.stringify(pending));

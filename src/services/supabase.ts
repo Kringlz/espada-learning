@@ -32,7 +32,7 @@ export const mode =
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const project = url ? new URL(url).hostname.split(".")[0] : "unconfigured";
-const authStorage = new SessionPersistence({
+export const authStorage = new SessionPersistence({
   durable:
     Platform.OS === "web"
       ? {
