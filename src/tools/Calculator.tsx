@@ -1,49 +1,44 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Keyboard, Pressable, ScrollView, TextInput, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Reference } from "./Reference";
 import { ChoiceTabs } from "../components/ChoiceTabs";
-import {
-  Button,
-  Card,
-  Disclosure,
-  Icon,
-  Txt,
-  useUITheme,
-} from "../components/ui";
+import { Button, Card, Icon, Txt, useUITheme } from "../components/ui";
 import { useLearning } from "../services/context";
 import { calculate, formatNumber } from "./arithmetic";
 
 type Entry = { expression: string; result: number };
-const keys = [
-  "(",
-  ")",
-  "√",
-  "AC",
-  "7",
-  "8",
-  "9",
-  "÷",
-  "4",
-  "5",
-  "6",
-  "×",
-  "1",
-  "2",
-  "3",
-  "−",
-  "0",
-  ",",
-  "%",
-  "+",
-  "π",
-  "^",
-  "⌫",
-  "=",
+const keyRows = [
+  ["(", ")", "√", "AC"],
+  ["7", "8", "9", "÷"],
+  ["4", "5", "6", "×"],
+  ["1", "2", "3", "−"],
+  ["0", ",", "%", "+"],
+  ["π", "^", "⌫", "="],
 ];
+const keyLabels: Record<string, string> = {
+  "(": "Открыть скобку",
+  ")": "Закрыть скобку",
+  "√": "Квадратный корень",
+  AC: "Очистить выражение",
+  "÷": "Разделить",
+  "×": "Умножить",
+  "−": "Вычесть",
+  ",": "Десятичная запятая",
+  "%": "Процент",
+  "+": "Прибавить",
+  π: "Число пи",
+  "^": "Возвести в степень",
+  "⌫": "Удалить символ",
+  "=": "Вычислить",
+};
 export function Calculator() {
-  const { colors } = useUITheme();
   const { actor } = useLearning();
+  // A new account gets fresh input and history even while storage is loading.
+  return <AccountCalculator key={actor.id} actorId={actor.id} />;
+}
+function AccountCalculator({ actorId }: { actorId: string }) {
+  const { colors } = useUITheme();
   const [view, setView] = useState<"calculator" | "reference" | "history">(
     "calculator",
   );
@@ -54,7 +49,9 @@ export function Calculator() {
   const [ready, setReady] = useState(false);
   const queue = useRef(Promise.resolve());
   const input = useRef<TextInput>(null);
-  const key = `espada.calculator.v1:${actor.id}`;
+  const resultScroll = useRef<ScrollView>(null);
+  const [resultWidth, setResultWidth] = useState(0);
+  const key = `espada.calculator.v1:${actorId}`;
   useEffect(() => {
     let live = true;
     void AsyncStorage.getItem(key)
@@ -116,6 +113,8 @@ export function Calculator() {
     }
   }
   function press(value: string) {
+    input.current?.blur();
+    Keyboard.dismiss();
     setMessage("");
     if (value === "=") return solve();
     if (value === "AC") return setExpression("");
@@ -123,7 +122,7 @@ export function Calculator() {
     setExpression((s) => (s + (value === "√" ? "sqrt(" : value)).slice(0, 240));
   }
   return (
-    <View style={{ gap: 18 }}>
+    <View testID="calculator" style={{ gap: 18, minWidth: 0 }}>
       <Txt size={28} weight="800">
         Инструменты
       </Txt>
@@ -140,7 +139,13 @@ export function Calculator() {
       {view === "reference" && <Reference />}
       {view === "calculator" && (
         <Card
-          style={{ width: "100%", maxWidth: 480, alignSelf: "center", gap: 14 }}
+          style={{
+            width: "100%",
+            maxWidth: 480,
+            minWidth: 0,
+            alignSelf: "center",
+            gap: 14,
+          }}
         >
           <View
             style={{
@@ -160,98 +165,103 @@ export function Calculator() {
               placeholderTextColor={colors.muted}
               autoCapitalize="none"
               autoCorrect={false}
+              returnKeyType="done"
               onSubmitEditing={solve}
               style={{
+                width: "100%",
+                minWidth: 0,
                 color: colors.ink,
                 fontSize: 21,
                 minHeight: 48,
                 textAlign: "right",
               }}
             />
-            <Txt
-              size={38}
-              weight="800"
-              style={{ textAlign: "right" }}
-              accessibilityLiveRegion="polite"
+            <ScrollView
+              ref={resultScroll}
+              testID="calculator-result-scroll"
+              horizontal
+              onLayout={(event) =>
+                setResultWidth(event.nativeEvent.layout.width)
+              }
+              onContentSizeChange={() =>
+                resultScroll.current?.scrollTo({ x: 0, animated: false })
+              }
+              contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: "flex-end",
+                alignItems: "center",
+              }}
+              style={{ minHeight: 54 }}
             >
-              {preview}
-            </Txt>
+              <Txt
+                testID="calculator-result"
+                size={
+                  resultWidth
+                    ? Math.min(
+                        38,
+                        Math.max(16, resultWidth / (preview.length * 0.64)),
+                      )
+                    : 38
+                }
+                weight="800"
+                numberOfLines={1}
+                selectable
+                style={{
+                  textAlign: "right",
+                  lineHeight: 54,
+                  fontVariant: ["tabular-nums"],
+                }}
+                accessibilityLabel={`Результат: ${preview}`}
+                accessibilityLiveRegion="polite"
+              >
+                {preview}
+              </Txt>
+            </ScrollView>
           </View>
           {!!message && (
             <Txt color={colors.red} size={14} accessibilityRole="alert">
               {message}
             </Txt>
           )}
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {keys.map((k) => (
-              <Pressable
-                key={k}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  k === "⌫"
-                    ? "Удалить символ"
-                    : k === "AC"
-                      ? "Очистить выражение"
-                      : k === "="
-                        ? "Вычислить"
-                        : k
-                }
-                disabled={!ready && k === "="}
-                onPress={() => press(k)}
-                style={({ pressed }) => ({
-                  width: "23%",
-                  flexGrow: 1,
-                  minHeight: 54,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: 14,
-                  backgroundColor:
-                    k === "="
-                      ? colors.primary
-                      : /^\d$/.test(k)
-                        ? colors.subtle
-                        : colors.light,
-                  opacity: pressed ? 0.65 : 1,
-                })}
-              >
-                <Txt
-                  size={23}
-                  weight="700"
-                  color={k === "=" ? colors.onPrimary : colors.ink}
-                >
-                  {k}
-                </Txt>
-              </Pressable>
+          <View testID="calculator-keypad" style={{ gap: 8 }}>
+            {keyRows.map((row, index) => (
+              <View key={index} style={{ flexDirection: "row", gap: 8 }}>
+                {row.map((k) => (
+                  <Pressable
+                    key={k}
+                    accessibilityRole="button"
+                    accessibilityLabel={keyLabels[k] ?? k}
+                    accessibilityState={{ disabled: !ready && k === "=" }}
+                    disabled={!ready && k === "="}
+                    onPress={() => press(k)}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      minWidth: 0,
+                      minHeight: 54,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      borderRadius: 14,
+                      backgroundColor:
+                        k === "="
+                          ? colors.primary
+                          : /^\d$/.test(k)
+                            ? colors.subtle
+                            : colors.light,
+                      opacity: pressed || (!ready && k === "=") ? 0.65 : 1,
+                    })}
+                  >
+                    <Txt
+                      size={23}
+                      weight="700"
+                      color={k === "=" ? colors.onPrimary : colors.ink}
+                    >
+                      {k}
+                    </Txt>
+                  </Pressable>
+                ))}
+              </View>
             ))}
           </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <Button
-              small
-              secondary
-              label="Подставить предыдущий ответ"
-              onPress={() => {
-                setExpression((s) => s + "ans");
-                input.current?.focus();
-              }}
-            >
-              Ans
-            </Button>
-            <Txt size={13} color={colors.muted}>
-              Предыдущий ответ
-            </Txt>
-          </View>
-          <Disclosure title="Как считать" icon="help-circle">
-            <Txt size={15}>
-              15% = 15 ÷ 100. Степень: 2^3. Между множителями ставь ×.
-            </Txt>
-          </Disclosure>
         </Card>
       )}
       {view === "history" && (
@@ -268,6 +278,7 @@ export function Calculator() {
               accessibilityRole="button"
               accessibilityLabel={`Повторить ${entry.expression}`}
               onPress={() => {
+                setMessage("");
                 setExpression(entry.expression);
                 setView("calculator");
               }}
@@ -278,10 +289,10 @@ export function Calculator() {
                 gap: 4,
               }}
             >
-              <Txt size={15} color={colors.muted}>
+              <Txt size={15} color={colors.muted} style={{ flexShrink: 1 }}>
                 {entry.expression}
               </Txt>
-              <Txt size={22} weight="700">
+              <Txt size={22} weight="700" style={{ flexShrink: 1 }}>
                 = {formatNumber(entry.result)}
               </Txt>
             </Pressable>
