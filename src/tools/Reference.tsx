@@ -1,220 +1,308 @@
-import React, { useState } from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
-import { Button, Card, Txt, useUITheme } from "../components/ui";
-import {
-  IllustrationKind,
-  MathIllustration,
-} from "../components/MathIllustrations";
-import { Formula } from "../math/Formula";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Keyboard, Pressable, TextInput, View } from "react-native";
+import { Icon, Txt, useUITheme } from "../components/ui";
+import { ScreenAnchor, ScreenScroll } from "../components/ScreenScroll";
+import { referenceItems, referenceTopics } from "./reference/data";
+import { searchReference } from "./reference/search";
+import { ReferenceRecord } from "./reference/ReferenceRecord";
+export { referenceItems } from "./reference/data";
 
-type Item = {
-  id: IllustrationKind;
-  title: string;
-  formula: string;
-  spoken: string;
-  explanation: string;
-  steps: { label: string; latex: string; spoken: string }[];
-};
-export const referenceItems: Item[] = [
-  {
-    id: "percent",
-    title: "Проценты",
-    formula: "\\frac{a\\cdot p}{100}",
-    spoken: "a умножить на p и разделить на 100",
-    explanation: "a — исходное значение, p — нужный процент.",
-    steps: [
-      {
-        label: "15% от 240",
-        latex: "\\frac{240\\cdot15}{100}=36",
-        spoken: "240 умножить на 15 и разделить на 100 равно 36",
-      },
-    ],
-  },
-  {
-    id: "mean",
-    title: "Среднее",
-    formula: "\\overline{x}=\\frac{x_1+\\cdots+x_n}{n}",
-    spoken: "Среднее равно сумме всех чисел, делённой на их количество",
-    explanation: "Сложи все значения и раздели на их количество.",
-    steps: [
-      {
-        label: "Числа: 7, 8, 9",
-        latex: "\\frac{7+8+9}{3}=8",
-        spoken: "7 плюс 8 плюс 9, всё разделить на 3, равно 8",
-      },
-    ],
-  },
-  {
-    id: "rectangle",
-    title: "Прямоугольник",
-    formula: "S=a\\cdot b",
-    spoken: "Площадь равна a умножить на b",
-    explanation:
-      "a и b — длины сторон. Площадь измеряется в квадратных единицах.",
-    steps: [
-      {
-        label: "Стороны: 8 см и 5 см",
-        latex: "S=8\\cdot5=40\\;\\text{см}^2",
-        spoken: "Площадь равна 40 квадратных сантиметров",
-      },
-    ],
-  },
-  {
-    id: "triangle",
-    title: "Треугольник",
-    formula: "S=\\frac{a\\cdot h}{2}",
-    spoken: "Площадь равна половине произведения основания a и высоты h",
-    explanation: "Высота h перпендикулярна основанию a.",
-    steps: [
-      {
-        label: "Основание: 6 см · высота: 4 см",
-        latex: "S=\\frac{6\\cdot4}{2}=12\\;\\text{см}^2",
-        spoken: "Площадь равна 12 квадратных сантиметров",
-      },
-    ],
-  },
-  {
-    id: "pythagoras",
-    title: "Гипотенуза",
-    formula: "c=\\sqrt{a^2+b^2}",
-    spoken:
-      "Гипотенуза c равна квадратному корню из суммы квадратов катетов a и b",
-    explanation:
-      "Только для прямоугольного треугольника. a и b — катеты, c — сторона напротив прямого угла.",
-    steps: [
-      {
-        label: "1. Возведи катеты в квадрат",
-        latex: "3^2=9,\\quad4^2=16",
-        spoken: "3 в квадрате равно 9, 4 в квадрате равно 16",
-      },
-      {
-        label: "2. Сложи и извлеки корень",
-        latex: "c=\\sqrt{9+16}=5",
-        spoken: "Гипотенуза равна корню из 25, то есть 5",
-      },
-    ],
-  },
-  {
-    id: "quadratic",
-    title: "Квадратное уравнение",
-    formula: "ax^2+bx+c=0",
-    spoken: "a x в квадрате плюс b x плюс c равно нулю",
-    explanation:
-      "a ≠ 0. Сначала найди D — дискриминант. Если D > 0 — два действительных корня; D = 0 — один; D < 0 — действительных корней нет.",
-    steps: [
-      {
-        label: "1. Дискриминант",
-        latex: "D=b^2-4ac",
-        spoken: "D равно b в квадрате минус 4 a c",
-      },
-      {
-        label: "2. Первый корень · при D ≥ 0",
-        latex: "x_1=\\frac{-b+\\sqrt{D}}{2a}",
-        spoken: "Первый корень: минус b плюс корень из D, всё разделить на 2 a",
-      },
-      {
-        label: "3. Второй корень · при D ≥ 0",
-        latex: "x_2=\\frac{-b-\\sqrt{D}}{2a}",
-        spoken:
-          "Второй корень: минус b минус корень из D, всё разделить на 2 a",
-      },
-      {
-        label: "Пример: a = 1, b = −5, c = 6",
-        latex: "D=25-24=1",
-        spoken: "В примере дискриминант равен 25 минус 24, то есть 1",
-      },
-      {
-        label: "Первый корень примера",
-        latex: "x_1=\\frac{5+1}{2}=3",
-        spoken: "Первый корень: 5 плюс 1, разделить на 2, равно 3",
-      },
-      {
-        label: "Второй корень примера",
-        latex: "x_2=\\frac{5-1}{2}=2",
-        spoken: "Второй корень: 5 минус 1, разделить на 2, равно 2",
-      },
-    ],
-  },
-];
+type Mode = "catalog" | "topic" | "search";
 export function Reference() {
-  const { colors } = useUITheme();
-  const wide = useWindowDimensions().width >= 800;
-  const [selected, setSelected] = useState<Item | null>(null);
-  const math = (latex: string, spoken: string, size = 24) => (
-    <Formula
-      latex={latex}
-      source={spoken}
-      size={size}
-      color={colors.ink}
-      display
-    />
+  const { colors, dark } = useUITheme();
+  const accent = dark ? "#A8D5B8" : "#326B4B";
+  const [query, setQuery] = useState("");
+  const [topic, setTopic] = useState<string>();
+  const [mode, setMode] = useState<Mode>("catalog");
+  const [width, setWidth] = useState(0);
+  const input = useRef<TextInput>(null);
+  const topicNodes = useRef<Record<string, View | null>>({});
+  const lastTopic = useRef<string | undefined>(undefined);
+  const previousMode = useRef<Mode>("catalog");
+  const toTop = useContext(ScreenScroll);
+  const toAnchor = useContext(ScreenAnchor);
+  useEffect(() => {
+    const returning = mode === "catalog" && previousMode.current !== "catalog";
+    previousMode.current = mode;
+    const frame = requestAnimationFrame(() => {
+      if (returning && lastTopic.current)
+        toAnchor(topicNodes.current[lastTopic.current]);
+      else if (mode !== "catalog" || returning) toTop();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mode, topic, toAnchor, toTop]);
+  const results = useMemo(
+    () =>
+      mode === "topic" ? searchReference("", topic) : searchReference(query),
+    [mode, topic, query],
   );
-  if (selected)
-    return (
-      <View style={{ gap: 16 }}>
-        <Button
-          small
-          secondary
-          icon="arrow-left"
-          onPress={() => setSelected(null)}
-        >
-          Все формулы
-        </Button>
-        <Card style={{ gap: 14 }}>
-          <Txt size={27} weight="800">
-            {selected.title}
-          </Txt>
-          <MathIllustration kind={selected.id} height={210} />
-          <View
-            style={{
-              backgroundColor: colors.light,
-              borderRadius: 18,
-              padding: 14,
-              alignItems: "center",
-            }}
-          >
-            {math(selected.formula, selected.spoken)}
-          </View>
-          <Txt size={16} color={colors.muted}>
-            {selected.explanation}
-          </Txt>
-        </Card>
-        {selected.steps.map((step, i) => (
-          <Card key={i} style={{ gap: 8 }}>
-            <Txt size={15} weight="700" color={colors.green}>
-              {step.label}
-            </Txt>
-            {math(step.latex, step.spoken, 23)}
-          </Card>
-        ))}
-      </View>
-    );
-  return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-      {referenceItems.map((item) => (
+  const counts = useMemo(
+    () =>
+      Object.fromEntries(
+        referenceTopics.map((t) => [
+          t.id,
+          referenceItems.filter((e) => e.topic === t.id).length,
+        ]),
+      ),
+    [],
+  );
+  const wide = width >= 880;
+  const showCatalog = mode === "catalog";
+  const currentTopic = referenceTopics.find((t) => t.id === topic);
+  function chooseTopic(id: string) {
+    Keyboard.dismiss();
+    lastTopic.current = id;
+    setTopic(id);
+    setMode("topic");
+    // A repeated click on the current sidebar topic still returns to its start.
+    if (mode === "topic" && topic === id) toTop();
+  }
+  function showTopics() {
+    Keyboard.dismiss();
+    setMode("catalog");
+  }
+  function clearSearch() {
+    setQuery("");
+    if (mode === "search") setMode("catalog");
+    input.current?.focus();
+  }
+  const button = (
+    label: string,
+    action: () => void,
+    back = false,
+    testID?: string,
+  ) => (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={action}
+      style={({ pressed }) => ({
+        minHeight: 44,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        alignSelf: "flex-start",
+        opacity: pressed ? 0.65 : 1,
+      })}
+    >
+      {back && <Icon name="arrow-left" size={18} color={accent} />}
+      <Txt size={15} weight="600" color={accent}>
+        {label}
+      </Txt>
+    </Pressable>
+  );
+  const topics = (sidebar = false) => (
+    <View
+      style={{
+        flexDirection: sidebar ? "column" : "row",
+        flexWrap: sidebar ? "nowrap" : "wrap",
+        gap: sidebar ? 2 : 10,
+      }}
+    >
+      {referenceTopics.map((t) => (
         <Pressable
-          key={item.id}
+          key={t.id}
+          ref={(node) => {
+            if (!sidebar) topicNodes.current[t.id] = node;
+          }}
           accessibilityRole="button"
-          accessibilityLabel={`Открыть формулу: ${item.title}`}
-          onPress={() => setSelected(item)}
+          accessibilityLabel={`Тема: ${t.title}`}
+          accessibilityState={{ selected: mode === "topic" && topic === t.id }}
+          onPress={() => chooseTopic(t.id)}
           style={({ pressed }) => ({
-            width: wide ? "31%" : "46%",
-            flexGrow: 1,
-            borderRadius: 22,
-            borderWidth: 1,
+            width: sidebar ? "100%" : width >= 600 ? "31%" : "47%",
+            flexGrow: sidebar ? 0 : 1,
+            minWidth: 0,
+            minHeight: 44,
+            padding: sidebar ? 12 : 15,
+            borderRadius: sidebar ? 10 : 16,
+            borderWidth: sidebar ? 0 : 1,
             borderColor: colors.line,
-            backgroundColor: colors.white,
-            padding: 12,
-            gap: 10,
+            backgroundColor: sidebar
+              ? mode === "topic" && topic === t.id
+                ? colors.subtle
+                : "transparent"
+              : colors.white,
             opacity: pressed ? 0.7 : 1,
+            gap: 10,
           })}
         >
-          <MathIllustration kind={item.id} height={120} decorative />
-          <Txt size={16} weight="700" style={{ textAlign: "center" }}>
-            {item.title}
+          {!sidebar && (
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <Txt size={12} weight="700" color={accent}>
+                {t.symbol}
+              </Txt>
+              <Txt size={12} color={colors.muted}>
+                {counts[t.id]}
+              </Txt>
+            </View>
+          )}
+          <Txt
+            size={sidebar ? 14 : 15}
+            weight="600"
+            color={mode === "topic" && topic === t.id ? accent : colors.ink}
+          >
+            {t.title}
           </Txt>
         </Pressable>
       ))}
+    </View>
+  );
+  return (
+    <View
+      testID="reference"
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+      style={{ gap: 18, minWidth: 0, width: "100%" }}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          flexWrap: "wrap",
+          gap: 8,
+        }}
+      >
+        <Txt size={24} weight="700" accessibilityRole="header">
+          Справочник
+        </Txt>
+        {showCatalog && (
+          <Txt size={13} color={colors.muted}>
+            {referenceTopics.length} тем
+          </Txt>
+        )}
+      </View>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          borderWidth: 1,
+          borderColor: colors.line,
+          backgroundColor: colors.white,
+          borderRadius: 15,
+          paddingLeft: 14,
+          minHeight: 52,
+          gap: 10,
+        }}
+      >
+        <Icon name="search" color={accent} size={20} />
+        <TextInput
+          ref={input}
+          accessibilityLabel="Поиск по справочнику"
+          placeholder="Найти формулу"
+          placeholderTextColor={colors.muted}
+          value={query}
+          onChangeText={(value) => {
+            setQuery(value);
+            setMode(value.trim() ? "search" : "catalog");
+          }}
+          autoCorrect={false}
+          autoCapitalize="none"
+          returnKeyType="search"
+          onSubmitEditing={() => {
+            Keyboard.dismiss();
+            if (query.trim()) setMode("search");
+          }}
+          style={{
+            color: colors.ink,
+            fontSize: 16,
+            flex: 1,
+            minWidth: 0,
+            paddingVertical: 14,
+          }}
+        />
+        {!!query && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Очистить поиск"
+            onPress={clearSearch}
+            style={{
+              minWidth: 44,
+              minHeight: 48,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon name="x" size={18} color={accent} />
+          </Pressable>
+        )}
+      </View>
+      {showCatalog ? (
+        <>
+          {!!query.trim() &&
+            button("Результаты", () => {
+              setMode("search");
+              Keyboard.dismiss();
+            })}
+          {topics()}
+        </>
+      ) : (
+        <View
+          style={{
+            flexDirection: wide ? "row" : "column",
+            gap: wide ? 40 : 8,
+            minWidth: 0,
+          }}
+        >
+          {wide && (
+            <View style={{ width: 216, gap: 8 }}>
+              {button("Темы", showTopics, true, "reference-topics")}
+              {topics(true)}
+            </View>
+          )}
+          <View style={{ flex: 1, minWidth: 0, maxWidth: 720 }}>
+            {!wide && button("Темы", showTopics, true, "reference-topics")}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "baseline",
+                gap: 12,
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderColor: colors.line,
+              }}
+            >
+              <Txt
+                size={21}
+                weight="700"
+                style={{ flex: 1 }}
+                accessibilityRole="header"
+              >
+                {mode === "search" ? "Результаты" : currentTopic?.title}
+              </Txt>
+              <Txt
+                size={14}
+                color={colors.muted}
+                accessibilityLiveRegion="polite"
+                accessibilityLabel={`Найдено записей: ${results.length}`}
+              >
+                {results.length}
+              </Txt>
+            </View>
+            {results.length === 0 ? (
+              <View style={{ paddingVertical: 28, gap: 10 }}>
+                <Txt size={20} weight="600" accessibilityLiveRegion="polite">
+                  Ничего не найдено
+                </Txt>
+                {button("Сбросить", clearSearch)}
+              </View>
+            ) : (
+              results.map((item) => (
+                <ReferenceRecord
+                  key={item.id}
+                  item={item}
+                  showTopic={mode === "search"}
+                />
+              ))
+            )}
+            {results.length > 0 &&
+              button("Темы", showTopics, true, "reference-topics-bottom")}
+          </View>
+        </View>
+      )}
     </View>
   );
 }

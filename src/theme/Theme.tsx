@@ -148,3 +148,20 @@ export function ClarityThemeProvider({
     </Ctx.Provider>
   );
 }
+
+/** Espada green accents within the existing observatory design. */
+export function VideoLessonTheme({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
+  const colors = React.useMemo(
+    () => ({
+      ...theme.colors,
+      green: theme.dark ? "#A7E0A5" : "#326340",
+      primary: theme.dark ? "#A7E0A5" : "#326340",
+      onPrimary: theme.dark ? "#102319" : "#FFFFFF",
+      selected: theme.dark ? "#203E32" : "#DCEEDD",
+      light: theme.dark ? "#172C26" : "#EAF3E7",
+    }),
+    [theme.colors, theme.dark],
+  );
+  return <Ctx.Provider value={{ ...theme, colors }}>{children}</Ctx.Provider>;
+}

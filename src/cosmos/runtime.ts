@@ -45,7 +45,12 @@ function updateUI(){
  $('lesson-title').textContent=selected.title;
  $('launch').firstChild.textContent=!data.ready?'Загрузка ':selected.complete?'Открыть урок ':selected.started?'Продолжить ':'Начать урок ';
  $('launch').disabled=!data.ready;
- $('prev').disabled=index<=0;$('next').disabled=index>=topics.length-1;
+ var previous=adjacent(-1), next=adjacent(1);
+ $('prev').disabled=!previous;$('next').disabled=!next;
+ [-1,1].forEach(function(direction){var target=direction<0?previous:next,button=$(direction<0?'prev':'next'),boundary=target&&target.grade!==grade;
+ button.classList.toggle('boundary',!!boundary);button.querySelector('span').textContent=boundary?target.grade+' класс':'';
+ button.setAttribute('aria-label',boundary?(direction<0?'Предыдущий класс: ':'Следующий класс: ')+target.grade:(direction<0?'Предыдущая тема':'Следующая тема'));
+ });
  $('overview').textContent=overview?'Выбери класс':grade+' класс';
  $('overview').setAttribute('aria-label',overview?'Вернуться к уроку':'Выбрать класс');
  $('sr-status').textContent=selected.title+'. '+grade+' класс. '+(index+1)+' из '+topics.length;
@@ -57,7 +62,8 @@ function updateUI(){
 }
 function setFree(){interacted=true;if(!free){free=true;updateUI()}}
 function selectStar(star){interacted=true;selected=star;grade=star.grade;seenGrades[grade]=star.id;overview=false;free=false;aim={x:star.x,y:star.y,z:star.z};destination={yaw:-.12,pitch:.08,distance:mobile?650:710};if(reduced){focus={...aim};orbit={...destination}}updateUI();wake();}
-function move(direction){var list=currentTopics(),index=list.findIndex(function(t){return t.id===selected.id}),next=list[clamp(index+direction,0,list.length-1)];if(next.id!==selected.id)selectStar(next)}
+function adjacent(direction){var list=currentTopics(),index=list.findIndex(function(t){return t.id===selected.id});if(list[index+direction])return list[index+direction];var targetGrade=grade+direction;if(targetGrade<5||targetGrade>11)return null;var target=data.lessons.filter(function(t){return t.grade===targetGrade});return (direction>0?target[0]:target[target.length-1])||null}
+function move(direction){var next=adjacent(direction);if(next)selectStar(next)}
 function chooseGrade(g){var t=data.lessons.find(function(t){return t.id===seenGrades[g]})||data.lessons.find(function(t){return t.grade===g&&!t.complete})||data.lessons.find(function(t){return t.grade===g});selectStar(t)}
 function toggleOverview(){interacted=true;if(overview){selectStar(selected);return}overview=true;free=false;aim={x:400,y:0,z:-2400};destination={yaw:0,pitch:.12,distance:mobile?12200:7800};if(reduced){focus={...aim};orbit={...destination}}updateUI();wake()}
 function launch(){if(!data.ready||jumpTimer)return;if(reduced){send({type:'lesson',id:selected.id});return}var id=selected.id;aim={x:selected.x,y:selected.y,z:selected.z};destination.distance=100;document.body.classList.add('jumping');jumpTimer=setTimeout(function(){send({type:'lesson',id:id});document.body.classList.remove('jumping');jumpTimer=null;destination.distance=mobile?650:710;},420)}
@@ -65,7 +71,7 @@ data.grades.forEach(function(g){var label=document.createElement('button');label
 $('prev').onclick=function(){move(-1)};$('next').onclick=function(){move(1)};$('launch').onclick=launch;$('reset').onclick=function(){selectStar(selected)};$('overview').onclick=toggleOverview;$('profile').onclick=function(){send({type:'navigate',id:'Profile'})};
 $('more').onclick=function(){$('more-panel').showModal()};
 $('signals-toggle').onclick=function(){$('more-panel').close();$('signals').showModal()};
-$('help').onclick=function(){$('more-panel').close();$('help-panel').showModal()};
+
 document.querySelectorAll('[data-navigate]').forEach(function(b){b.onclick=function(){$('more-panel').close();send({type:'navigate',id:b.dataset.navigate})}});
 document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=function(){$(b.dataset.close).close()}});
 // Photometric stars: a small white core, a smooth bloom and restrained diffraction.
@@ -120,7 +126,7 @@ window.addEventListener('keydown',function(e){if(document.querySelector('dialog[
  if(k==='ArrowRight')move(1);else if(k==='ArrowLeft')move(-1);else if(k==='Home')selectStar(currentTopics()[0]);else if(k==='End'){var t=currentTopics();selectStar(t[t.length-1])}else if(k==='r')selectStar(selected);else if(k==='Escape'&&overview)selectStar(selected);else if(k==='Enter'&&e.target===canvas)launch();
  keys[k]=true;wake();
 });window.addEventListener('keyup',function(e){keys[e.key.length===1?e.key.toLowerCase():e.key]=false});window.addEventListener('blur',function(){keys={};pointers.clear();drag=null;pinch=null});
-window.addEventListener('message',function(event){var m=event.data;if(!m||m.source!=='espada-host'||(event.source&&event.source!==parent&&event.source!==window))return;if(m.data){var resume=!data.ready&&m.data.ready&&!interacted;data=m.data;selected=data.lessons.find(function(t){return t.id===(resume?data.initialId:selected.id)})||data.lessons[0];if(resume)selectStar(selected);else updateUI()}if(typeof m.reduced==='boolean')reduced=m.reduced;if(typeof m.active==='boolean')active=m.active;if(active)wake();else pause()});
+window.addEventListener('message',function(event){var m=event.data;if(!m||m.source!=='espada-host'||(event.source&&event.source!==parent&&event.source!==window))return;if(m.data){var resume=!data.ready&&m.data.ready&&!interacted;data=m.data;selected=data.lessons.find(function(t){return t.id===(resume?data.initialId:selected.id)})||data.lessons[0];grade=selected.grade;if(resume)selectStar(selected);else updateUI()}if(typeof m.reduced==='boolean')reduced=m.reduced;if(typeof m.active==='boolean')active=m.active;if(active)wake();else pause()});
 var sizeObserver=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;if(sizeObserver)sizeObserver.observe(canvas);
 document.addEventListener('visibilitychange',function(){if(document.hidden)pause();else wake()});window.addEventListener('resize',resize);window.addEventListener('pagehide',function(){disposed=true;pause();if(sizeObserver)sizeObserver.disconnect();if(jumpTimer)clearTimeout(jumpTimer)});
 selectedSize[selected.id]=1;updateUI();resize();wake();tellReady();

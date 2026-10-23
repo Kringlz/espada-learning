@@ -1,3 +1,5 @@
+import { VideoLesson } from "./videoLesson/VideoLesson";
+import { lessonId as videoLessonId } from "./videoLesson/content";
 import {
   ConstellationNavigator,
   GradeOrbits,
@@ -91,9 +93,28 @@ function CourseBrowser({
   const [subject, setSubject] = useState("all");
   const [query, setQuery] = useState("");
   const [listView, setListView] = useState(false);
+  const [mapFocus, setMapFocus] = useState<string>();
   const [selected, setSelected] = useState<CourseTopic | null>(null);
+  const [legacy, setLegacy] = useState(false);
+  function closeTopic() {
+    setSelected(null);
+    setLegacy(false);
+    if (Platform.OS === "web" && window.location.hash === "#/lesson/G08-02")
+      window.location.hash = "/course";
+  }
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const changed = () => {
+      if (window.location.hash !== "#/lesson/G08-02") {
+        setSelected(null);
+        setLegacy(false);
+      }
+    };
+    window.addEventListener("hashchange", changed);
+    return () => window.removeEventListener("hashchange", changed);
+  }, []);
   const storage = useCourseProgress(actorId);
-  useLessonFocus(!!selected, () => setSelected(null));
+  useLessonFocus(!!selected, closeTopic);
   useEffect(() => {
     onTopicChange?.(!!selected);
   }, [selected, onTopicChange]);
@@ -102,6 +123,12 @@ function CourseBrowser({
   }, [mode]);
   function selectTopic(topic: CourseTopic) {
     setSelected(topic);
+    setLegacy(false);
+    if (topic.id === videoLessonId) {
+      if (Platform.OS === "web" && window.location.hash !== "#/lesson/G08-02")
+        window.location.hash = "/lesson/G08-02";
+      return;
+    }
     let page = storage.progress[topic.id]?.page ?? 0;
     if (mode === "videos" && !courseVideos[topic.id].pageVideos[page]?.length) {
       page = Math.max(
@@ -136,7 +163,12 @@ function CourseBrowser({
       changeKey={selected?.id ?? "catalog"}
       style={{
         gap: 22,
-        maxWidth: selected ? 760 : 1040,
+        maxWidth:
+          selected?.id === videoLessonId && !legacy
+            ? 1120
+            : selected
+              ? 760
+              : 1040,
         width: "100%",
         alignSelf: "center",
       }}
@@ -151,12 +183,20 @@ function CourseBrowser({
           </Button>
         </Card>
       )}
-      {selected ? (
+      {selected?.id === videoLessonId && !legacy ? (
+        <VideoLesson
+          actorId={actorId}
+          back={closeTopic}
+          legacy={() => setLegacy(true)}
+        />
+      ) : selected ? (
         <CourseReader
           key={selected.id}
           topic={selected}
           storage={storage}
-          back={() => setSelected(null)}
+          back={() =>
+            selected.id === videoLessonId ? setLegacy(false) : closeTopic()
+          }
           next={selectTopic}
           initialTab={mode === "videos" ? "video" : "theory"}
         />
@@ -244,6 +284,13 @@ function CourseBrowser({
             <ConstellationNavigator
               key={`${grade}:${subject}:${query}`}
               topics={filtered}
+              initialTopicId={mapFocus}
+              onClassChange={(topic) => {
+                setMapFocus(topic.id);
+                setGrade(topic.grade);
+                setSubject("all");
+                setQuery("");
+              }}
               progress={storage.progress}
               ready={storage.ready}
               videos={mode === "videos"}

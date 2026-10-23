@@ -1,3 +1,4 @@
+import { Asset } from "expo-asset";
 import React, { useEffect, useMemo, useRef } from "react";
 import { WebView } from "react-native-webview";
 import { spaceDocument } from "./document";
@@ -15,7 +16,15 @@ export function SpaceFlight({
   onAction,
 }: SpaceFlightProps) {
   const view = useRef<WebView>(null);
-  const html = useMemo(() => spaceDocument(data, reduced), []);
+  const html = useMemo(
+    () =>
+      spaceDocument(
+        data,
+        reduced,
+        Asset.fromModule(require("../../assets/brand/knight-dark.jpg")).uri,
+      ),
+    [],
+  );
   const sync = () =>
     view.current?.injectJavaScript(
       `window.postMessage(${JSON.stringify({ source: "espada-host", data, active, reduced }).replace(/</g, "\\u003c")}, '*'); true;`,

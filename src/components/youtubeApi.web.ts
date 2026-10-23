@@ -1,14 +1,26 @@
-type Player = {
+export type YouTubeInstance = {
   getCurrentTime(): number;
   getDuration(): number;
   getPlayerState(): number;
+  getAvailablePlaybackRates(): number[];
+  getPlaybackRate(): number;
+  setPlaybackRate(rate: number): void;
+  seekTo(seconds: number, allowSeekAhead: boolean): void;
+  pauseVideo(): void;
   destroy(): void;
 };
 type YouTubeAPI = {
   Player: new (
     element: HTMLIFrameElement,
-    options: { events: { onReady(): void; onError(): void } },
-  ) => Player;
+    options: {
+      events: {
+        onReady(): void;
+        onError(event: { data: number }): void;
+        onStateChange?(event: { data: number }): void;
+        onPlaybackRateChange?(): void;
+      };
+    },
+  ) => YouTubeInstance;
 };
 declare global {
   interface Window {
@@ -23,11 +35,12 @@ export function loadYouTubeAPI(): Promise<YouTubeAPI> {
   loading = new Promise<YouTubeAPI>((resolve, reject) => {
     const previous = window.onYouTubeIframeAPIReady;
     const script = document.createElement("script");
-    const timeout = setTimeout(() => fail(), 15000);
+    const timeout = setTimeout(fail, 12000);
     function fail() {
       clearTimeout(timeout);
       script.remove();
       loading = null;
+      window.onYouTubeIframeAPIReady = previous;
       reject(new Error("YouTube API unavailable"));
     }
     window.onYouTubeIframeAPIReady = () => {

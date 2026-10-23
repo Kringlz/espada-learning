@@ -392,6 +392,8 @@ test("compatible versions retain earliest axis order despite reordering and JSON
 });
 test("correction does not move a same-day report ahead of a later-added report", () => {
   let s = seed();
+  // This ordering case owns its reports; demo dates move with the current day.
+  s.reports = [];
   const t = s.reportTemplates![0];
   const r = result(t, 900, "2026-07-01");
   s = applyCommand(

@@ -16,7 +16,11 @@ import { RewardNotice } from "./src/engagement/LevelCard";
 import { MotionActiveContext, SoftReveal } from "./src/components/Motion";
 import { Parent } from "./src/screens/Family";
 import { useUITheme } from "./src/components/ui";
-import { ClarityThemeProvider, ThemeProvider } from "./src/theme/Theme";
+import {
+  ClarityThemeProvider,
+  ThemeProvider,
+  VideoLessonTheme,
+} from "./src/theme/Theme";
 import { Brand } from "./src/components/Brand";
 import { CourseProgressProvider } from "./src/course/storage";
 import { ScreenAnchor, ScreenScroll } from "./src/components/ScreenScroll";
@@ -675,6 +679,12 @@ function Shell() {
   const inSpace = explorer && tab === "Home" && !topic && !result;
   function returnToSpace() {
     focusedLesson?.exit();
+    if (Platform.OS === "web" && window.location.hash.startsWith("#/"))
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}#/`,
+      );
     courseOrigin.current = null;
     navigate("Home");
   }
@@ -752,6 +762,24 @@ function Shell() {
     });
     return () => handler.remove();
   }, [topic, tab, result, focusedLesson]);
+  useEffect(() => {
+    if (Platform.OS !== "web" || actor.role !== "student") return;
+    const route = () => {
+      if (window.location.hash === "#/lesson/G08-02") {
+        setCourseRequest({ id: "G08-02", key: Date.now() });
+        setLearnVisited(true);
+        setTab("Learn");
+        setTopic(null);
+        setResult(null);
+      } else if (window.location.hash === "#/course") {
+        setLearnVisited(true);
+        setTab("Learn");
+      }
+    };
+    route();
+    window.addEventListener("hashchange", route);
+    return () => window.removeEventListener("hashchange", route);
+  }, [actor.id, actor.role]);
   function navigate(next: string) {
     sounds.play("open");
     setTopic(null);
@@ -934,16 +962,10 @@ function Shell() {
                   style={{ minHeight: 44, justifyContent: "center" }}
                 >
                   <Txt size={14} color={colors.ink}>
-                    ← Вернуться в космос
+                    ← К карте
                   </Txt>
                 </Pressable>
-                <Txt
-                  size={11}
-                  color={colors.muted}
-                  style={{ letterSpacing: 2 }}
-                >
-                  ESPADA
-                </Txt>
+                <Brand />
               </View>
             )}
             <View
@@ -980,10 +1002,7 @@ function Shell() {
                     alignItems: "center",
                   }}
                 >
-                  <Icon name="circle" size={12} color={colors.green} />
-                  <Txt size={12} weight="500" style={{ letterSpacing: 1.2 }}>
-                    ESPADA / МАТЕМАТИКА
-                  </Txt>
+                  <Brand />
                 </View>
               ) : clarity || student ? (
                 <Brand />
@@ -1212,7 +1231,9 @@ function Shell() {
                           </View>
                           {!topic && !result && tab === "Arena" && <Arena />}
                           {!topic && !result && tab === "Calculator" && (
-                            <Calculator />
+                            <VideoLessonTheme>
+                              <Calculator />
+                            </VideoLessonTheme>
                           )}
                           {!topic && !result && tab === "Profile" && (
                             <Profile switchDemo={() => setAccountOpen(true)} />
@@ -1239,7 +1260,9 @@ function Shell() {
                       ) : tab === "Arena" ? (
                         <Arena />
                       ) : tab === "Calculator" ? (
-                        <Calculator />
+                        <VideoLessonTheme>
+                          <Calculator />
+                        </VideoLessonTheme>
                       ) : tab === "Profile" ? (
                         <Profile switchDemo={() => setAccountOpen(true)} />
                       ) : actor.role === "parent" ? (

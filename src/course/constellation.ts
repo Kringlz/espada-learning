@@ -47,3 +47,90 @@ export function starPosition(index: number, grade: number) {
 export function adjacentStar(index: number, direction: number, count: number) {
   return Math.max(0, Math.min(Math.max(0, count - 1), index + direction));
 }
+
+/** Hand-placed, stable silhouettes. Coordinates are local to each class. */
+const classShapes: Record<number, [number, number][]> = {
+  5: [
+    [0, 0.15],
+    [0.18, 0.65],
+    [0.38, 0.35],
+    [0.6, 0.65],
+    [0.8, 0.2],
+    [1, 0.4],
+  ],
+  6: [
+    [0, 0.5],
+    [0.2, 0.18],
+    [0.5, 0.08],
+    [0.82, 0.28],
+    [1, 0.7],
+    [0.62, 0.88],
+    [0.35, 0.58],
+  ],
+  7: [
+    [0, 0.25],
+    [0.12, 0.5],
+    [0.22, 0.8],
+    [0.35, 0.5],
+    [0.45, 0.18],
+    [0.57, 0.5],
+    [0.7, 0.82],
+    [0.8, 0.55],
+    [0.9, 0.3],
+    [1, 0.05],
+  ],
+  8: [
+    [0, 0.85],
+    [0.18, 0.58],
+    [0.38, 0.36],
+    [0.58, 0.13],
+    [0.48, 0.48],
+    [0.68, 0.62],
+    [0.83, 0.78],
+    [1, 0.88],
+  ],
+  9: [
+    [0, 0.25],
+    [0.2, 0.08],
+    [0.42, 0.2],
+    [0.58, 0.5],
+    [0.45, 0.82],
+    [0.72, 0.9],
+    [0.85, 0.65],
+    [1, 0.45],
+  ],
+  10: [
+    [0, 0.8],
+    [0.22, 0.82],
+    [0.45, 0.8],
+    [0.47, 0.48],
+    [0.48, 0.15],
+    [0.75, 0.15],
+    [1, 0.18],
+    [0.98, 0.5],
+    [0.95, 0.84],
+  ],
+  11: [
+    [0, 0.7],
+    [0.18, 0.4],
+    [0.36, 0.15],
+    [0.58, 0.12],
+    [0.8, 0.35],
+    [1, 0.65],
+    [0.58, 0.88],
+  ],
+};
+export function classStarPosition(grade: number, index: number, count: number) {
+  const points = classShapes[grade] ?? classShapes[5];
+  const at = Math.max(
+    0,
+    Math.min(
+      points.length - 1,
+      (index * (points.length - 1)) / Math.max(1, count - 1),
+    ),
+  );
+  const a = points[Math.floor(at)],
+    b = points[Math.ceil(at)],
+    t = at % 1;
+  return { x: a[0] + (b[0] - a[0]) * t, y: a[1] + (b[1] - a[1]) * t };
+}

@@ -1,7 +1,11 @@
 import { course, CourseProgress } from "../course/model";
 import { courseContent } from "../course/content";
 import { lessonStatus, nextLesson } from "../course/journey";
-import { constellations, starIdentity } from "../course/constellation";
+import {
+  constellations,
+  starIdentity,
+  classStarPosition,
+} from "../course/constellation";
 
 export type SpaceLesson = {
   id: string;
@@ -36,7 +40,7 @@ export function makeSpaceData(
 ): Pick<SpaceData, "lessons" | "grades" | "initialId"> {
   const grades = Object.entries(constellations).map(([g, meta], i) => ({
     grade: Number(g),
-    name: meta.name,
+    name: `${g} класс`,
     x: i === 0 ? 0 : Math.cos(i * 1.2) * (1800 + i * 210),
     y: i === 0 ? 0 : Math.sin(i * 1.7) * 1250,
     z: i === 0 ? 0 : -1500 - i * 500,
@@ -46,13 +50,18 @@ export function makeSpaceData(
       .filter((t) => t.grade === center.grade)
       .map((topic, i) => {
         const status = lessonStatus(topic, progress);
+        const point = classStarPosition(
+          topic.grade,
+          i,
+          course.filter((t) => t.grade === topic.grade).length,
+        );
         return {
           id: topic.id,
           grade: topic.grade,
           title: courseContent[topic.id].pages[0].title,
-          x: center.x + i * 245,
-          y: center.y + Math.sin(i * 1.3) * 155,
-          z: center.z + Math.sin(i * 0.85) * 190 - i * 80,
+          x: center.x + point.x * 1600,
+          y: center.y + (0.5 - point.y) * 950,
+          z: center.z,
           seed: starIdentity(topic.id).seed,
           color: (i + topic.grade) % 5,
           complete: status.complete,

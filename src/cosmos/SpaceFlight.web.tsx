@@ -1,3 +1,4 @@
+import { Asset } from "expo-asset";
 import React, { useEffect, useMemo, useRef } from "react";
 import { spaceDocument } from "./document";
 import { SpaceAction, SpaceData, validSpaceAction } from "./model";
@@ -16,7 +17,15 @@ export function SpaceFlight({
   const frame = useRef<HTMLIFrameElement>(null);
   const latest = useRef({ data, active, reduced, onAction });
   latest.current = { data, active, reduced, onAction };
-  const html = useMemo(() => spaceDocument(data, reduced), []);
+  const html = useMemo(
+    () =>
+      spaceDocument(
+        data,
+        reduced,
+        Asset.fromModule(require("../../assets/brand/knight-dark.jpg")).uri,
+      ),
+    [],
+  );
   const sync = () =>
     frame.current?.contentWindow?.postMessage(
       {

@@ -10,17 +10,8 @@ import {
 } from "react-native";
 import Svg, { Line } from "react-native-svg";
 import { courseContent } from "../course/content";
-import {
-  adjacentStar,
-  constellations,
-  starPosition,
-} from "../course/constellation";
-import {
-  CourseProgress,
-  CourseTopic,
-  grades,
-  subjectName,
-} from "../course/model";
+import { constellations, classStarPosition } from "../course/constellation";
+import { course, CourseProgress, CourseTopic, grades } from "../course/model";
 import { lessonStatus, nextLesson } from "../course/journey";
 import { Icon, Txt, useUITheme } from "./ui";
 import { MotionActiveContext, useReducedMotion } from "./Motion";
@@ -48,7 +39,7 @@ export function GradeOrbits({
         <Pressable
           key={g}
           accessibilityRole="button"
-          accessibilityLabel={`${g} класс · ${constellations[g].name}`}
+          accessibilityLabel={`${g} класс`}
           accessibilityState={{ selected: grade === g }}
           onPress={() => onChange(g)}
           style={({ pressed }) => ({
@@ -87,16 +78,22 @@ export function ConstellationNavigator({
   open,
   ready = true,
   videos = false,
+  initialTopicId,
+  onClassChange,
 }: {
   topics: CourseTopic[];
   progress: CourseProgress;
   open: (topic: CourseTopic) => void;
   ready?: boolean;
   videos?: boolean;
+  initialTopicId?: string;
+  onClassChange?: (topic: CourseTopic) => void;
 }) {
   const { colors } = useUITheme();
   const [width, setWidth] = useState(900);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialTopicId ?? null,
+  );
   const [overview, setOverview] = useState(false);
   const active = useContext(MotionActiveContext);
   const reduced = useReducedMotion();
@@ -114,8 +111,11 @@ export function ConstellationNavigator({
   const positions = useMemo(
     () =>
       topics.map((t, i) => {
-        const p = starPosition(i, t.grade);
-        return { x: i * gap, y: compact ? p.y * 0.8 : p.y };
+        const p = classStarPosition(t.grade, i, topics.length);
+        return {
+          x: p.x * Math.max(500, (topics.length - 1) * gap),
+          y: 80 + p.y * (compact ? 150 : 180),
+        };
       }),
     [topics, gap, compact],
   );
@@ -134,9 +134,24 @@ export function ConstellationNavigator({
     animation.start();
     return () => animation.stop();
   }, [position.x, reduced, active, camera]);
+  function boundaryTopic(direction: number) {
+    if (
+      !onClassChange ||
+      (direction < 0 ? index !== 0 : index !== topics.length - 1)
+    )
+      return undefined;
+    const targetGrade = grade + direction;
+    if (targetGrade < 5 || targetGrade > 11) return undefined;
+    const target = course.filter((t) => t.grade === targetGrade);
+    return direction > 0 ? target[0] : target[target.length - 1];
+  }
   const move = (direction: number) => {
-    const next = topics[adjacentStar(index, direction, topics.length)];
+    const next = topics[index + direction];
     if (next) setSelectedId(next.id);
+    else {
+      const target = boundaryTopic(direction);
+      if (target) onClassChange?.(target);
+    }
   };
   const pan = PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) =>
@@ -190,10 +205,10 @@ export function ConstellationNavigator({
   ).length;
   const worldWidth = Math.max(width, topics.length * gap);
   const mapWidth = Math.max(240, width - 90);
-  const mapPosition = (i: number) => ({
-    x: 45 + (i / Math.max(1, topics.length - 1)) * mapWidth,
-    y: 150 + Math.sin(i * 1.72 + grade) * 50 + Math.cos(i * 0.6) * 20,
-  });
+  const mapPosition = (i: number) => {
+    const p = classStarPosition(grade, i, topics.length);
+    return { x: 45 + p.x * mapWidth, y: 60 + p.y * (stageHeight - 110) };
+  };
   return (
     <View
       {...keyboardProps}
@@ -221,10 +236,7 @@ export function ConstellationNavigator({
       >
         <View style={{ gap: 5 }}>
           <Txt size={10} color="#8E9BB7" style={{ letterSpacing: 2.7 }}>
-            СОЗВЕЗДИЕ {String(grade).padStart(2, "0")}
-          </Txt>
-          <Txt size={compact ? 23 : 28} weight="500" color="#EDF0FA">
-            {constellation.name}
+            {grade} КЛАСС
           </Txt>
         </View>
         <Pressable
@@ -286,16 +298,6 @@ export function ConstellationNavigator({
         }
       >
         <Starfield height={stageHeight} />
-        <View
-          pointerEvents="none"
-          style={{ position: "absolute", top: 24, left: 30 }}
-        >
-          <Txt size={10} color="#74819B" style={{ letterSpacing: 1.5 }}>
-            {overview
-              ? "АТЛАС УРОКОВ"
-              : `${subjectName(grade, selected.subject).toUpperCase()} / ${grade} КЛАСС`}
-          </Txt>
-        </View>
         {overview ? (
           <>
             <Svg
@@ -445,7 +447,6 @@ export function ConstellationNavigator({
                     >
                       {complete ? "✓ " : ""}
                       {String(i + 1).padStart(2, "0")}
-                      {current ? " / ТВОЯ ЗВЕЗДА" : ""}
                     </Txt>
                     {!current && !compact && (
                       <Txt
@@ -463,24 +464,6 @@ export function ConstellationNavigator({
             })}
           </Animated.View>
         )}
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            bottom: 12,
-            left: 0,
-            right: 0,
-            alignItems: "center",
-          }}
-        >
-          <Txt size={10} color="#8592AA">
-            {overview
-              ? "Нажми на звезду, чтобы приблизить"
-              : compact
-                ? "Листай звёзды свайпом или стрелками"
-                : "Каждая звезда — новое открытие. Выбирай стрелками ← →"}
-          </Txt>
-        </View>
       </View>
       <View
         style={{
@@ -515,10 +498,10 @@ export function ConstellationNavigator({
               />
               <Txt size={10} color="#A6B4CE" style={{ letterSpacing: 1.6 }}>
                 {status.complete
-                  ? "ЗВЕЗДА ОТКРЫТА"
+                  ? "ПРОЙДЕНО"
                   : status.started
-                    ? "ПУТЕШЕСТВИЕ ПРОДОЛЖАЕТСЯ"
-                    : "НОВОЕ ОТКРЫТИЕ"}
+                    ? "В ПРОЦЕССЕ"
+                    : ""}
               </Txt>
             </View>
             <Txt
@@ -532,9 +515,7 @@ export function ConstellationNavigator({
             <Txt size={12} color="#9CAAC2">
               {selected.pages.length} разделов · {selected.practice.count}{" "}
               заданий
-              {status.started
-                ? ` · ${status.percent}% пройдено`
-                : " · В своём темпе"}
+              {status.started ? ` · ${status.percent}% пройдено` : ""}
             </Txt>
           </View>
           <View
@@ -545,45 +526,51 @@ export function ConstellationNavigator({
               flexWrap: "wrap",
             }}
           >
-            {[-1, 1].map((direction) => (
-              <Pressable
-                key={direction}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  direction < 0 ? "Предыдущая звезда" : "Следующая звезда"
-                }
-                disabled={
-                  direction < 0 ? index === 0 : index === topics.length - 1
-                }
-                accessibilityState={{
-                  disabled:
-                    direction < 0 ? index === 0 : index === topics.length - 1,
-                }}
-                onPress={() => move(direction)}
-                style={({ pressed }) => ({
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  borderWidth: 1,
-                  borderColor: "#39445A",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: (
-                    direction < 0 ? index === 0 : index === topics.length - 1
-                  )
-                    ? 0.25
-                    : pressed
-                      ? 0.6
-                      : 1,
-                })}
-              >
-                <Icon
-                  name={direction < 0 ? "arrow-left" : "arrow-right"}
-                  color="#DCE4F4"
-                  size={19}
-                />
-              </Pressable>
-            ))}
+            {[-1, 1].map((direction) => {
+              const target = boundaryTopic(direction);
+              const disabled = !topics[index + direction] && !target;
+              return (
+                <Pressable
+                  key={direction}
+                  testID={
+                    direction < 0 ? "constellation-prev" : "constellation-next"
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    target
+                      ? `${direction < 0 ? "Предыдущий" : "Следующий"} класс: ${target.grade}`
+                      : direction < 0
+                        ? "Предыдущая тема"
+                        : "Следующая тема"
+                  }
+                  disabled={disabled}
+                  accessibilityState={{ disabled }}
+                  onPress={() => move(direction)}
+                  style={({ pressed }) => ({
+                    minWidth: 44,
+                    height: 48,
+                    paddingHorizontal: target ? 9 : 0,
+                    flexDirection: "row",
+                    gap: 6,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: disabled ? 0.25 : pressed ? 0.6 : 1,
+                  })}
+                >
+                  {direction < 0 && (
+                    <Icon name="arrow-left" color="#DCE4F4" size={19} />
+                  )}
+                  {target && (
+                    <Txt size={13} color="#DCE4F4">
+                      {target.grade} класс
+                    </Txt>
+                  )}
+                  {direction > 0 && (
+                    <Icon name="arrow-right" color="#DCE4F4" size={19} />
+                  )}
+                </Pressable>
+              );
+            })}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`${videos ? "Смотреть видео" : status.complete ? "Повторить урок" : status.started ? "Продолжить урок" : "Открыть урок"}: ${courseContent[selected.id].pages[0].title}`}

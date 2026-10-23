@@ -1,0 +1,147 @@
+[
+  {
+    "file": ".gitignore",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/.gitignore",
+    "sha256": "74ecec34511099ac1bb85b6f7e2db0afc6225e62e2f52f37650184361917bb2f"
+  },
+  {
+    "file": "App.tsx",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/App.tsx",
+    "sha256": "cfde9a50540551f72fdfcd397be8e7c64f7553a3fafe0188289d958934432001"
+  },
+  {
+    "file": "src/course/CourseLibrary.tsx",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/CourseLibrary.tsx",
+    "sha256": "a01b39711edc90c51ccb129b0cbfdc1c3cfc3db701c12bc4203fcc6256ff5411"
+  },
+  {
+    "file": "src/theme/Theme.tsx",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/theme/Theme.tsx",
+    "sha256": "a2dd77d2ee2544a77d51fc45efc80c035b51cdea4f5396a587a0f3b3b99ddd2d"
+  },
+  {
+    "file": "src/components/YouTubePlayer.tsx",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/components/YouTubePlayer.tsx",
+    "sha256": "85a5df034c569fae8aeffbf0b82219be9ea861cf0d1a2c8f013a925598006663"
+  },
+  {
+    "file": "src/components/YouTubePlayer.web.tsx",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/components/YouTubePlayer.web.tsx",
+    "sha256": "a16f2814e0d5dd91e9a6e2b2a7080c66986eed5da397e5710fc0bae3d7126a60"
+  },
+  {
+    "file": "src/components/youtubeApi.web.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/components/youtubeApi.web.ts",
+    "sha256": "070cae87672a28baac4fd4e5822d30ef0bb86fe0b58aebc7c68f1d3625d94dab"
+  },
+  {
+    "file": "tests/video-lesson.test.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/tests/video-lesson.test.ts",
+    "sha256": "d33f8d67d5d48b3e789cf8572b9fdf5c8082a19d87a7e85df8f77f46205fd6d5"
+  },
+  {
+    "file": "scripts/test-video-lesson.mjs",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/scripts/test-video-lesson.mjs",
+    "sha256": "25a6cdec6c116b5ebbeac655b88b0b609218b5adcd0db1f0db08f4f499851359"
+  },
+  {
+    "file": "scripts/test-video-player.mjs",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/scripts/test-video-player.mjs",
+    "sha256": "6a8f910ebcf55e6df634442bd247aecb8367547a83e9f3ca9c9426252038e3c0"
+  },
+  {
+    "file": "docs/VIDEO_LESSON.md",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/docs/VIDEO_LESSON.md",
+    "sha256": "4322c617782f2fb09a12308e7bc9ce119a59d02c0a1bb510ffe814dd7f802537"
+  },
+  {
+    "file": "docs/VIDEO_LESSON_V2.md",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/docs/VIDEO_LESSON_V2.md",
+    "sha256": "7e1a3a2d11c69683e5cdec391b80fbbf7337a4b4db99a994860f3769c659cfa7"
+  },
+  {
+    "file": "src/course/videoLesson/VideoLesson.tsx",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/VideoLesson.tsx",
+    "sha256": "f6c84eed13d51a7e940d7be631b1f70a138a7de46e13c56d531f9971d31cf6eb"
+  },
+  {
+    "file": "src/course/videoLesson/useLesson.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/useLesson.ts",
+    "sha256": "278da7dd72a9bc71ea174fb3bb72949fa559b9964f7349d221a5e38c5055947b"
+  },
+  {
+    "file": "src/course/videoLesson/content.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/content.ts",
+    "sha256": "64619ac13bc8ba784eaaedeefe6460424883b434a68891190085fdc8ceeed86c"
+  },
+  {
+    "file": "src/course/videoLesson/model.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/model.ts",
+    "sha256": "c552803ee22aebfa674075b7090c29cd740e8a574595ad4d8115d4c56284c58d"
+  },
+  {
+    "file": "src/course/videoLesson/content.v1.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/content.v1.ts",
+    "sha256": "a2d0f5c5d3de8210553b16ebe7c5218a5c788ce08ab934cd21c61825262d8699"
+  },
+  {
+    "file": "src/tools/Reference.tsx",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/src/tools/Reference.tsx",
+    "sha256": "1d36f8e1ececf0c896dae78f42d34ad391bf6f9246427f7067fc1a7438f8e23a"
+  },
+  {
+    "file": "tests/reference.test.ts",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/tests/reference.test.ts",
+    "sha256": "0483b27c7d3d5564fd81ce47038bc5271f6abbd971619295d18d585d9a94a00f"
+  },
+  {
+    "file": "docs/reference/SOURCES.md",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/docs/reference/SOURCES.md",
+    "sha256": "35a2cf231984001690a16ff8f72c1f55a646075b437cd1b2ad8c258fc76a4ccb"
+  },
+  {
+    "file": "docs/reference/OPEN_READING.md",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/docs/reference/OPEN_READING.md",
+    "sha256": "f6b1fc095fa9dc9b67ace01eceb1238e4d37c967ca85c6078f0f4ba6b1c37701"
+  },
+  {
+    "file": "docs/reference/VERIFICATION.md",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/docs/reference/VERIFICATION.md",
+    "sha256": "486d3a62e242a62d03ac9e77572f9959e13b2b98085aed7e0a72f8f41176e4cc"
+  },
+  {
+    "file": "src/tools/reference/data.ts",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/src/tools/reference/data.ts",
+    "sha256": "876c4c3f1fb9724529aade47c588b2bfbb9e382d6803ce4a0d8270916a71f853"
+  },
+  {
+    "file": "src/tools/reference/search.ts",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/src/tools/reference/search.ts",
+    "sha256": "0bbc209f2c0bd18b2f39cc7a9783ed656ef2a22d19fe5d97fce77d867fc4d2f6"
+  },
+  {
+    "file": "src/tools/reference/ReferenceMath.tsx",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/src/tools/reference/ReferenceMath.tsx",
+    "sha256": "0ed068d1d81e4837f8237acfa89f4447cb6d3c0b2e26abd2accaeaad2811e298"
+  },
+  {
+    "file": "src/tools/reference/ReferenceRecord.tsx",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/src/tools/reference/ReferenceRecord.tsx",
+    "sha256": "d027e24803c0d70b133e47b784611cce6a54075a6b2450e0896b19ccaa4ce4a2"
+  },
+  {
+    "file": "src/tools/reference/ReferenceMath.web.tsx",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/src/tools/reference/ReferenceMath.web.tsx",
+    "sha256": "7bcc3f462890eeeb04568a34caccbdb511513489f57d7167840ef6ed3711e124"
+  },
+  {
+    "file": "src/tools/reference/layout.ts",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/src/tools/reference/layout.ts",
+    "sha256": "bde4f49c58897c0d0b3b10f7a53d9d2bd26b33168a11ed623d2b536a8634d9cc"
+  },
+  {
+    "file": "src/tools/reference/ReferenceDiagram.tsx",
+    "source": "/Users/skebobr/Desktop/Espada-reference-20261023/src/tools/reference/ReferenceDiagram.tsx",
+    "sha256": "fd6b1eb4afc4de42d8deade9ceb063b93f379619cddf58d58d651de72044e5d0"
+  }
+]
