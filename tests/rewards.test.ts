@@ -75,3 +75,17 @@ test("opening, seeking, pausing, hidden playback and repeat loops cannot manufac
   assert.equal(trackWatch(watch, 11, Infinity, true, now).completed, false);
   assert.equal(trackWatch(watch, 80, 100, true, now + 60000).completed, false);
 });
+test("playback time includes rewatching but coverage and rewards remain unique", () => {
+  let w = trackWatch(emptyWatch(), 0, 100, true, 0).state;
+  for (let i = 1; i <= 5; i++) w = trackWatch(w, i, 100, true, i * 1000).state;
+  assert.equal(w.activeSeconds, 5);
+  assert.equal(w.seconds, 5);
+  w = trackWatch(w, 0, 100, true, 6000).state;
+  for (let i = 1; i <= 5; i++)
+    w = trackWatch(w, i, 100, true, (6 + i) * 1000).state;
+  assert.equal(w.activeSeconds, 10);
+  assert.equal(w.seconds, 5);
+  w = trackWatch(w, 90, 100, true, 12000).state;
+  w = trackWatch(w, 91, 100, false, 13000).state;
+  assert.equal(w.activeSeconds, 10);
+});

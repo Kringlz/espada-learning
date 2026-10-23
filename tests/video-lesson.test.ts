@@ -246,6 +246,11 @@ test("failed saves are recoverable; rapid edits are serialized; remount restores
   fail = false;
   await act(async () => h.current.retry());
   assert.equal(h.current.error, "");
+  assert.equal(
+    h.current.data.runs[0].syncRevision,
+    undefined,
+    "local-only records must remain eligible for archive import",
+  );
   assert.ok(keys.every((k) => k === lessonKey("local-fixture")));
   await h.close();
   const restored = await mount(storage);

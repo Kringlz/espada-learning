@@ -1,3 +1,4 @@
+import { StudentProgress } from "../progress/ProgressScreen";
 import { DuoHome } from "../components/DuoHome";
 import { StreakButton } from "../components/StreakButton";
 import { AtlasImage } from "../components/AtlasImage";
@@ -469,15 +470,19 @@ export function Progress({
     );
   if (personal && view === "activity")
     return (
-      <ClarityProgress
-        openCourse={openCourse}
-        openResult={openResult ?? setLocalDetail}
-        details={() => setView("topics")}
-      >
-        {lessonStorageReady && (
-          <TestProgress active={active} open={setTestAttempt} />
-        )}
-      </ClarityProgress>
+      <StudentProgress
+        studentId={id}
+        details={
+          <View style={{ gap: 12 }}>
+            <Button secondary onPress={() => setView("topics")}>
+              Освоение тем и прежние отчёты
+            </Button>
+            {lessonStorageReady && (
+              <TestProgress active={active} open={setTestAttempt} />
+            )}
+          </View>
+        }
+      />
     );
   return (
     <View

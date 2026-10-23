@@ -19,7 +19,10 @@
     "test:lessons:db": "node scripts/test-lessons.mjs",
     "lessons:seed:local": "node scripts/seed-demo-lessons.mjs --local-preview",
     "lessons:server:local": "node scripts/lesson-preview-server.mjs --local-preview",
-    "lessons:preview": "EXPO_PUBLIC_DATA_MODE=demo EXPO_PUBLIC_LESSON_PREVIEW_URL=http://127.0.0.1:55433 expo start --web --clear"
+    "lessons:preview": "EXPO_PUBLIC_DATA_MODE=demo EXPO_PUBLIC_LESSON_PREVIEW_URL=http://127.0.0.1:55433 expo start --web --clear",
+    "test:progress:db": "node --import tsx scripts/test-progress-db.mts",
+    "test:progress:web": "node --import tsx scripts/test-progress-browser.mjs",
+    "progress:server:local": "node scripts/progress-preview-server.mjs --local-preview"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

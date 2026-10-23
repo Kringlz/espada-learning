@@ -1,5 +1,7 @@
+import { useLearning } from "../../services/context";
+import { lessonSync } from "../../progress/service";
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
+import { AppState, Pressable, View, useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Path, Rect, Text as SvgText, Circle } from "react-native-svg";
 import { Button, Icon, Txt, useUITheme } from "../../components/ui";
@@ -55,7 +57,16 @@ function Lesson({
   const { width } = useWindowDimensions();
   const wide = width >= 1100;
   const active = useContext(MotionActiveContext);
-  const store = useLesson(actorId, AsyncStorage, lessonId);
+  const { actor } = useLearning();
+  const connectedSync = actor.role === "student" ? lessonSync : undefined;
+  const store = useLesson(actorId, AsyncStorage, lessonId, connectedSync);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", () => store.pause());
+    return () => sub.remove();
+  }, []);
+  useEffect(() => {
+    if (!active) store.pause();
+  }, [active]);
   const { award, earned, ready: rewardsReady } = useRewards();
   const [reviewVideo, setReviewVideo] = useState(false);
   const [confirmFinish, setConfirmFinish] = useState(false);
@@ -237,6 +248,13 @@ function Lesson({
           </Txt>
         )}
       </View>
+      {connectedSync && !store.error && (
+        <Txt size={12} color={colors.muted}>
+          {store.saving
+            ? "Ожидает подтверждения сервера…"
+            : "Сохранено на сервере"}
+        </Txt>
+      )}
       {!!store.error && (
         <View style={{ gap: 8 }}>
           <Txt accessibilityRole="alert" color={colors.red}>

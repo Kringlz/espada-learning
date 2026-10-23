@@ -8,6 +8,7 @@ export type Run = {
   lessonId?: string;
   contentVersion?: number;
   startedAt: string;
+  syncRevision?: number;
   finishedAt?: string;
   stage: Stage;
   initial?: Answer;
@@ -302,6 +303,9 @@ export function parseLesson(
       (n) => Number.isFinite(n) && n >= 0,
     ) ||
     typeof d.video.completed !== "boolean" ||
+    (d.video.watch?.activeSeconds !== undefined &&
+      (!Number.isFinite(d.video.watch.activeSeconds) ||
+        d.video.watch.activeSeconds < 0)) ||
     !Array.isArray(d.video.watch?.ranges) ||
     !d.video.watch.ranges.every(
       (r) =>

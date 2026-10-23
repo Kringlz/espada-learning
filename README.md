@@ -131,3 +131,7 @@ This is an experienceable first version, not a store-ready or independently vali
 ### Activity rewards and sound
 
 Students have three local activity levels (0 / 100 / 300 points), +10 for watching 80% of a video and +20 for a unique correct exercise. Points persist by profile on this device; repeats never add points and grades/mastery remain separate. The header speaker button toggles quiet original effects. See `docs/SCORING.md` and `docs/MATH_COURSE_RU.md` for limits and video mapping rules. Native builds now include `expo-audio` with recording and background playback disabled.
+
+## Прогресс для семьи и учителя
+
+В этой ветке добавлен серверный прогресс видеоуроков, обзор группы, общая недельная цель и школьные работы с приватными вложениями. Схема, правила подсчёта, воспроизводимая локальная проверка и ограничения описаны в [руководстве по прогрессу](docs/STUDENT_PROGRESS_RU.md). Нужны миграция `011_student_progress.sql` и замороженный `supabase/progress-bank.sql`; без сервера интерфейс явно сообщает о недоступности данных. Ничего не публикуется автоматически из локальной копии.

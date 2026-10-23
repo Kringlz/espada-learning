@@ -58,6 +58,7 @@ export type WatchState = {
   position: number | null;
   clock: number | null;
   seconds: number;
+  activeSeconds?: number;
   ranges: [number, number][];
 };
 export const emptyWatch = (): WatchState => ({
@@ -108,6 +109,7 @@ export function trackWatch(
   const next = {
     position,
     clock: now,
+    activeSeconds: (state.activeSeconds ?? 0) + (watched > 0 ? elapsed : 0),
     seconds: merged.reduce((sum, [start, end]) => sum + end - start, 0),
     ranges: merged,
   };

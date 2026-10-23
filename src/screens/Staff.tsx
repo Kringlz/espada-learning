@@ -1,3 +1,4 @@
+import { GroupProgress, StudentProgress } from "../progress/ProgressScreen";
 import { GroupRoster } from "../components/GroupRoster";
 import {
   WorkspaceOverview,
@@ -69,6 +70,7 @@ export function Staff({
   if (topicEdit)
     return <ContentEditor topic={topicEdit} close={() => setTopicEdit(null)} />;
   if (tab === "Manage") return <Management />;
+  if (tab === "Overview") return <GroupProgress />;
   if (studentTopic) {
     const t = s.topics.find((t) => t.id === studentTopic)!;
     return (
@@ -149,7 +151,7 @@ export function Staff({
                   <Txt size={26} weight="700">
                     {selectedStudent.name}
                   </Txt>
-                  <LearnerSnapshot
+                  <StudentProgress
                     studentId={selectedStudent.id}
                     details={
                       <Progress

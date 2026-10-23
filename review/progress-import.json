@@ -1,0 +1,156 @@
+{
+  "source": "/Users/skebobr/Desktop/Espada/tmp/espada-progress-20261023",
+  "base": "f3ae4a4",
+  "files": [
+    {
+      "path": "App.tsx",
+      "sourceSha256": "35d81c9d178446bdcca5713315b939a468f76d9571419337643e5c4fb85ee0f8",
+      "mergedSha256": "bb437ccfffb282459c8b588b581868f1e5f014d7dd15573157e30462a73ead57"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sourceSha256": "82fd8a1a26d3b2b3ef645ca90391efe24fbad359f5204a633eca357984c894a1",
+      "mergedSha256": "82fd8a1a26d3b2b3ef645ca90391efe24fbad359f5204a633eca357984c894a1"
+    },
+    {
+      "path": "README.md",
+      "sourceSha256": "5e11499813fd0905af84fe94bf22e8f67e9b86cd757a09df971f1c06633e2552",
+      "mergedSha256": "5e11499813fd0905af84fe94bf22e8f67e9b86cd757a09df971f1c06633e2552"
+    },
+    {
+      "path": "docs/STUDENT_PROGRESS_RU.md",
+      "sourceSha256": "973f8f647e53a00fea9af7f17c4b7bb9896688b686a53f884ccc9f3c2bc9708c",
+      "mergedSha256": "973f8f647e53a00fea9af7f17c4b7bb9896688b686a53f884ccc9f3c2bc9708c"
+    },
+    {
+      "path": "package.json",
+      "sourceSha256": "7df7c44d3b3b32970d46e4fed08380c473b894cc09bac5b360ee0ecbe7ea362f",
+      "mergedSha256": "7df7c44d3b3b32970d46e4fed08380c473b894cc09bac5b360ee0ecbe7ea362f"
+    },
+    {
+      "path": "scripts/generate-progress-bank.ts",
+      "sourceSha256": "e137736783a5963f0c6607966c1203f752214d81b13c33893c30c472cdfc3658",
+      "mergedSha256": "e137736783a5963f0c6607966c1203f752214d81b13c33893c30c472cdfc3658"
+    },
+    {
+      "path": "scripts/progress-preview-server.mjs",
+      "sourceSha256": "2e8fd40030884bb86f7a29bdc17ebb316ea9778cad5eb1d0003aa7a5e34ebeb7",
+      "mergedSha256": "c640a7c7578e245f7cb90f528398cfcbff617fe09a7e64743f4ceefaaccbd17d"
+    },
+    {
+      "path": "scripts/seed-progress-preview.sql",
+      "sourceSha256": "c6fbd4382ed63c758a6f2fd72b2429248149f473fbac3b79d38df1876ff21ba5",
+      "mergedSha256": "c6fbd4382ed63c758a6f2fd72b2429248149f473fbac3b79d38df1876ff21ba5"
+    },
+    {
+      "path": "scripts/test-database.sh",
+      "sourceSha256": "34b972ce96bcfcb371f3063f47cd0e83cd02e5b21797c8b8b6b6df140fa9de1b",
+      "mergedSha256": "34b972ce96bcfcb371f3063f47cd0e83cd02e5b21797c8b8b6b6df140fa9de1b"
+    },
+    {
+      "path": "scripts/test-progress-browser.mjs",
+      "sourceSha256": "4330454744c0b7d55aa752446a9956bab730ed6f21ba2d0269537ae788d0d486",
+      "mergedSha256": "4330454744c0b7d55aa752446a9956bab730ed6f21ba2d0269537ae788d0d486"
+    },
+    {
+      "path": "scripts/test-progress-db.mts",
+      "sourceSha256": "278dda240eb534ca06f4d5c11bf4edcfcdb1b234b4e551d20dc7e6f85b7c7f3e",
+      "mergedSha256": "278dda240eb534ca06f4d5c11bf4edcfcdb1b234b4e551d20dc7e6f85b7c7f3e"
+    },
+    {
+      "path": "src/course/videoLesson/VideoLesson.tsx",
+      "sourceSha256": "27678b4adc99d93e5dbc90ee3f3743fa1486015c1dde186d14d497e4e07cf576",
+      "mergedSha256": "20a4684d4fbcfc616d6bda7b6f2e8e4750055df80940238ee5b17754c983cf54"
+    },
+    {
+      "path": "src/course/videoLesson/model.ts",
+      "sourceSha256": "76385accd92c99e4ff33650258405ae6eab124c1a9489629b840c1cd45b1b1c3",
+      "mergedSha256": "76385accd92c99e4ff33650258405ae6eab124c1a9489629b840c1cd45b1b1c3"
+    },
+    {
+      "path": "src/course/videoLesson/useLesson.ts",
+      "sourceSha256": "34ae3b87c013b4bbe728332944742b50a494d5e08cb5e4eb8cae0f3fc64c2758",
+      "mergedSha256": "34ae3b87c013b4bbe728332944742b50a494d5e08cb5e4eb8cae0f3fc64c2758"
+    },
+    {
+      "path": "src/engagement/rewards.ts",
+      "sourceSha256": "bf118a83aba0f9eb7efec1e7405b835a9af1e921303ead511b70ac011874f752",
+      "mergedSha256": "bf118a83aba0f9eb7efec1e7405b835a9af1e921303ead511b70ac011874f752"
+    },
+    {
+      "path": "src/progress/ProgressScreen.tsx",
+      "sourceSha256": "4ee356535dda715eb1c0331f1e54bc0ab22409ea2ad1e5b57626c2714263a28a",
+      "mergedSha256": "d08e36e627649f09930df9bc91b65af972171e0b19570d9e0b6cc8de3d80ba1d"
+    },
+    {
+      "path": "src/progress/model.ts",
+      "sourceSha256": "f04b555c3753402e17f24270e21fc9d9368ccf84881bec7d1aae9847774ab5a0",
+      "mergedSha256": "f04b555c3753402e17f24270e21fc9d9368ccf84881bec7d1aae9847774ab5a0"
+    },
+    {
+      "path": "src/progress/outbox.ts",
+      "sourceSha256": "c15f981e5bc5f9aaf0647c1c56e427d7d78c39fa440f61db8ffd00e69cf6025b",
+      "mergedSha256": "c15f981e5bc5f9aaf0647c1c56e427d7d78c39fa440f61db8ffd00e69cf6025b"
+    },
+    {
+      "path": "src/progress/service.ts",
+      "sourceSha256": "aa940de7587cbadc3c907ba48b4f72d4dce3f42dcacb7af7711905bc29b65896",
+      "mergedSha256": "aa940de7587cbadc3c907ba48b4f72d4dce3f42dcacb7af7711905bc29b65896"
+    },
+    {
+      "path": "src/progress/useProgress.ts",
+      "sourceSha256": "d28ebcd84e310c49540aa6e11866fff38e5d35e8d96ac1e470c4c0c83fd67aef",
+      "mergedSha256": "d28ebcd84e310c49540aa6e11866fff38e5d35e8d96ac1e470c4c0c83fd67aef"
+    },
+    {
+      "path": "src/screens/Family.tsx",
+      "sourceSha256": "b738f9d3e59711449de3dd740ebf08c8635462b00dbda8342f6087b207fe1bcd",
+      "mergedSha256": "b738f9d3e59711449de3dd740ebf08c8635462b00dbda8342f6087b207fe1bcd"
+    },
+    {
+      "path": "src/screens/Reports.tsx",
+      "sourceSha256": "4b7fdf6903ce4890f63d32b5d9a3c50c412fdbc6d0bd868686dca3dbdaf98fca",
+      "mergedSha256": "9383b95857c02401a705c72675f0d7eb62789eebcd63e9924d7b54915335e972"
+    },
+    {
+      "path": "src/screens/Staff.tsx",
+      "sourceSha256": "afd9a093b09ac7fb57acfede467fcce079a3514487e00de716b1ecd6bd59c721",
+      "mergedSha256": "4dfddecc4659f5f35644a77f030e3dc623bf2f76c94d56ffb25be0b1edd17de2"
+    },
+    {
+      "path": "supabase/migrations/011_student_progress.sql",
+      "sourceSha256": "a182bc4e33cf4044ce86d65a61d4ca5a14055e1a73a1e7a9684a01446a1ae605",
+      "mergedSha256": "a182bc4e33cf4044ce86d65a61d4ca5a14055e1a73a1e7a9684a01446a1ae605"
+    },
+    {
+      "path": "supabase/progress-bank.sql",
+      "sourceSha256": "10bd697ef0d1a548094c3a8423e5b85f14ebee46af3290d7143be984e284d8ae",
+      "mergedSha256": "10bd697ef0d1a548094c3a8423e5b85f14ebee46af3290d7143be984e284d8ae"
+    },
+    {
+      "path": "tests/progress.test.ts",
+      "sourceSha256": "bad987f08817d254164207b0003dc66e3897fbc86c96b688bd32aa9f3e2bbc65",
+      "mergedSha256": "bad987f08817d254164207b0003dc66e3897fbc86c96b688bd32aa9f3e2bbc65"
+    },
+    {
+      "path": "tests/rewards.test.ts",
+      "sourceSha256": "b3fe160b3f0b9c0ef1a8ffc39dafc5fd7c1545a4abd9dbce700c12cd10bcf977",
+      "mergedSha256": "b3fe160b3f0b9c0ef1a8ffc39dafc5fd7c1545a4abd9dbce700c12cd10bcf977"
+    },
+    {
+      "path": "tests/video-lesson.test.ts",
+      "sourceSha256": "3a5473690379987481ca5c394e88c97e2e8ead35b6768b061e5cd92846d363d6",
+      "mergedSha256": "3a5473690379987481ca5c394e88c97e2e8ead35b6768b061e5cd92846d363d6"
+    }
+  ],
+  "capturedAt": "2026-10-23T02:17:55.289280+00:00",
+  "sourceHead": "f3ae4a4ed33b5a5b6a5dcc293166501fc062dc8a",
+  "sourceThreadStatus": "inProgress / waitingOnApproval",
+  "integrationNotes": [
+    "Three-way merge against f3ae4a4 and saved source snapshots",
+    "Kept lessonFromHash navigation and removal of atlas in App.tsx",
+    "Preserved common cosmic theme; centered StudentProgress and added its page title",
+    "Preview server supports ESPADA_PROGRESS_PORT; this copy runs on 55435",
+    "Ignored generated fixture date-only changes"
+  ]
+}

@@ -1,3 +1,4 @@
+import { StudentProgress } from "../progress/ProgressScreen";
 import { LearnerSnapshot } from "../components/ClarityWorkspace";
 import React, { useState, useEffect } from "react";
 import { Linking, View } from "react-native";
@@ -106,7 +107,7 @@ export function Parent({ tab }: { tab: string }) {
         </Txt>
       </View>
       {tab === "FamilyProgress" && (
-        <LearnerSnapshot
+        <StudentProgress
           key={child.id}
           studentId={child.id}
           details={<Progress studentId={child.id} openTopic={setTopicId} />}

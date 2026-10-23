@@ -161,3 +161,11 @@ real shared accounts and cloud media require separately configured backend servi
 - Кабинет родителя: выбор ребёнка, опубликованные результаты и радар, история, домашняя работа, контакты преподавателей. Добавлен вымышленный демоаккаунт Елены Морозовой.
 - Учитель зачисляет действующий аккаунт ученика в свою группу по коду, подтверждает/отзывает связь родителя с учеником и редактирует собственные контакты в профиле. Ввод офлайн-результатов и назначение ДЗ остаются в существующих разделах.
 - Серверная миграция `007_family_roles.sql`: роль parent, подтверждённые связи, контакты, доступ на уровне строк и проверяемые команды. Родитель не может изменять учебные данные, видеть одноклассников и черновики. Администратор остаётся служебной ролью.
+
+## 2026-10-23 — Student progress (isolated local implementation)
+
+- Start from the latest unified 55-lesson/reference build, preserving original working copies.
+- Add immutable versioned lesson evidence, durable idempotent synchronization, meaningful activity periods in Asia/Bishkek, family/student progress and teacher group overview.
+- Add a single attributed weekly goal and audited external school results with private JPG/PNG/PDF attachments.
+- Reuse existing group/family authorization and preserve mastery policy, former reports, lesson answers and notes.
+- Verify a clean local database installation, independent browser sessions, network/upload retries and 320/390/1440 layouts. Hosted Auth/Storage and native devices remain unverified; no deployment.
