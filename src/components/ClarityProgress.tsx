@@ -1,5 +1,4 @@
 import { StarGlyph } from "./Starfield";
-import { constellations } from "../course/constellation";
 import { lessonStatus, nextLesson } from "../course/journey";
 import { PointsDetails } from "./PointsDetails";
 import { StreakButton } from "./StreakButton";
@@ -71,19 +70,16 @@ export function ClarityProgress({
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <Txt
           size={wide ? 42 : 30}
-          weight="700"
+          weight="500"
           style={{ letterSpacing: -1, flex: 1 }}
         >
-          Мои открытия
+          Мой прогресс
         </Txt>
         <StreakButton />
       </View>
-      <Txt size={15} color={colors.muted}>
-        Каждое открытие остаётся с тобой. Здесь видно, какой путь уже пройден.
-      </Txt>
       <View style={{ gap: 16 }}>
         <Txt size={11} color={colors.muted} style={{ letterSpacing: 2 }}>
-          ТВОИ СОЗВЕЗДИЯ
+          КЛАССЫ
         </Txt>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
           {grades.map((grade) => {
@@ -96,7 +92,7 @@ export function ClarityProgress({
               <Pressable
                 key={grade}
                 accessibilityRole="button"
-                accessibilityLabel={`${constellations[grade].name}, ${grade} класс: ${completed} из ${topics.length} уроков пройдено`}
+                accessibilityLabel={`${grade} класс: ${completed} из ${topics.length} уроков пройдено`}
                 disabled={!openCourse || !storage.ready}
                 onPress={() => resume && openCourse?.(resume.id)}
                 style={({ pressed }) => ({
@@ -105,10 +101,9 @@ export function ClarityProgress({
                   padding: 16,
                   gap: 8,
                   alignItems: "center",
-                  borderWidth: 1,
-                  borderColor: colors.line,
+                  borderWidth: 0,
                   borderRadius: 18,
-                  backgroundColor: pressed ? colors.light : colors.white,
+                  backgroundColor: pressed ? colors.light : "transparent",
                 })}
               >
                 <StarGlyph
@@ -118,10 +113,10 @@ export function ClarityProgress({
                   selected={completed > 0}
                 />
                 <Txt size={14} weight="500">
-                  {constellations[grade].name}
+                  {grade} класс
                 </Txt>
                 <Txt size={11} color={colors.muted}>
-                  {grade} класс · {completed}/{topics.length}
+                  {completed}/{topics.length}
                 </Txt>
               </Pressable>
             );
@@ -338,8 +333,7 @@ export function ClarityProgress({
                 style={({ pressed }) => ({
                   padding: 20,
                   borderRadius: 22,
-                  borderWidth: 1,
-                  borderColor: colors.line,
+                  borderWidth: 0,
                   backgroundColor: colors.white,
                   gap: 16,
                   opacity: pressed ? 0.8 : 1,

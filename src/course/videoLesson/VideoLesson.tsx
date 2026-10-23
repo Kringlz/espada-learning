@@ -24,7 +24,6 @@ export function VideoLesson(props: {
   actorId: string;
   lessonId?: string;
   back: () => void;
-  legacy: () => void;
 }) {
   return (
     <VideoLessonTheme>
@@ -51,7 +50,6 @@ function Lesson({
   actorId: string;
   lessonId?: string;
   back: () => void;
-  legacy: () => void;
 }) {
   const { colors } = useUITheme();
   const { width } = useWindowDimensions();
@@ -129,7 +127,7 @@ function Lesson({
           <Button onPress={store.retry}>Повторить загрузку</Button>
         )}
         <Button secondary onPress={back}>
-          К урокам
+          К карте
         </Button>
       </View>
     );
@@ -208,7 +206,7 @@ function Lesson({
           gap: 8,
         }}
       >
-        <QuietAction label="К урокам" onPress={back} icon="arrow-left" />
+        <QuietAction label="К карте" onPress={back} icon="arrow-left" />
       </View>
       <View style={{ gap: 10 }}>
         <Txt

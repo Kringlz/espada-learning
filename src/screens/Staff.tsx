@@ -5,7 +5,6 @@ import {
 } from "../components/ClarityWorkspace";
 import { GroupEnrollment, ParentLinkEditor } from "./Family";
 import { useUITheme } from "../components/ui";
-import { CourseLibrary } from "../course/CourseLibrary";
 import { LessonLibrary } from "../lessons/LessonLibrary";
 import { GroupPicker, GroupCodeAndSchedule } from "../components/Groups";
 import { GroupHomework } from "./GroupHomework";
@@ -54,8 +53,8 @@ export function Staff({
   const [studentTopic, setStudentTopic] = useState<string | null>(null);
   const [videoTopic, setVideoTopic] = useState<string | null>(null);
   const [showLessonLibrary, setShowLessonLibrary] = useState<
-    "course" | "tests" | "legacy"
-  >("course");
+    "tests" | "legacy"
+  >("tests");
   const [topicEdit, setTopicEdit] = useState<Topic | null>(null);
   if (tab === "Assessments" || create)
     return (
@@ -188,15 +187,6 @@ export function Staff({
           <Button
             secondary
             small
-            icon="book"
-            selected={showLessonLibrary === "course"}
-            onPress={() => setShowLessonLibrary("course")}
-          >
-            Курс 5–11 классов
-          </Button>
-          <Button
-            secondary
-            small
             icon="book-open"
             selected={showLessonLibrary === "tests"}
             onPress={() => setShowLessonLibrary("tests")}
@@ -215,9 +205,7 @@ export function Staff({
         </View>
       )}
       {tab === "Curriculum" &&
-        (showLessonLibrary === "course" ? (
-          <CourseLibrary />
-        ) : showLessonLibrary === "tests" ? (
+        (showLessonLibrary === "tests" ? (
           <LessonLibrary />
         ) : videoTopic ? (
           (() => {

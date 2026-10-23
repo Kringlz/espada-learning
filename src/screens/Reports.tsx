@@ -16,7 +16,8 @@ import { course } from "../course/model";
 import { useCourseProgress } from "../course/storage";
 import { lessonStorageReady } from "../lessons/service";
 import { useScreenScroll } from "../components/ScreenScroll";
-import { CourseLibrary } from "../course/CourseLibrary";
+import { VideoLesson } from "../course/videoLesson/VideoLesson";
+import { useLessonFocus } from "../components/LessonFocus";
 import { LessonLibrary } from "../lessons/LessonLibrary";
 import React, { useEffect, useState } from "react";
 import { Image, Pressable, View, useWindowDimensions } from "react-native";
@@ -49,7 +50,6 @@ import {
   styles,
   dateText,
 } from "../components/ui";
-import { TopicTree } from "../components/TopicTree";
 
 const empty =
   "Пока нет результатов. Они появятся после проверки работы учителем";
@@ -150,40 +150,22 @@ export function Home({
 }
 
 export function Learn({
-  openTopic,
   courseRequest,
-  active = true,
+  back,
 }: {
-  openTopic: (id: string) => void;
   courseRequest?: { id: string; key: number };
-  active?: boolean;
+  back: () => void;
 }) {
-  const [reading, setReading] = useState(false);
-  useScreenScroll("learn");
+  const { actor } = useLearning();
+  useLessonFocus(!!courseRequest, back);
+  if (!courseRequest) return null;
   return (
-    <View
-      style={{ gap: 24, maxWidth: 1040, width: "100%", alignSelf: "center" }}
-    >
-      {!reading && (
-        <Txt size={34} weight="700" style={{ letterSpacing: -0.8 }}>
-          Атлас знаний
-        </Txt>
-      )}
-      <CourseLibrary
-        onTopicChange={setReading}
-        request={courseRequest}
-        extras={
-          <View style={{ gap: 16 }}>
-            <Disclosure title="Темы от учителя" icon="book-open">
-              <TopicTree openTopic={openTopic} />
-            </Disclosure>
-            {lessonStorageReady && (
-              <Disclosure title="Задания от учителя" icon="check-circle">
-                <LessonLibrary />
-              </Disclosure>
-            )}
-          </View>
-        }
+    <View style={{ maxWidth: 1120, width: "100%", alignSelf: "center" }}>
+      <VideoLesson
+        key={`${actor.id}:${courseRequest.id}`}
+        actorId={actor.id}
+        lessonId={courseRequest.id}
+        back={back}
       />
     </View>
   );

@@ -94,6 +94,6 @@ export function validSpaceAction(
     return data.ready && data.lessons.some((t) => t.id === id);
   if (type === "topic") return data.signals.some((s) => s.id === id);
   if (type === "navigate")
-    return ["Progress", "Calculator", "Learn", "Profile"].includes(id);
+    return ["Progress", "Calculator", "Profile"].includes(id);
   return type === "retry";
 }

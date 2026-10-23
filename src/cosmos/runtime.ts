@@ -7,7 +7,7 @@ var canvas=document.getElementById('space'), ctx=canvas.getContext('2d',{alpha:f
 var $=function(id){return document.getElementById(id)};
 var selected=data.lessons.find(function(t){return t.id===data.initialId})||data.lessons[0];
 var grade=selected.grade, overview=false, free=false, disposed=false, interacted=false;
-if(!ctx){$('error').style.display='block';$('error').textContent='Не удалось открыть космическую сцену. ';var fallback=document.createElement('button');fallback.textContent='Открыть уроки';fallback.onclick=function(){send({type:'navigate',id:'Learn'})};$('error').appendChild(fallback);return}
+if(!ctx){$('error').style.display='block';$('error').textContent='Не удалось открыть космическую сцену. ';var fallback=document.createElement('button');fallback.textContent='Повторить';fallback.onclick=function(){location.reload()};$('error').appendChild(fallback);return}
 var width=innerWidth,height=innerHeight,dpr=1, focal=700, mobile=false, lastTime=0, frame=0, ticks=0;
 var focus={x:selected.x,y:selected.y,z:selected.z}, aim={x:focus.x,y:focus.y,z:focus.z};
 var orbit={yaw:-.12,pitch:.08,distance:710}, destination={yaw:-.12,pitch:.08,distance:710};

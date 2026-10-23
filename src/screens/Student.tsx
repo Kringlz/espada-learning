@@ -21,8 +21,10 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
   const [confirm, setConfirm] = useState(false);
   const requested = s.deletionRequests.some((r) => r.studentId === actor.id);
   return (
-    <View style={{ gap: 16, maxWidth: 800 }}>
-      <Txt size={27} weight="600">
+    <View
+      style={{ gap: 24, maxWidth: 800, width: "100%", alignSelf: "center" }}
+    >
+      <Txt size={32} weight="500">
         Профиль
       </Txt>
       <Card>

@@ -1,3 +1,5 @@
+import { lessonFromHash } from "./src/course/navigation";
+import { SpaceBackdrop } from "./src/components/SpaceBackdrop";
 import { Arena } from "./src/arena/Arena";
 import { Calculator } from "./src/tools/Calculator";
 import {
@@ -678,7 +680,6 @@ function Shell() {
   const explorer = actor.role === "student";
   const inSpace = explorer && tab === "Home" && !topic && !result;
   function returnToSpace() {
-    focusedLesson?.exit();
     if (Platform.OS === "web" && window.location.hash.startsWith("#/"))
       window.history.replaceState(
         null,
@@ -704,7 +705,7 @@ function Shell() {
   }, []);
   const tabs =
     actor.role === "student"
-      ? ["Home", "Learn", "Arena", "Progress", "Calculator"]
+      ? ["Home", "Progress", "Calculator"]
       : actor.role === "parent"
         ? ["FamilyProgress", "Homework", "Contacts"]
         : [
@@ -765,16 +766,22 @@ function Shell() {
   useEffect(() => {
     if (Platform.OS !== "web" || actor.role !== "student") return;
     const route = () => {
-      const lessonRoute = /^#\/lesson\/([AG]\d{2}-\d{2})$/.exec(window.location.hash);
-      if (lessonRoute) {
-        setCourseRequest({ id: lessonRoute[1], key: Date.now() });
+      const lessonId = lessonFromHash(window.location.hash);
+      if (lessonId) {
+        setCourseRequest({ id: lessonId, key: Date.now() });
         setLearnVisited(true);
         setTab("Learn");
         setTopic(null);
         setResult(null);
-      } else if (window.location.hash === "#/course") {
-        setLearnVisited(true);
-        setTab("Learn");
+      } else {
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}${window.location.search}#/`,
+        );
+        setTab("Home");
+        setTopic(null);
+        setResult(null);
       }
     };
     route();
@@ -810,6 +817,7 @@ function Shell() {
               }[name] ?? translate(name))
             : translate(name);
   function openCourse(id: string) {
+    if (Platform.OS === "web") window.location.hash = `/lesson/${id}`;
     courseOrigin.current = tab;
     setCourseRequest({ id, key: Date.now() });
     navigate("Learn");
@@ -946,6 +954,7 @@ function Shell() {
               backgroundColor: explorer && !inSpace ? colors.paper : undefined,
             }}
           >
+            {!inSpace && <SpaceBackdrop />}
             {explorer && !inSpace && (
               <View
                 style={{
@@ -1206,9 +1215,8 @@ function Shell() {
                                 value={tab === "Learn" && !topic && !result}
                               >
                                 <Learn
-                                  active={tab === "Learn" && !topic && !result}
-                                  openTopic={setTopic}
                                   courseRequest={courseRequest}
+                                  back={returnToSpace}
                                 />
                               </MotionActiveContext.Provider>
                             )}
