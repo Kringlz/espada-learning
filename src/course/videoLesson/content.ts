@@ -1,3 +1,5 @@
+import lessonCatalog from "../../../content/math-course/video-lessons/lessons.v1.json";
+import { courseVideos } from "../videos";
 import * as original from "./content.v1";
 import type { Question } from "./content.v1";
 export {
@@ -306,10 +308,56 @@ export const check: Question[] = [
     ),
   },
 ];
-export function getLessonContent(run: { contentVersion?: number }) {
+export type LessonContent = {
+  opening: Question;
+  practice: Question[];
+  check: Question[];
+  reference: { id: string; title: string; text: string }[];
+};
+export const allLessons = lessonCatalog as Record<
+  string,
+  LessonContent & {
+    version: number;
+    title: string;
+    grade: number;
+    notes: string[];
+    sources: string[];
+  }
+>;
+export function getLessonMeta(id = original.lessonId) {
+  const entry = allLessons[id];
+  if (id !== original.lessonId && !entry) throw Error("Unknown lesson");
+  return {
+    id,
+    title: entry?.title ?? "Теорема Пифагора",
+    version: entry?.version ?? contentVersion,
+    videos: courseVideos[id].items,
+    notes: entry?.notes ?? [
+      "Катеты a и b образуют угол 90°. Сторона c напротив него — гипотенуза.",
+      "c² = a² + b²",
+      "Длина — положительный корень. Гипотенуза длиннее каждого катета.",
+      "Обратно: если для наибольшей стороны c выполнено c² = a² + b², треугольник прямоугольный.",
+    ],
+  };
+}
+export function getLessonContent(run: {
+  contentVersion?: number;
+  lessonId?: string;
+}): LessonContent {
+  if (run.lessonId && run.lessonId !== original.lessonId) {
+    const entry = allLessons[run.lessonId];
+    if (!entry || run.contentVersion !== entry.version)
+      throw Error("Unknown lesson content version");
+    return entry;
+  }
   if (run.contentVersion === undefined || run.contentVersion === 1)
     return original;
   if (run.contentVersion === 2)
-    return { opening: original.opening, practice, check };
+    return {
+      opening: original.opening,
+      practice,
+      check,
+      reference: original.reference,
+    };
   throw new Error("Unknown lesson content version");
 }

@@ -1,5 +1,4 @@
 import { VideoLesson } from "./videoLesson/VideoLesson";
-import { lessonId as videoLessonId } from "./videoLesson/content";
 import {
   ConstellationNavigator,
   GradeOrbits,
@@ -99,13 +98,13 @@ function CourseBrowser({
   function closeTopic() {
     setSelected(null);
     setLegacy(false);
-    if (Platform.OS === "web" && window.location.hash === "#/lesson/G08-02")
+    if (Platform.OS === "web" && window.location.hash.startsWith("#/lesson/"))
       window.location.hash = "/course";
   }
   useEffect(() => {
     if (Platform.OS !== "web") return;
     const changed = () => {
-      if (window.location.hash !== "#/lesson/G08-02") {
+      if (!window.location.hash.startsWith("#/lesson/")) {
         setSelected(null);
         setLegacy(false);
       }
@@ -124,21 +123,11 @@ function CourseBrowser({
   function selectTopic(topic: CourseTopic) {
     setSelected(topic);
     setLegacy(false);
-    if (topic.id === videoLessonId) {
-      if (Platform.OS === "web" && window.location.hash !== "#/lesson/G08-02")
-        window.location.hash = "/lesson/G08-02";
-      return;
-    }
-    let page = storage.progress[topic.id]?.page ?? 0;
-    if (mode === "videos" && !courseVideos[topic.id].pageVideos[page]?.length) {
-      page = Math.max(
-        0,
-        courseVideos[topic.id].pageVideos.findIndex(
-          (items) => items.length > 0,
-        ),
-      );
-    }
-    storage.update(topic.id, { page });
+    if (
+      Platform.OS === "web" &&
+      window.location.hash !== `#/lesson/${topic.id}`
+    )
+      window.location.hash = `/lesson/${topic.id}`;
   }
   useEffect(() => {
     const topic = request && course.find((t) => t.id === request.id);
@@ -163,12 +152,7 @@ function CourseBrowser({
       changeKey={selected?.id ?? "catalog"}
       style={{
         gap: 22,
-        maxWidth:
-          selected?.id === videoLessonId && !legacy
-            ? 1120
-            : selected
-              ? 760
-              : 1040,
+        maxWidth: selected && !legacy ? 1120 : selected ? 760 : 1040,
         width: "100%",
         alignSelf: "center",
       }}
@@ -183,8 +167,10 @@ function CourseBrowser({
           </Button>
         </Card>
       )}
-      {selected?.id === videoLessonId && !legacy ? (
+      {selected && !legacy ? (
         <VideoLesson
+          key={selected.id}
+          lessonId={selected.id}
           actorId={actorId}
           back={closeTopic}
           legacy={() => setLegacy(true)}
@@ -194,9 +180,7 @@ function CourseBrowser({
           key={selected.id}
           topic={selected}
           storage={storage}
-          back={() =>
-            selected.id === videoLessonId ? setLegacy(false) : closeTopic()
-          }
+          back={() => setLegacy(false)}
           next={selectTopic}
           initialTab={mode === "videos" ? "video" : "theory"}
         />

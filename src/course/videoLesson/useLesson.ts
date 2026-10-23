@@ -8,7 +8,11 @@ import {
   updateLesson,
 } from "./model";
 
-export function useLesson(actorId: string, storage: ProgressStorage) {
+export function useLesson(
+  actorId: string,
+  storage: ProgressStorage,
+  lessonId = "G08-02",
+) {
   const [data, setData] = useState(emptyLesson);
   const latest = useRef(data);
   const [ready, setReady] = useState(false);
@@ -17,7 +21,7 @@ export function useLesson(actorId: string, storage: ProgressStorage) {
   const [reload, setReload] = useState(0);
   const mounted = useRef(false);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
-  const key = lessonKey(actorId);
+  const key = lessonKey(actorId, lessonId);
   useEffect(() => {
     let live = true;
     mounted.current = true;
@@ -25,7 +29,7 @@ export function useLesson(actorId: string, storage: ProgressStorage) {
     storage
       .getItem(key)
       .then((raw) => {
-        const loaded = parseLesson(raw);
+        const loaded = parseLesson(raw, lessonId);
         if (!live) return;
         latest.current = loaded;
         setData(loaded);

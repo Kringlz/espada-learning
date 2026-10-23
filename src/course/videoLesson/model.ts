@@ -1,11 +1,12 @@
-import { contentVersion, getLessonContent, Question } from "./content";
+import { getLessonMeta, getLessonContent, Question } from "./content";
 import { emptyWatch, WatchState } from "../../engagement/rewards";
 export type Stage =
   "intro" | "video" | "practice" | "return" | "check" | "result";
 export type Answer = { choice: number; at: string };
 export type Run = {
   id: string;
-  contentVersion?: 1 | 2;
+  lessonId?: string;
+  contentVersion?: number;
   startedAt: string;
   finishedAt?: string;
   stage: Stage;
@@ -24,10 +25,29 @@ export type VideoProgress = {
   watch: WatchState;
   completed: boolean;
 };
-export type LessonData = { version: 1; runs: Run[]; video: VideoProgress };
-export const newRun = (id: string, at: string): Run => ({
+export type LessonData = {
+  version: 1;
+  runs: Run[];
+  video: VideoProgress;
+  videos?: Record<string, VideoProgress>;
+  selectedVideo?: string;
+};
+export function videoProgress(
+  data: LessonData,
+  lessonId: string,
+  videoId: string,
+) {
+  return (
+    data.videos?.[videoId] ??
+    (videoId === getLessonMeta(lessonId).videos[0].id
+      ? data.video
+      : emptyLesson().video)
+  );
+}
+export const newRun = (id: string, at: string, lessonId = "G08-02"): Run => ({
   id,
-  contentVersion,
+  lessonId,
+  contentVersion: getLessonMeta(lessonId).version,
   startedAt: at,
   stage: "intro",
   practice: {},
@@ -42,8 +62,8 @@ export const emptyLesson = (): LessonData => ({
   runs: [],
   video: { position: 0, duration: 0, watch: emptyWatch(), completed: false },
 });
-export const lessonKey = (actor: string) =>
-  `espada.video-lesson.v1:${encodeURIComponent(actor)}:G08-02`;
+export const lessonKey = (actor: string, lessonId = "G08-02") =>
+  `espada.video-lesson.v1:${encodeURIComponent(actor)}:${lessonId}`;
 export function result(run: Run) {
   const { check } = getLessonContent(run);
   const correct = check.filter(
@@ -64,7 +84,7 @@ export function result(run: Run) {
   };
 }
 export type Action =
-  | { type: "start"; id: string; at: string }
+  | { type: "start"; id: string; at: string; lessonId?: string }
   | { type: "choose"; id: string; choice: number }
   | { type: "submit"; at: string }
   | { type: "hint" }
@@ -75,7 +95,8 @@ export type Action =
   | { type: "checkIndex"; index: number }
   | { type: "checkContinue"; index: number }
   | { type: "finish"; at: string }
-  | { type: "video"; progress: VideoProgress };
+  | { type: "video"; progress: VideoProgress; id?: string }
+  | { type: "selectVideo"; id: string };
 export function currentQuestion(run: Run): Question | undefined {
   const { opening, practice, check } = getLessonContent(run);
   return run.stage === "intro" || run.stage === "return"
@@ -113,15 +134,41 @@ export function taskControl(run: Run) {
   return undefined;
 }
 export function updateLesson(data: LessonData, action: Action): LessonData {
-  if (action.type === "video") return { ...data, video: action.progress };
+  if (action.type === "video") {
+    if (!action.id) return { ...data, video: action.progress };
+    const meta = getLessonMeta(data.runs.at(-1)?.lessonId);
+    if (!meta.videos.some((v) => v.id === action.id)) return data;
+    return {
+      ...data,
+      video: action.id === meta.videos[0].id ? action.progress : data.video,
+      videos: { ...data.videos, [action.id]: action.progress },
+    };
+  }
+  if (action.type === "selectVideo") {
+    if (
+      !getLessonMeta(data.runs.at(-1)?.lessonId).videos.some(
+        (v) => v.id === action.id,
+      )
+    )
+      return data;
+    return { ...data, selectedVideo: action.id };
+  }
   const previous = data.runs.at(-1);
   if (action.type === "start") {
+    if (
+      previous &&
+      (previous.lessonId ?? "G08-02") !== (action.lessonId ?? "G08-02")
+    )
+      return data;
     if (
       (previous && !previous.finishedAt) ||
       data.runs.some((r) => r.id === action.id)
     )
       return data;
-    return { ...data, runs: [...data.runs, newRun(action.id, action.at)] };
+    return {
+      ...data,
+      runs: [...data.runs, newRun(action.id, action.at, action.lessonId)],
+    };
   }
   if (!previous || previous.finishedAt) return data;
   let run = { ...previous };
@@ -233,7 +280,10 @@ export function updateLesson(data: LessonData, action: Action): LessonData {
   return { ...data, runs: [...data.runs.slice(0, -1), run] };
 }
 /** Fail closed on corrupted/newer storage. Never silently replace saved attempts. */
-export function parseLesson(raw: string | null): LessonData {
+export function parseLesson(
+  raw: string | null,
+  lessonId = "G08-02",
+): LessonData {
   if (!raw) return emptyLesson();
   const d = JSON.parse(raw) as LessonData;
   const validAnswer = (a: Answer | undefined, q: Question) =>
@@ -263,7 +313,8 @@ export function parseLesson(raw: string | null): LessonData {
   )
     throw Error("Invalid lesson data");
   for (const r of d.runs) {
-    if (!r) throw Error("Invalid attempt");
+    if (!r || (r.lessonId ?? "G08-02") !== lessonId)
+      throw Error("Invalid attempt lesson");
     const { opening, practice, check } = getLessonContent(r);
     if (
       !r ||
@@ -296,5 +347,20 @@ export function parseLesson(raw: string | null): LessonData {
     position: null,
     seconds: d.video.watch.ranges.reduce((n, r) => n + r[1] - r[0], 0),
   };
+  const meta = getLessonMeta(lessonId);
+  if (d.selectedVideo && !meta.videos.some((v) => v.id === d.selectedVideo))
+    throw Error("Unknown video");
+  if (d.videos) {
+    if (typeof d.videos !== "object" || Array.isArray(d.videos))
+      throw Error("Invalid videos");
+    for (const [id, progress] of Object.entries(d.videos)) {
+      if (!meta.videos.some((v) => v.id === id)) throw Error("Unknown video");
+      // Reuse the same strict progress validation and clear the playback clock.
+      d.videos[id] = parseLesson(
+        JSON.stringify({ version: 1, runs: [], video: progress }),
+        lessonId,
+      ).video;
+    }
+  }
   return d;
 }

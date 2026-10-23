@@ -14,7 +14,7 @@ export type Question = {
   prompt: string;
   choices: string[];
   correct: number;
-  concept: Concept;
+  concept: string;
   hints: string[];
   solution: string;
   source: string;

@@ -9,7 +9,7 @@ import { ScreenAnchor, useScreenScroll } from "../../components/ScreenScroll";
 import { VideoLessonTheme } from "../../theme/Theme";
 import { useRewards } from "../../engagement/RewardContext";
 import { useLesson } from "./useLesson";
-import { getLessonContent, lessonVideo, Question, reference } from "./content";
+import { getLessonContent, getLessonMeta, Question } from "./content";
 import {
   currentQuestion,
   draftId,
@@ -17,16 +17,21 @@ import {
   Run,
   Stage,
   taskControl,
+  videoProgress,
 } from "./model";
 
 export function VideoLesson(props: {
   actorId: string;
+  lessonId?: string;
   back: () => void;
   legacy: () => void;
 }) {
   return (
     <VideoLessonTheme>
-      <Lesson {...props} />
+      <Lesson
+        key={`${props.actorId}:${props.lessonId ?? "G08-02"}`}
+        {...props}
+      />
     </VideoLessonTheme>
   );
 }
@@ -40,9 +45,11 @@ const stages: [Stage, string][] = [
 const now = () => new Date().toISOString();
 function Lesson({
   actorId,
+  lessonId = "G08-02",
   back,
 }: {
   actorId: string;
+  lessonId?: string;
   back: () => void;
   legacy: () => void;
 }) {
@@ -50,15 +57,20 @@ function Lesson({
   const { width } = useWindowDimensions();
   const wide = width >= 1100;
   const active = useContext(MotionActiveContext);
-  const store = useLesson(actorId, AsyncStorage);
+  const store = useLesson(actorId, AsyncStorage, lessonId);
   const { award, earned, ready: rewardsReady } = useRewards();
   const [reviewVideo, setReviewVideo] = useState(false);
   const [confirmFinish, setConfirmFinish] = useState(false);
   const [oldRun, setOldRun] = useState<string | null>(null);
   const run = store.data.runs.at(-1);
+  const meta = getLessonMeta(lessonId);
   const { opening, practice, check } = getLessonContent(
-    run ?? { contentVersion: 2 },
+    run ?? { lessonId, contentVersion: meta.version },
   );
+  const lessonVideo =
+    meta.videos.find((v) => v.id === store.data.selectedVideo) ??
+    meta.videos[0];
+  const progress = videoProgress(store.data, lessonId, lessonVideo.id);
   const taskRef = useRef<View>(null);
   const scrollToTask = useContext(ScreenAnchor);
   const videoEvent = {
@@ -69,19 +81,20 @@ function Lesson({
     if (store.ready && !run)
       store.send({
         type: "start",
-        id: `g08-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        lessonId,
+        id: `${lessonId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         at: now(),
       });
   }, [store.ready, !!run]);
   useEffect(() => {
     if (
       store.ready &&
-      store.data.video.completed &&
+      progress.completed &&
       rewardsReady &&
       !earned(videoEvent)
     )
       award([videoEvent]);
-  }, [store.ready, store.data.video.completed, rewardsReady]);
+  }, [store.ready, progress.completed, lessonVideo.id, rewardsReady]);
   useScreenScroll(
     `${run?.stage}:${run?.practiceIndex}:${run?.checkIndex}:${reviewVideo}:${oldRun}`,
   );
@@ -203,7 +216,7 @@ function Lesson({
           weight="600"
           accessibilityRole="header"
         >
-          Теорема Пифагора
+          {meta.title}
         </Txt>
         <View
           style={{ flexDirection: "row", gap: 5 }}
@@ -253,20 +266,50 @@ function Lesson({
             >
               {active && (
                 <YouTubePlayer
+                  key={lessonVideo.id}
                   id={lessonVideo.id}
                   title={lessonVideo.title}
-                  progress={store.data.video}
+                  progress={progress}
                   onProgress={(progress) =>
-                    store.send({ type: "video", progress })
+                    store.send({ type: "video", id: lessonVideo.id, progress })
                   }
                   onWatched={() => award([videoEvent])}
                 />
               )}
             </View>
             <View style={{ width: wide ? 220 : "100%" }}>
-              <VideoNotes />
+              <VideoNotes notes={meta.notes} />
             </View>
           </View>
+          {meta.videos.length > 1 && (
+            <Fold title={`Видео по теме · ${meta.videos.length}`}>
+              {meta.videos.map((video, i) => (
+                <Pressable
+                  key={video.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${i + 1}. ${video.title}`}
+                  accessibilityState={{ selected: video.id === lessonVideo.id }}
+                  onPress={() =>
+                    store.send({ type: "selectVideo", id: video.id })
+                  }
+                  style={{ paddingVertical: 10, flexDirection: "row", gap: 10 }}
+                >
+                  <Txt
+                    color={
+                      video.id === lessonVideo.id ? colors.green : colors.muted
+                    }
+                    size={14}
+                    style={{ flex: 1 }}
+                  >
+                    {i + 1}. {video.title}
+                  </Txt>
+                  {video.id === lessonVideo.id && (
+                    <Icon name="check" size={18} color={colors.green} />
+                  )}
+                </Pressable>
+              ))}
+            </Fold>
+          )}
           {videoNext}
         </>
       ) : run.stage === "result" ? (
@@ -287,7 +330,8 @@ function Lesson({
                 setConfirmFinish(false);
                 store.send({
                   type: "start",
-                  id: `g08-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                  lessonId,
+                  id: `${lessonId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                   at: now(),
                 });
               }}
@@ -308,7 +352,7 @@ function Lesson({
               .map((r, index) => (
                 <QuietAction
                   key={r.id}
-                  label={`Попытка ${store.data.runs.length - index} · ${new Date(r.finishedAt!).toLocaleDateString("ru-RU")} · ${result(r).percent}%`}
+                  label={`Попытка ${store.data.runs.length - index} · ${new Date(r.finishedAt!).toLocaleDateString("ru-RU")} · ${Math.round(result(r).percent)}%`}
                   onPress={() => setOldRun(r.id)}
                 />
               ))}
@@ -619,6 +663,12 @@ function TaskControls({
 function OpeningQuestion({ question }: { question: Question }) {
   const { width } = useWindowDimensions();
   const split = question.prompt.lastIndexOf(". ") + 2;
+  if (question.id !== "g08-path")
+    return (
+      <Txt size={width < 380 ? 20 : 23} weight="600" accessibilityRole="header">
+        {question.prompt}
+      </Txt>
+    );
   return (
     <View style={{ gap: 16 }}>
       <Txt size={width < 380 ? 20 : 23} weight="600" accessibilityRole="header">
@@ -792,17 +842,11 @@ function Choices({
     </View>
   );
 }
-const videoNotes = [
-  "Катеты a и b образуют угол 90°. Сторона c напротив него — гипотенуза.",
-  "c² = a² + b²",
-  "Длина — положительный корень. Гипотенуза длиннее каждого катета.",
-  "Обратно: если для наибольшей стороны c выполнено c² = a² + b², треугольник прямоугольный.",
-];
-function VideoNotes() {
+function VideoNotes({ notes }: { notes: string[] }) {
   const { colors } = useUITheme();
   return (
     <View testID="video-notes" style={{ gap: 12 }}>
-      {videoNotes.map((text, index) => (
+      {notes.map((text, index) => (
         <View
           key={text}
           style={{ flexDirection: "row", gap: 10, alignItems: "flex-start" }}
@@ -892,7 +936,8 @@ function Courtyard() {
     </View>
   );
 }
-function Reference({ only }: { only: string[] }) {
+function Reference({ only, run }: { only: string[]; run: Run }) {
+  const { reference } = getLessonContent(run);
   const { colors } = useUITheme();
   return (
     <View style={{ gap: 16 }}>
@@ -960,7 +1005,7 @@ function Result({ run }: { run: Run }) {
     <View style={{ gap: 20 }}>
       <View style={{ gap: 6 }}>
         <Txt size={48} color={colors.green} weight="600">
-          {score.percent}%
+          {Math.round(score.percent)}%
         </Txt>
         <Txt size={17}>
           {score.correct} из {score.total} ·{" "}
@@ -972,7 +1017,7 @@ function Result({ run }: { run: Run }) {
           <Txt size={18} weight="600">
             Что повторить
           </Txt>
-          <Reference only={score.concepts} />
+          <Reference only={score.concepts} run={run} />
         </View>
       )}
       <Fold title="Ответы и решения">

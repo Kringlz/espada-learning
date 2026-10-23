@@ -1,0 +1,86 @@
+[
+  {
+    "file": "App.tsx",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/App.tsx",
+    "sourceSha256": "8d89f30e9b728bf46fc371dfbf5208842d4b1a9f5881b5899136f84836985e33",
+    "baseSha256": "cfde9a50540551f72fdfcd397be8e7c64f7553a3fafe0188289d958934432001"
+  },
+  {
+    "file": "content/math-course/video-lessons/lessons.v1.json",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/content/math-course/video-lessons/lessons.v1.json",
+    "sourceSha256": "10ba9f179e027f325285e9341819913fc4e535d3f6ce453b37b64d67e1507b8f",
+    "baseSha256": null
+  },
+  {
+    "file": "content/math-course/video-lessons/source-review.json",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/content/math-course/video-lessons/source-review.json",
+    "sourceSha256": "0998df89e84d7f5d194ebf452e336cd8a8cd2d583fe0b5c3ea3c2180be9fef47",
+    "baseSha256": null
+  },
+  {
+    "file": "content/math-course/video-lessons/sources.json",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/content/math-course/video-lessons/sources.json",
+    "sourceSha256": "c7499e74e8c63636ba50cd2d805c16aabef4482cb4765cb89de520c66043c147",
+    "baseSha256": null
+  },
+  {
+    "file": "docs/ALL_VIDEO_LESSONS.md",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/docs/ALL_VIDEO_LESSONS.md",
+    "sourceSha256": "ac9ab8962cbbaa685979a8f7a3f9ed236e3dff3507534f705c42540dc0f4c019",
+    "baseSha256": null
+  },
+  {
+    "file": "scripts/import_uchitel.py",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/scripts/import_uchitel.py",
+    "sourceSha256": "db14626e6af47ea83a83678a9933f4b1eaf18e94e1068e6748e9fa406c263c5d",
+    "baseSha256": null
+  },
+  {
+    "file": "scripts/test_uchitel_parser.py",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/scripts/test_uchitel_parser.py",
+    "sourceSha256": "5637788deab26a15a3dea99fe46c70216d88f619c142d677910d0fbc32c67779",
+    "baseSha256": null
+  },
+  {
+    "file": "src/course/CourseLibrary.tsx",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/CourseLibrary.tsx",
+    "sourceSha256": "e4b98828b07c612696686a1d6ffd686d4c29b8e41b2c1a0a564d6677410ba385",
+    "baseSha256": "a01b39711edc90c51ccb129b0cbfdc1c3cfc3db701c12bc4203fcc6256ff5411"
+  },
+  {
+    "file": "src/course/videoLesson/VideoLesson.tsx",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/VideoLesson.tsx",
+    "sourceSha256": "ac77d9a3f85bdb7400823b430edaf16af3c42357b40bf3d0313e85413a5f4185",
+    "baseSha256": "f6c84eed13d51a7e940d7be631b1f70a138a7de46e13c56d531f9971d31cf6eb"
+  },
+  {
+    "file": "src/course/videoLesson/content.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/content.ts",
+    "sourceSha256": "1eb27f0342f17d73272ceb2fac44c288b5a1b2fef52ef184393eba0cd9a63f3b",
+    "baseSha256": "64619ac13bc8ba784eaaedeefe6460424883b434a68891190085fdc8ceeed86c"
+  },
+  {
+    "file": "src/course/videoLesson/content.v1.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/content.v1.ts",
+    "sourceSha256": "582612e6714367ee2da4e8257afa6c895b602f14f47bb687b6165461e37580ad",
+    "baseSha256": "a2d0f5c5d3de8210553b16ebe7c5218a5c788ce08ab934cd21c61825262d8699"
+  },
+  {
+    "file": "src/course/videoLesson/model.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/model.ts",
+    "sourceSha256": "ec3de5177ef90c6ee6ae113b5d810ec031a98f30e86064ca107368912e00ce01",
+    "baseSha256": "c552803ee22aebfa674075b7090c29cd740e8a574595ad4d8115d4c56284c58d"
+  },
+  {
+    "file": "src/course/videoLesson/useLesson.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/src/course/videoLesson/useLesson.ts",
+    "sourceSha256": "512f0fd914466d5102130d6a9fb2b91db3fb5e7ccb8448bcfe20defa1787cf17",
+    "baseSha256": "278da7dd72a9bc71ea174fb3bb72949fa559b9964f7349d221a5e38c5055947b"
+  },
+  {
+    "file": "tests/all-video-lessons.test.ts",
+    "source": "/Users/skebobr/.codex/worktrees/video-lesson/Espada/tests/all-video-lessons.test.ts",
+    "sourceSha256": "e502e00a805b3e057d73ec60602916c9fc857c3d661961878c455b78d69a45e9",
+    "baseSha256": null
+  }
+]

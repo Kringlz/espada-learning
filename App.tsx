@@ -765,8 +765,9 @@ function Shell() {
   useEffect(() => {
     if (Platform.OS !== "web" || actor.role !== "student") return;
     const route = () => {
-      if (window.location.hash === "#/lesson/G08-02") {
-        setCourseRequest({ id: "G08-02", key: Date.now() });
+      const lessonRoute = /^#\/lesson\/([AG]\d{2}-\d{2})$/.exec(window.location.hash);
+      if (lessonRoute) {
+        setCourseRequest({ id: lessonRoute[1], key: Date.now() });
         setLearnVisited(true);
         setTab("Learn");
         setTopic(null);
