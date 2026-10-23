@@ -113,3 +113,10 @@ test("all current video notes, questions, choices and reference prose retain tex
       text,
     );
 });
+
+test("variable lists and Russian ordinal suffixes preserve prose punctuation", () => {
+  assert.ok(mathSegments("m, n — показатели степени")[0].latex);
+  const segments = mathSegments("Корень n-й степени");
+  assert.equal(segments.map((s) => s.text).join(""), "Корень n-й степени");
+  assert.equal(segments.find((s) => s.latex)?.text, "n");
+});

@@ -172,6 +172,12 @@ function automatic(text: string): MathSegment[] {
   let last = 0;
   for (const match of text.matchAll(candidate)) {
     let value = match[0].replace(/[\s.,;:]+$/, "");
+    // Russian suffixes (n-й, 5-го) keep their hyphen in prose.
+    if (
+      value.endsWith("-") &&
+      /[А-Яа-яЁё]/.test(text[match.index! + value.length] ?? "")
+    )
+      value = value.slice(0, -1);
     // Leave unmatched closing punctuation with the surrounding sentence.
     while (
       value.endsWith(")") &&
@@ -191,7 +197,7 @@ function automatic(text: string): MathSegment[] {
       !(
         signal.test(value) ||
         /^[0-9]+(?:[.,][0-9]+)?%?$/.test(value) ||
-        /^[a-zA-Zα-ωΔ]{1,3}$/.test(value) ||
+        /^[a-zA-Zα-ωΔ]{1,3}(?:[ ,;:]+[a-zA-Zα-ωΔ]{1,3})*$/.test(value) ||
         /[+−×÷·*\-]|\d/.test(value)
       ) ||
       /(?:https?:\/\/|www\.)/.test(before + value) ||
