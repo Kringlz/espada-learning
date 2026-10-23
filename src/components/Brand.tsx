@@ -3,7 +3,7 @@ import { Image, View } from "react-native";
 import { Txt, useUITheme } from "./ui";
 
 export function Brand({ compact = false }: { compact?: boolean }) {
-  const { dark } = useUITheme();
+  const { dark, colors } = useUITheme();
   return (
     <View
       accessibilityLabel="Espada"
@@ -14,7 +14,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
           width: 31,
           height: 40,
           overflow: "hidden",
-          ...({ mixBlendMode: dark ? "screen" : "multiply" } as any),
+          backgroundColor: colors.paper,
         }}
       >
         <Image
