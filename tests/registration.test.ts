@@ -29,14 +29,14 @@ test("registration validates inputs before any auth request", () => {
   assert.deepEqual(validateRegistration(student, true), {
     ...student,
     name: "Анна",
-    code: "ABC2345",
+    code: "",
     email: "test@example.com",
   });
   for (const input of [
     { ...student, name: " " },
     { ...student, name: "a".repeat(81) },
-    { ...student, code: "" },
-    { ...student, code: "ABC" },
+    { ...student, role: "parent", code: "" },
+    { ...student, role: "parent", code: "ABC" },
     { ...student, email: "invalid" },
     { ...student, password: "short" },
   ])
@@ -63,7 +63,7 @@ test("damaged signup drafts cannot crash startup or introduce privileged roles",
   assert.deepEqual(parsePendingRegistration(JSON.stringify(student)), {
     name: "Анна",
     role: "student",
-    code: "ABC2345",
+    code: "",
     email: "test@example.com",
   });
 });
@@ -83,16 +83,29 @@ test("demo repository applies the same restrictions and creates real memberships
   await assert.rejects(repo.registerProfile("Intruder", "admin"), {
     code: "registration_role_closed",
   });
-  await assert.rejects(
-    repo.registerProfile("Анна", "student", "ZZZZZZZ"),
-    /Код группы/,
-  );
-  assert.equal((await repo.read()).profiles.length, before.profiles.length);
-  const group = before.classes[0];
-  const id = await repo.registerProfile("Анна", "student", group.joinCode);
+  const id = await repo.registerProfile("Анна", "student");
   const after = await repo.read();
-  assert(after.classes[0].studentIds.includes(id));
-  assert.equal(after.profiles.find((p) => p.id === id)?.role, "student");
+  const profile = after.profiles.find((p) => p.id === id)!;
+  assert.equal(profile.role, "student");
+  assert.match(profile.code!, /^[A-Z2-9]{7}$/);
+  assert(after.classes.every((group) => !group.studentIds.includes(id)));
+  const group = before.classes.find((g) => g.teacherIds.includes(teacher.id))!;
+  await repo.dispatch(teacher.id, {
+    type: "enrollStudent",
+    classId: group.id,
+    studentCode: profile.code!,
+  });
+  await repo.dispatch(teacher.id, {
+    type: "enrollStudent",
+    classId: group.id,
+    studentCode: profile.code!,
+  });
+  assert.equal(
+    (await repo.read()).classes
+      .find((g) => g.id === group.id)!
+      .studentIds.filter((sid) => sid === id).length,
+    1,
+  );
   const parent = await repo.registerProfile(
     "Родитель",
     "parent",
@@ -106,4 +119,19 @@ test("demo repository applies the same restrictions and creates real memberships
     final.profiles.find((p) => p.id === teacher.id)?.role,
     "teacher",
   );
+});
+
+test("students register and resume without a group code; old drafts never enroll them", () => {
+  for (const code of [undefined, "", "ABC2345", "invalid"]) {
+    assert.equal(validateRegistration({ ...student, code }, true).code, "");
+    assert.deepEqual(
+      parsePendingRegistration(JSON.stringify({ ...student, code })),
+      {
+        name: "Анна",
+        role: "student",
+        code: "",
+        email: "test@example.com",
+      },
+    );
+  }
 });

@@ -1,3 +1,4 @@
+import { useTheme } from "../theme/Theme";
 import { Asset } from "expo-asset";
 import React, { useEffect, useMemo, useRef } from "react";
 import { spaceDocument } from "./document";
@@ -14,18 +15,32 @@ export function SpaceFlight({
   reduced,
   onAction,
 }: SpaceFlightProps) {
+  const { dark, setPreference } = useTheme();
+  const brandUri = Asset.fromModule(
+    dark
+      ? require("../../assets/brand/knight-dark.jpg")
+      : require("../../assets/brand/knight-light.jpg"),
+  ).uri;
   const frame = useRef<HTMLIFrameElement>(null);
-  const latest = useRef({ data, active, reduced, onAction });
-  latest.current = { data, active, reduced, onAction };
-  const html = useMemo(
-    () =>
-      spaceDocument(
-        data,
-        reduced,
-        Asset.fromModule(require("../../assets/brand/knight-dark.jpg")).uri,
-      ),
-    [],
-  );
+  const latest = useRef({
+    data,
+    active,
+    reduced,
+    onAction,
+    dark,
+    brandUri,
+    setPreference,
+  });
+  latest.current = {
+    data,
+    active,
+    reduced,
+    onAction,
+    dark,
+    brandUri,
+    setPreference,
+  };
+  const html = useMemo(() => spaceDocument(data, reduced, brandUri, dark), []);
   const sync = () =>
     frame.current?.contentWindow?.postMessage(
       {
@@ -33,10 +48,12 @@ export function SpaceFlight({
         data: latest.current.data,
         active: latest.current.active,
         reduced: latest.current.reduced,
+        dark: latest.current.dark,
+        brandUri: latest.current.brandUri,
       },
       "*",
     );
-  useEffect(sync, [data, active, reduced]);
+  useEffect(sync, [data, active, reduced, dark, brandUri]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (
@@ -48,8 +65,11 @@ export function SpaceFlight({
         sync();
         return;
       }
-      if (validSpaceAction(event.data.action, latest.current.data))
-        latest.current.onAction(event.data.action);
+      if (validSpaceAction(event.data.action, latest.current.data)) {
+        if (event.data.action.type === "theme")
+          latest.current.setPreference(event.data.action.id);
+        else latest.current.onAction(event.data.action);
+      }
     };
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);

@@ -123,8 +123,8 @@ export function GroupCodeAndSchedule({ classId }: { classId: string }) {
   return (
     <Disclosure title="Код группы и расписание" icon="calendar">
       <Txt color={colors.muted}>
-        Этот код даёт ученику возможность самостоятельно вступить в группу при
-        регистрации.
+        Для регистрации код группы не нужен. Добавляйте учеников по их личному
+        коду через «Добавить ученика».
       </Txt>
       <Txt selectable size={20} weight="700">
         {group.joinCode}

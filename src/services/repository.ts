@@ -97,13 +97,7 @@ export class LocalRepository {
         active: true,
         code: generateUniqueCode(s.profiles.map((p) => p.code)),
       };
-      if (role === "student") {
-        const group = s.classes.find(
-          (c) => c.joinCode === (code ?? "").trim().toUpperCase(),
-        );
-        if (!group) throw Error("Код группы не найден.");
-        group.studentIds.push(id);
-      } else if (role === "parent") {
+      if (role === "parent") {
         const student = s.profiles.find(
           (p) =>
             p.code === (code ?? "").trim().toUpperCase() &&

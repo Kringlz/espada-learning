@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { Brand } from "../components/Brand";
 import { SpaceBackdrop } from "../components/SpaceBackdrop";
 import { AuthForm } from "../components/AuthForm";
@@ -267,9 +268,13 @@ export function AuthScreen(p: AuthScreenProps) {
           onBlur={() => {
             if (repeat.length) setRepeatChecked(true);
           }}
-          returnKeyType={screen === "register" ? "next" : "done"}
+          returnKeyType={
+            screen === "register" && role === "parent" ? "next" : "done"
+          }
           onSubmitEditing={() =>
-            screen === "register" ? codeRef.current?.focus() : submit()
+            screen === "register" && role === "parent"
+              ? codeRef.current?.focus()
+              : submit()
           }
         />
       )}
@@ -293,7 +298,16 @@ export function AuthScreen(p: AuthScreenProps) {
           }}
         >
           <View style={{ width: "100%", maxWidth: 420, gap: 22 }}>
-            <Brand />
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Brand />
+              <ThemeToggle />
+            </View>
             <Card style={{ gap: 14, padding: 22 }}>
               <AuthForm onSubmit={submit}>
                 <Txt size={27} weight="600">
@@ -393,7 +407,9 @@ export function AuthScreen(p: AuthScreenProps) {
                           onSubmitEditing={() =>
                             credentials
                               ? emailRef.current?.focus()
-                              : codeRef.current?.focus()
+                              : role === "parent"
+                                ? codeRef.current?.focus()
+                                : submit()
                           }
                           error={submitted && !name.trim() ? "Введите имя" : ""}
                         />
@@ -406,24 +422,30 @@ export function AuthScreen(p: AuthScreenProps) {
                             </Txt>
                           </>
                         )}
-                        <AuthField
-                          ref={codeRef}
-                          label={
-                            role === "student" ? "Код группы" : "Код ученика"
-                          }
-                          value={code}
-                          onChangeText={setCode}
-                          editable={!busy}
-                          autoComplete="off"
-                          returnKeyType="done"
-                          onSubmitEditing={submit}
-                          error={
-                            submitted &&
-                            !/^[A-Z2-9]{7}$/.test(code.trim().toUpperCase())
-                              ? "Введите код из 7 символов"
-                              : ""
-                          }
-                        />
+                        {role === "student" ? (
+                          <Txt size={13} color={colors.muted}>
+                            Код группы не нужен. После регистрации передайте
+                            учителю код из своего профиля — он добавит вас в
+                            группу.
+                          </Txt>
+                        ) : (
+                          <AuthField
+                            ref={codeRef}
+                            label="Код ученика"
+                            value={code}
+                            onChangeText={setCode}
+                            editable={!busy}
+                            autoComplete="off"
+                            returnKeyType="done"
+                            onSubmitEditing={submit}
+                            error={
+                              submitted &&
+                              !/^[A-Z2-9]{7}$/.test(code.trim().toUpperCase())
+                                ? "Введите код из 7 символов"
+                                : ""
+                            }
+                          />
+                        )}
                         {credentials && rememberControl}
                         <Button
                           fullWidth

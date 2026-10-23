@@ -6,6 +6,7 @@ export function spaceDocument(
   data: SpaceData,
   reduced: boolean,
   brandUri = "",
+  dark = true,
 ) {
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Вселенная Espada</title><style>
 *{box-sizing:border-box}
@@ -42,12 +43,20 @@ body.overview .bottom,body.overview .step{visibility:hidden;pointer-events:none}
 @media(max-width:700px){.top{inset:18px 16px auto;grid-template-columns:auto 1fr auto}.wordmark{font-size:20px;gap:6px}.brand-icon{width:26px;height:36px}.brand-icon img{left:-21px;top:-9px}#overview{justify-self:center}#overview{font-size:13px;padding:10px 8px;gap:8px}.tools{gap:0}.step{width:62px;height:76px;padding:14px;top:42%}.step svg{width:34px}#prev{left:8px}#next{right:8px}.bottom{bottom:max(32px,env(safe-area-inset-bottom));width:calc(100% - 48px)}#lesson-title{font-size:24px;max-width:330px;margin-bottom:20px}#launch{font-size:14px}#grade-labels button{font-size:13px}#reset{top:68px}}
 @media(max-height:540px){.top{top:10px}.bottom{bottom:16px}#lesson-title{font-size:20px;margin:7px auto 12px}#launch{padding:10px 22px}.step{top:40%}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
-</style></head><body>
+body.light{background:#f1f5f2;color:#20392e}body.light #vignette{background:linear-gradient(0deg,#f1f5f2 2%,#f1f5f2b0 20%,transparent 48%),radial-gradient(ellipse at center,transparent 35%,#f1f5f266)}
+body.light .top{background:#f1f5f2ed;border:1px solid #d6e2da;border-radius:22px;padding:8px 14px}
+body.light .brand-icon img{mix-blend-mode:multiply}body.light #overview,body.light .tools button,body.light .step,body.light #grade-labels button{color:#365845}
+body.light .tools button:hover{background:#dce9e0;color:#20392e}body.light #lesson-number,body.light #reset{color:#526c5e}
+body.light #launch{background:#365f49;color:#fff}body.light #launch:hover{background:#294b39}
+body.light button:focus-visible,body.light canvas:focus-visible{outline-color:#365f49}
+body.light #error{background:#fff0eb;color:#873c2b}
+@media(max-width:400px){.wordmark>span:last-child{display:none}.top{column-gap:4px}body.light .top{padding:6px 8px}.tools button{width:44px}#overview{padding:10px 5px}}
+</style></head><body class="${dark ? "dark" : "light"}">
 <canvas id="space" tabindex="0" aria-label="Карта уроков. Перетаскивай для поворота, используй колесо для приближения. Стрелки выбирают урок, Enter открывает его, R возвращает камеру."></canvas><div id="vignette"></div>
-<div class="top"><button class="wordmark" id="profile" aria-label="Открыть профиль"><span class="brand-icon"><img src="${brandUri.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" alt=""></span><span>Espada</span></button><button id="overview" aria-label="Выбрать класс">5 класс</button><nav class="tools" aria-label="Инструменты"><button data-navigate="Progress" aria-label="Мой прогресс" title="Мой прогресс"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V13M12 20V4M19 20V9"/></svg></button><button data-navigate="Calculator" aria-label="Калькулятор и формулы" title="Калькулятор и формулы"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="3"/><path d="M8 6h8M8 11h1M15 11h1M8 15h1M15 15h1M8 19h1M15 19h1"/></svg></button></nav></div>
+<div class="top"><button class="wordmark" id="profile" aria-label="Открыть профиль"><span class="brand-icon"><img src="${brandUri.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" alt=""></span><span>Espada</span></button><button id="overview" aria-label="Выбрать класс">5 класс</button><nav class="tools" aria-label="Инструменты"><button id="theme-toggle" aria-label="${dark ? "Включить светлую тему" : "Включить тёмную тему"}" title="Сменить тему"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg></button><button data-navigate="Progress" aria-label="Мой прогресс" title="Мой прогресс"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V13M12 20V4M19 20V9"/></svg></button><button data-navigate="Calculator" aria-label="Калькулятор и формулы" title="Калькулятор и формулы"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="3"/><path d="M8 6h8M8 11h1M15 11h1M8 15h1M15 15h1M8 19h1M15 19h1"/></svg></button></nav></div>
 <button id="reset">К уроку</button><div id="grade-labels"></div>
 <button class="step" id="prev" aria-label="Предыдущий урок">${arrow(true)}<span></span></button><button class="step" id="next" aria-label="Следующий урок"><span></span>${arrow()}</button>
 <div class="bottom"><div id="lesson-number"></div><h1 id="lesson-title"></h1><button id="launch">Начать урок ${arrow()}</button></div>
 <div id="error" role="alert"></div><div id="sr-status" aria-live="polite"></div><div id="transition"></div>
-<script>window.SPACE_INITIAL=${JSON.stringify({ data, reduced }).replace(/</g, "\\u003c")};${spaceRuntime}</script></body></html>`;
+<script>window.SPACE_INITIAL=${JSON.stringify({ data, reduced, dark, brandUri }).replace(/</g, "\\u003c")};${spaceRuntime}</script></body></html>`;
 }

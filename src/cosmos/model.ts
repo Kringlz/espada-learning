@@ -31,10 +31,12 @@ export type SpaceData = {
   name: string;
   signals: { id: string; title: string }[];
 };
-export type SpaceAction = {
-  type: "lesson" | "topic" | "navigate" | "retry";
-  id: string;
-};
+export type SpaceAction =
+  | {
+      type: "lesson" | "topic" | "navigate" | "retry";
+      id: string;
+    }
+  | { type: "theme"; id: "light" | "dark" };
 export function makeSpaceData(
   progress: CourseProgress,
 ): Pick<SpaceData, "lessons" | "grades" | "initialId"> {
@@ -90,6 +92,7 @@ export function validSpaceAction(
   if (!value || typeof value !== "object") return false;
   const { type, id } = value as SpaceAction;
   if (typeof id !== "string") return false;
+  if (type === "theme") return id === "light" || id === "dark";
   if (type === "lesson")
     return data.ready && data.lessons.some((t) => t.id === id);
   if (type === "topic") return data.signals.some((s) => s.id === id);

@@ -87,3 +87,9 @@ test("untrusted lesson text cannot break out of the embedded scene script", () =
   // TypeScript cannot check JavaScript inside an HTML string.
   assert.doesNotThrow(() => new Function(spaceRuntime));
 });
+
+test("theme bridge accepts only explicit light and dark preferences", () => {
+  assert.ok(validSpaceAction({ type: "theme", id: "light" }, data));
+  assert.ok(validSpaceAction({ type: "theme", id: "dark" }, data));
+  assert.equal(validSpaceAction({ type: "theme", id: "unknown" }, data), false);
+});

@@ -1,3 +1,4 @@
+import { useTheme } from "../theme/Theme";
 import { Asset } from "expo-asset";
 import React, { useEffect, useMemo, useRef } from "react";
 import { WebView } from "react-native-webview";
@@ -15,21 +16,19 @@ export function SpaceFlight({
   reduced,
   onAction,
 }: SpaceFlightProps) {
+  const { dark, setPreference } = useTheme();
+  const brandUri = Asset.fromModule(
+    dark
+      ? require("../../assets/brand/knight-dark.jpg")
+      : require("../../assets/brand/knight-light.jpg"),
+  ).uri;
   const view = useRef<WebView>(null);
-  const html = useMemo(
-    () =>
-      spaceDocument(
-        data,
-        reduced,
-        Asset.fromModule(require("../../assets/brand/knight-dark.jpg")).uri,
-      ),
-    [],
-  );
+  const html = useMemo(() => spaceDocument(data, reduced, brandUri, dark), []);
   const sync = () =>
     view.current?.injectJavaScript(
-      `window.postMessage(${JSON.stringify({ source: "espada-host", data, active, reduced }).replace(/</g, "\\u003c")}, '*'); true;`,
+      `window.postMessage(${JSON.stringify({ source: "espada-host", data, active, reduced, dark, brandUri }).replace(/</g, "\\u003c")}, '*'); true;`,
     );
-  useEffect(sync, [data, active, reduced]);
+  useEffect(sync, [data, active, reduced, dark, brandUri]);
   return (
     <WebView
       ref={view}
@@ -48,8 +47,11 @@ export function SpaceFlight({
           if (
             message.source === "espada-space" &&
             validSpaceAction(message.action, data)
-          )
-            onAction(message.action);
+          ) {
+            if (message.action.type === "theme")
+              setPreference(message.action.id);
+            else onAction(message.action);
+          }
         } catch {
           /* Ignore malformed bridge messages. */
         }

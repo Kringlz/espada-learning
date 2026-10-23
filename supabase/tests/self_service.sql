@@ -28,14 +28,20 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000903'
 select pg_temp.assert_denied($q$select public.register_profile('Хочу быть админом','admin',null)$q$);
 select pg_temp.assert_true((select count(*)=0 from public.profiles where id='00000000-0000-4000-8000-000000000903'),'rejected admin self-registration leaves no profile');
 
--- Student self-registration by a bad group code is rejected; a good one enrolls them.
+-- Student registration needs no code and gives no group access.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000901',true);
-select pg_temp.assert_denied($q$select public.register_profile('Новый ученик','student','ZZZZZZZ')$q$);
-select public.register_profile('Новый ученик','student',current_setting('test.group_code'));
--- Retrying after a lost response must not duplicate membership or escalate the role.
+select public.register_profile('Новый ученик','student');
 select public.register_profile('Повтор','student',current_setting('test.group_code'));
 select pg_temp.assert_denied($q$select public.register_profile('Повышение','teacher',null)$q$);
-select pg_temp.assert_true((select count(*)=1 from public.class_memberships where class_id='00000000-0000-4000-8000-000000000006' and profile_id='00000000-0000-4000-8000-000000000901'),'student joins group by code');
+select pg_temp.assert_true((select count(*)=0 from public.class_memberships where profile_id='00000000-0000-4000-8000-000000000901'),'student starts without memberships');
+select pg_temp.assert_true((select code ~ '^[A-Z2-9]{7}$' from public.profiles where id='00000000-0000-4000-8000-000000000901'),'student receives personal code');
+select set_config('test.new_student_code',(select code from public.profiles where id='00000000-0000-4000-8000-000000000901'),true);
+select public.load_learning_state();
+select pg_temp.assert_true((select count(*)=0 from public.profiles where id='00000000-0000-4000-8000-000000000001'),'unassigned student cannot read another student');
+-- A code from an older signup draft must not grant membership either.
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000905',true);
+select public.register_profile('Старый черновик','student',current_setting('test.group_code'));
+select pg_temp.assert_true((select count(*)=0 from public.class_memberships where profile_id='00000000-0000-4000-8000-000000000905'),'legacy group code does not enroll');
 
 -- Parent self-registration by a bad student code is rejected; a good one links them.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000902',true);
@@ -60,7 +66,8 @@ select public.learning_command(jsonb_build_object('type','regenerateGroupCode','
 
 -- A teacher can still manually add an already-registered student to their group by code.
 select pg_temp.assert_denied($q$select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000904','studentCode','ZZZZZZZ'))$q$);
-select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000904','studentCode',(select code from public.profiles where id='00000000-0000-4000-8000-000000000901')));
+select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000904','studentCode',current_setting('test.new_student_code')));
+select public.learning_command(jsonb_build_object('type','enrollStudent','classId','00000000-0000-4000-8000-000000000904','studentCode',current_setting('test.new_student_code')));
 select pg_temp.assert_true((select count(*)=1 from public.class_memberships where class_id='00000000-0000-4000-8000-000000000904' and profile_id='00000000-0000-4000-8000-000000000901'),'teacher enrolls existing student by code');
 
 -- The internal version this migration superseded is no longer directly callable.

@@ -25,12 +25,11 @@ export function validateRegistration(
       "Укажите имя — от 1 до 80 символов.",
       "invalid_name",
     );
-  const code = (input.code ?? "").trim().toUpperCase();
-  if (!/^[A-Z2-9]{7}$/.test(code))
+  const code =
+    input.role === "parent" ? (input.code ?? "").trim().toUpperCase() : "";
+  if (input.role === "parent" && !/^[A-Z2-9]{7}$/.test(code))
     throw new AuthFlowError(
-      input.role === "student"
-        ? "Введите код группы из 7 символов. Его выдаёт учитель."
-        : "Введите код ученика из 7 символов. Он находится в профиле ребёнка.",
+      "Введите код ученика из 7 символов. Он находится в профиле ребёнка.",
       "invalid_join_code",
     );
   const email = normalizeEmail(input.email ?? "");
@@ -58,7 +57,7 @@ export function parsePendingRegistration(raw: string | null) {
       !isRegistrationRole(value.role) ||
       typeof value.name !== "string" ||
       typeof value.email !== "string" ||
-      typeof value.code !== "string"
+      (value.code !== undefined && typeof value.code !== "string")
     )
       return null;
     if (!validEmail(value.email)) return null;

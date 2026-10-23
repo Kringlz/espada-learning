@@ -260,7 +260,8 @@ try {
     await page.getByText("Пароли не совпадают", { exact: true }).count(),
     0,
   );
-  await input("Код группы").fill("ABCDEFG");
+  assert.equal(await input("Код группы").count(), 0);
+  await input("Имя").click();
   await page.getByText("Пароли не совпадают", { exact: true }).waitFor();
   await button("Создать аккаунт").click();
   assert.equal(signupCalls, 0);
