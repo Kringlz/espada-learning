@@ -166,7 +166,7 @@ export function Learn({
     >
       {!reading && (
         <Txt size={34} weight="700" style={{ letterSpacing: -0.8 }}>
-          Все уроки
+          Атлас знаний
         </Txt>
       )}
       <CourseLibrary

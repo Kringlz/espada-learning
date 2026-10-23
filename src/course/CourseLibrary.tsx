@@ -1,3 +1,7 @@
+import {
+  ConstellationNavigator,
+  GradeOrbits,
+} from "../components/ConstellationNavigator";
 import { ClarityReading } from "./ClarityReading";
 import { supplemental } from "./supplemental";
 import { ClarityRoute } from "./ClarityRoute";
@@ -86,6 +90,7 @@ function CourseBrowser({
   const [grade, setGrade] = useState<number | null>(5);
   const [subject, setSubject] = useState("all");
   const [query, setQuery] = useState("");
+  const [listView, setListView] = useState(false);
   const [selected, setSelected] = useState<CourseTopic | null>(null);
   const storage = useCourseProgress(actorId);
   useLessonFocus(!!selected, () => setSelected(null));
@@ -157,36 +162,21 @@ function CourseBrowser({
         />
       ) : (
         <>
-          <Disclosure
-            key={`grade-${grade}`}
-            title={grade ? `${grade} класс` : "Все классы"}
-            icon="book-open"
+          <GradeOrbits
+            grade={grade}
+            onChange={(g) => {
+              setGrade(g);
+              setSubject("all");
+            }}
+          />
+          <Button
+            secondary
+            small
+            selected={grade === null}
+            onPress={() => setGrade(null)}
           >
-            <View style={[styles.row, { flexWrap: "wrap" }]}>
-              {grades.map((g) => (
-                <Button
-                  key={g}
-                  secondary
-                  small
-                  selected={grade === g}
-                  onPress={() => {
-                    setGrade(g);
-                    setSubject("all");
-                  }}
-                >
-                  {g} класс
-                </Button>
-              ))}
-              <Button
-                secondary
-                small
-                selected={grade === null}
-                onPress={() => setGrade(null)}
-              >
-                Все классы
-              </Button>
-            </View>
-          </Disclosure>
+            Все классы
+          </Button>
           <Field
             label=""
             placeholder="Найти тему…"
@@ -235,10 +225,27 @@ function CourseBrowser({
               </Button>
             </Card>
           )}
-          {clarity ? (
+          <Button
+            secondary
+            small
+            icon={listView ? "map" : "list"}
+            onPress={() => setListView(!listView)}
+          >
+            {listView ? "Карта созвездия" : "Список уроков"}
+          </Button>
+          {clarity && (listView || grade === null || !!query.trim()) ? (
             <ClarityRoute
               topics={filtered}
               progress={storage.progress}
+              videos={mode === "videos"}
+              open={selectTopic}
+            />
+          ) : clarity ? (
+            <ConstellationNavigator
+              key={`${grade}:${subject}:${query}`}
+              topics={filtered}
+              progress={storage.progress}
+              ready={storage.ready}
               videos={mode === "videos"}
               open={selectTopic}
             />
@@ -310,7 +317,7 @@ function CourseReader({
   const p = storage.progress[topic.id] ?? emptyProgress();
   const [page, setPage] = useState(p.page);
   const [tab, setTab] = useState<"overview" | "theory" | "video" | "practice">(
-    clarity && initialTab === "theory" ? "overview" : initialTab,
+    initialTab,
   );
   const [sourceError, setSourceError] = useState("");
   useEffect(() => {
@@ -360,6 +367,7 @@ function CourseReader({
       {tab === "overview" ? (
         <>
           <TopicCover
+            starId={topic.id}
             title={content.pages[0].title}
             themeTitle={topic.title}
             subject={topic.subject}
