@@ -1,4 +1,5 @@
 import { progressOutbox } from "../progress/service";
+import { webAuthRedirect } from "./authRedirect";
 import {
   clearRecovery,
   handleRecoveryLink,
@@ -379,6 +380,10 @@ export function LearningProvider({
         const { data, error } = await backend!.auth.signUp({
           email,
           password: input.password!,
+          options: {
+            emailRedirectTo:
+              Platform.OS === "web" ? webAuthRedirect(window.location) : undefined,
+          },
         });
         if (error) throw error;
         if (!data.session && data.user?.identities?.length === 0)
@@ -424,6 +429,10 @@ export function LearningProvider({
       const { error } = await backend!.auth.resend({
         type: "signup",
         email: address,
+        options: {
+          emailRedirectTo:
+            Platform.OS === "web" ? webAuthRedirect(window.location) : undefined,
+        },
       });
       if (error) throw error;
     });

@@ -2,6 +2,7 @@ import { Linking, Platform } from "react-native";
 import { backend, authStorage } from "./supabase";
 import { authFailure, AuthFlowError } from "./authFlow";
 import { passwordError } from "./password";
+import { webAuthRedirect } from "./authRedirect";
 
 const recoveryKey = `${authStorage.authKey}-recovery`;
 // Subscribe at module load: the SDK can consume a callback before React mounts.
@@ -39,7 +40,7 @@ export async function saveNewPassword(password: string) {
 }
 export function recoveryRedirect() {
   if (Platform.OS !== "web") return "espada://auth/recovery";
-  return `${window.location.origin}${window.location.pathname}`;
+  return webAuthRedirect(window.location);
 }
 /** The native app accepts only its recovery callback, never arbitrary links. */
 export async function handleRecoveryLink(url: string) {
