@@ -10,6 +10,7 @@ export type RichTextProps = {
   weight?: "400" | "600" | "700";
   color?: string;
   heading?: boolean;
+  align?: "left" | "center" | "right" | "auto" | "justify";
 };
 /** Real text nodes, including semantic sup/sub, support selection, copying and screen readers. */
 export function RichText({
@@ -18,6 +19,7 @@ export function RichText({
   weight = "400",
   color: providedColor,
   heading,
+  align,
 }: RichTextProps) {
   const { colors, styles } = useUITheme();
   const color = providedColor ?? colors.ink;
@@ -26,6 +28,7 @@ export function RichText({
     <Tag
       style={{
         margin: 0,
+        textAlign: align === "auto" ? undefined : align,
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
         fontSize: size,

@@ -82,12 +82,12 @@ export function Starfield({
         >
           <Defs>
             <RadialGradient id={`${id}-cloud`}>
-              <Stop offset="0" stopColor="#435A9F" stopOpacity="0.24" />
-              <Stop offset="0.5" stopColor="#292B61" stopOpacity="0.12" />
+              <Stop offset="0" stopColor="#8057BE" stopOpacity="0.34" />
+              <Stop offset="0.5" stopColor="#603B8E" stopOpacity="0.12" />
               <Stop offset="1" stopColor="#080C16" stopOpacity="0" />
             </RadialGradient>
             <RadialGradient id={`${id}-dust`}>
-              <Stop offset="0" stopColor="#8C6B9E" stopOpacity="0.16" />
+              <Stop offset="0" stopColor="#B280D2" stopOpacity="0.24" />
               <Stop offset="1" stopColor="#080C16" stopOpacity="0" />
             </RadialGradient>
           </Defs>
@@ -144,7 +144,7 @@ export function StarGlyph({
         <RadialGradient id={uid}>
           <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.95" />
           <Stop offset="0.08" stopColor={color} stopOpacity="0.8" />
-          <Stop offset="0.3" stopColor={color} stopOpacity="0.24" />
+          <Stop offset="0.3" stopColor={color} stopOpacity="0.34" />
           <Stop offset="1" stopColor={color} stopOpacity="0" />
         </RadialGradient>
       </Defs>

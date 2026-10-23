@@ -2,6 +2,7 @@
 export function calculate(source: string, previous = 0): number {
   if (source.length > 240) throw Error("Выражение слишком длинное.");
   const input = source
+    .replace(/√/g, "sqrt")
     .replace(/,/g, ".")
     .replace(/×/g, "*")
     .replace(/[÷:]/g, "/")

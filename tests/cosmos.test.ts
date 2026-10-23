@@ -93,3 +93,9 @@ test("theme bridge accepts only explicit light and dark preferences", () => {
   assert.ok(validSpaceAction({ type: "theme", id: "dark" }, data));
   assert.equal(validSpaceAction({ type: "theme", id: "unknown" }, data), false);
 });
+
+test("sound bridge accepts only a tap or toggle, without other app actions", () => {
+  assert.ok(validSpaceAction({ type: "feedback", id: "tap" }, data));
+  assert.ok(validSpaceAction({ type: "feedback", id: "toggle" }, data));
+  assert.equal(validSpaceAction({ type: "feedback", id: "loud" }, data), false);
+});

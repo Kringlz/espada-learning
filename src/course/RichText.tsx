@@ -10,6 +10,7 @@ export type RichTextProps = {
   weight?: "400" | "600" | "700";
   color?: string;
   heading?: boolean;
+  align?: "left" | "center" | "right" | "auto" | "justify";
 };
 const superscript: Record<string, string> = Object.fromEntries(
   Array.from("0123456789+-−=()abcdefghijklmnopqrstuvwxyz").map((c, i) => [
@@ -36,6 +37,7 @@ export function RichText({
   weight = "400",
   color: providedColor,
   heading,
+  align,
 }: RichTextProps) {
   const { colors, styles } = useUITheme();
   const color = providedColor ?? colors.ink;
@@ -44,7 +46,17 @@ export function RichText({
     return (
       <View
         accessibilityRole={heading ? "header" : undefined}
-        style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center" }}
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent:
+            align === "center"
+              ? "center"
+              : align === "right"
+                ? "flex-end"
+                : undefined,
+        }}
       >
         {segments.flatMap((r, i) =>
           r.latex

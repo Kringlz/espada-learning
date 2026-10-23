@@ -1,3 +1,4 @@
+import { useSounds } from "../engagement/Sounds";
 import { useTheme } from "../theme/Theme";
 import { Asset } from "expo-asset";
 import React, { useEffect, useMemo, useRef } from "react";
@@ -15,6 +16,7 @@ export function SpaceFlight({
   reduced,
   onAction,
 }: SpaceFlightProps) {
+  const sounds = useSounds();
   const { dark, setPreference } = useTheme();
   const brandUri = Asset.fromModule(
     dark
@@ -30,6 +32,7 @@ export function SpaceFlight({
     dark,
     brandUri,
     setPreference,
+    sounds,
   });
   latest.current = {
     data,
@@ -39,8 +42,12 @@ export function SpaceFlight({
     dark,
     brandUri,
     setPreference,
+    sounds,
   };
-  const html = useMemo(() => spaceDocument(data, reduced, brandUri, dark), []);
+  const html = useMemo(
+    () => spaceDocument(data, reduced, brandUri, dark, sounds.enabled),
+    [],
+  );
   const sync = () =>
     frame.current?.contentWindow?.postMessage(
       {
@@ -50,10 +57,11 @@ export function SpaceFlight({
         reduced: latest.current.reduced,
         dark: latest.current.dark,
         brandUri: latest.current.brandUri,
+        soundEnabled: latest.current.sounds.enabled,
       },
       "*",
     );
-  useEffect(sync, [data, active, reduced, dark, brandUri]);
+  useEffect(sync, [data, active, reduced, dark, brandUri, sounds.enabled]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (
@@ -66,7 +74,10 @@ export function SpaceFlight({
         return;
       }
       if (validSpaceAction(event.data.action, latest.current.data)) {
-        if (event.data.action.type === "theme")
+        if (event.data.action.type === "feedback") {
+          if (event.data.action.id === "toggle") latest.current.sounds.toggle();
+          else latest.current.sounds.play("open");
+        } else if (event.data.action.type === "theme")
           latest.current.setPreference(event.data.action.id);
         else latest.current.onAction(event.data.action);
       }

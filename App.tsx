@@ -14,6 +14,7 @@ import { Parent } from "./src/screens/Family";
 import { useUITheme } from "./src/components/ui";
 import {
   ClarityThemeProvider,
+  CosmicSurface,
   ThemeProvider,
   VideoLessonTheme,
 } from "./src/theme/Theme";
@@ -425,13 +426,14 @@ function Shell() {
             style={{
               flex: 1,
               minWidth: 0,
-              backgroundColor: explorer && !inSpace ? colors.paper : undefined,
+              backgroundColor: !inSpace ? "#080613" : undefined,
             }}
           >
             {!inSpace && <SpaceBackdrop />}
             {explorer && !inSpace && (
               <View
                 style={{
+                  backgroundColor: colors.paper,
                   paddingHorizontal: desktop ? 36 : 22,
                   paddingVertical: 20,
                   flexDirection: "row",
@@ -650,136 +652,144 @@ function Shell() {
                 </Button>
               </View>
             )}
-            <LessonFocus.Provider value={registerLesson}>
-              <ScreenScroll.Provider value={scrollStaffToTop}>
-                <ScreenAnchor.Provider value={scrollToAnchor}>
-                  <ScrollView
-                    style={{ display: inSpace ? "none" : "flex" }}
-                    ref={scroller}
-                    scrollEventThrottle={16}
-                    onScroll={(event) => {
-                      if (!restoring.current)
-                        offsets.current[routeKey] =
-                          event.nativeEvent.contentOffset.y;
-                    }}
-                    keyboardShouldPersistTaps="handled"
-                    contentContainerStyle={{
-                      paddingHorizontal: desktop ? 32 : 18,
-                      paddingTop: desktop ? 26 : 20,
-                      paddingBottom: 40,
-                      alignItems: "center",
-                    }}
-                  >
-                    <View
-                      ref={scrollContent}
-                      collapsable={false}
-                      style={{ width: "100%", maxWidth: 1380 }}
+            <CosmicSurface>
+              <LessonFocus.Provider value={registerLesson}>
+                <ScreenScroll.Provider value={scrollStaffToTop}>
+                  <ScreenAnchor.Provider value={scrollToAnchor}>
+                    <ScrollView
+                      style={{ display: inSpace ? "none" : "flex" }}
+                      ref={scroller}
+                      scrollEventThrottle={16}
+                      onScroll={(event) => {
+                        if (!restoring.current)
+                          offsets.current[routeKey] =
+                            event.nativeEvent.contentOffset.y;
+                      }}
+                      keyboardShouldPersistTaps="handled"
+                      contentContainerStyle={{
+                        paddingHorizontal: desktop ? 32 : 18,
+                        paddingTop: desktop ? 26 : 20,
+                        paddingBottom: 40,
+                        alignItems: "center",
+                      }}
                     >
-                      {actor.role === "student" ? (
-                        <SoftReveal
-                          key={actor.id}
-                          changeKey={routeKey}
-                          testID="student-screen-transition"
-                        >
-                          <View
-                            style={{
-                              display:
-                                !topic && !result && tab === "Learn"
-                                  ? "flex"
-                                  : "none",
-                            }}
+                      <View
+                        ref={scrollContent}
+                        collapsable={false}
+                        style={{ width: "100%", maxWidth: 1380 }}
+                      >
+                        {actor.role === "student" ? (
+                          <SoftReveal
+                            key={actor.id}
+                            changeKey={routeKey}
+                            testID="student-screen-transition"
                           >
-                            {learnVisited && (
-                              <MotionActiveContext.Provider
-                                value={tab === "Learn" && !topic && !result}
-                              >
-                                <Learn
-                                  courseRequest={courseRequest}
-                                  back={returnToSpace}
-                                />
-                              </MotionActiveContext.Provider>
-                            )}
-                          </View>
-                          <View
-                            style={{
-                              display:
-                                !topic && !result && tab === "Progress"
-                                  ? "flex"
-                                  : "none",
-                            }}
-                          >
-                            {progressVisited && (
-                              <Progress
-                                active={tab === "Progress" && !topic && !result}
-                                openCourse={openCourse}
-                                openResult={setResult}
-                                openTopic={setTopic}
-                              />
-                            )}
-                          </View>
-                          {!topic && !result && tab === "Arena" && <Arena />}
-                          {!topic && !result && tab === "Calculator" && (
-                            <VideoLessonTheme>
-                              <Calculator />
-                            </VideoLessonTheme>
-                          )}
-                          {!topic && !result && tab === "Profile" && (
-                            <Profile switchDemo={() => setAccountOpen(true)} />
-                          )}
-                          {result && (
-                            <View style={{ display: topic ? "none" : "flex" }}>
-                              <ReportDetail
-                                key={result}
-                                id={result}
-                                back={() => setResult(null)}
-                                openTopic={setTopic}
-                              />
+                            <View
+                              style={{
+                                display:
+                                  !topic && !result && tab === "Learn"
+                                    ? "flex"
+                                    : "none",
+                              }}
+                            >
+                              {learnVisited && (
+                                <MotionActiveContext.Provider
+                                  value={tab === "Learn" && !topic && !result}
+                                >
+                                  <Learn
+                                    courseRequest={courseRequest}
+                                    back={returnToSpace}
+                                  />
+                                </MotionActiveContext.Provider>
+                              )}
                             </View>
-                          )}
-                          {topic && (
-                            <Lesson
-                              key={`${actor.id}-${topic}`}
-                              topicId={topic}
-                              back={() => setTopic(null)}
-                              openTopic={setTopic}
-                            />
-                          )}
-                        </SoftReveal>
-                      ) : tab === "Arena" ? (
-                        <Arena />
-                      ) : tab === "Calculator" ? (
-                        <VideoLessonTheme>
-                          <Calculator />
-                        </VideoLessonTheme>
-                      ) : tab === "Profile" ? (
-                        <Profile switchDemo={() => setAccountOpen(true)} />
-                      ) : actor.role === "parent" ? (
-                        <Parent key={actor.id} tab={tab} />
-                      ) : (
-                        <Staff
-                          key={`${actor.id}-${tab}`}
-                          tab={tab}
-                          onScreenChange={scrollStaffToTop}
-                        />
-                      )}
-                    </View>
-                    {(saving || isLessonPreview) && (
-                      <View style={{ marginTop: 20 }}>
-                        <Txt size={11} color={colors.muted}>
-                          {saving
-                            ? "Saving…"
-                            : mode === "demo"
-                              ? isLessonPreview
-                                ? "Новые уроки и тесты сохраняются в локальной PostgreSQL."
-                                : "Your demo workspace saves on this device."
-                              : "Connected to your learning organisation."}
-                        </Txt>
+                            <View
+                              style={{
+                                display:
+                                  !topic && !result && tab === "Progress"
+                                    ? "flex"
+                                    : "none",
+                              }}
+                            >
+                              {progressVisited && (
+                                <Progress
+                                  active={
+                                    tab === "Progress" && !topic && !result
+                                  }
+                                  openCourse={openCourse}
+                                  openResult={setResult}
+                                  openTopic={setTopic}
+                                />
+                              )}
+                            </View>
+                            {!topic && !result && tab === "Arena" && <Arena />}
+                            {!topic && !result && tab === "Calculator" && (
+                              <VideoLessonTheme>
+                                <Calculator />
+                              </VideoLessonTheme>
+                            )}
+                            {!topic && !result && tab === "Profile" && (
+                              <Profile
+                                switchDemo={() => setAccountOpen(true)}
+                              />
+                            )}
+                            {result && (
+                              <View
+                                style={{ display: topic ? "none" : "flex" }}
+                              >
+                                <ReportDetail
+                                  key={result}
+                                  id={result}
+                                  back={() => setResult(null)}
+                                  openTopic={setTopic}
+                                />
+                              </View>
+                            )}
+                            {topic && (
+                              <Lesson
+                                key={`${actor.id}-${topic}`}
+                                topicId={topic}
+                                back={() => setTopic(null)}
+                                openTopic={setTopic}
+                              />
+                            )}
+                          </SoftReveal>
+                        ) : tab === "Arena" ? (
+                          <Arena />
+                        ) : tab === "Calculator" ? (
+                          <VideoLessonTheme>
+                            <Calculator />
+                          </VideoLessonTheme>
+                        ) : tab === "Profile" ? (
+                          <Profile switchDemo={() => setAccountOpen(true)} />
+                        ) : actor.role === "parent" ? (
+                          <Parent key={actor.id} tab={tab} />
+                        ) : (
+                          <Staff
+                            key={`${actor.id}-${tab}`}
+                            tab={tab}
+                            onScreenChange={scrollStaffToTop}
+                          />
+                        )}
                       </View>
-                    )}
-                  </ScrollView>
-                </ScreenAnchor.Provider>
-              </ScreenScroll.Provider>
-            </LessonFocus.Provider>
+                      {(saving || isLessonPreview) && (
+                        <View style={{ marginTop: 20 }}>
+                          <Txt size={11} color={colors.muted}>
+                            {saving
+                              ? "Saving…"
+                              : mode === "demo"
+                                ? isLessonPreview
+                                  ? "Новые уроки и тесты сохраняются в локальной PostgreSQL."
+                                  : "Your demo workspace saves on this device."
+                                : "Connected to your learning organisation."}
+                          </Txt>
+                        </View>
+                      )}
+                    </ScrollView>
+                  </ScreenAnchor.Provider>
+                </ScreenScroll.Provider>
+              </LessonFocus.Provider>
+            </CosmicSurface>
             {student && <RewardNotice />}
             {!desktop && !focused && !explorer && (
               <View

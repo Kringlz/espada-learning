@@ -30,7 +30,7 @@ test("explicit LaTeX and legacy text coexist without swallowing text, dates or u
   assert.equal(segments.map((s) => s.text).join(""), text);
   assert.deepEqual(
     segments.filter((s) => s.latex).map((s) => s.latex),
-    ["\\frac{2}{4}", "\\sqrt{x}", "\\frac{a}{b}"],
+    ["\\frac{2}{4}", "\\sqrt{x}", "\\frac{a}{b}", "12"],
   );
   assert.equal(segments.filter((s) => s.display).length, 1);
   assert.equal(
@@ -74,4 +74,42 @@ test("every detected mathematical span in the complete textbook renders successf
   }
   visit(courseContent);
   assert.ok(count > 2000);
+});
+
+test("all current video notes, questions, choices and reference prose retain text and render", async () => {
+  const { course } = await import("../src/course/model");
+  const { getLessonMeta, getLessonContent } =
+    await import("../src/course/videoLesson/content");
+  const { referenceItems } = await import("../src/tools/reference/data");
+  const strings: string[] = referenceItems.flatMap((item) =>
+    [item.rule, item.notation, item.conditions].filter(
+      (text): text is string => !!text,
+    ),
+  );
+  for (const topic of course) {
+    const meta = getLessonMeta(topic.id);
+    const content = getLessonContent({
+      lessonId: topic.id,
+      contentVersion: meta.version,
+    });
+    strings.push(...meta.notes);
+    for (const q of [content.opening, ...content.practice, ...content.check])
+      strings.push(q.prompt, ...q.choices, ...q.hints, q.solution);
+  }
+  let formulas = 0;
+  for (const text of strings) {
+    const segments = mathSegments(text);
+    assert.equal(segments.map((s) => s.text).join(""), text);
+    for (const segment of segments)
+      if (segment.latex) {
+        assert.ok(renderMath(segment.latex), `${text}: ${segment.latex}`);
+        formulas++;
+      }
+  }
+  assert.ok(formulas > 1000);
+  for (const text of ["a", "2x", "3 + 4", "42", "c² = a² + b²", "(a+b)/(c+d)"])
+    assert.ok(
+      mathSegments(text).some((s) => s.latex),
+      text,
+    );
 });

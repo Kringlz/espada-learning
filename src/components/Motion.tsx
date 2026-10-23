@@ -1,3 +1,4 @@
+import Svg, { Circle, Path } from "react-native-svg";
 import { useSounds } from "../engagement/Sounds";
 import React, {
   createContext,
@@ -114,7 +115,7 @@ export function Confetti({ burst }: { burst: number }) {
     setVisible(true);
     const animation = Animated.timing(value, {
       toValue: 1,
-      duration: 1700,
+      duration: 2200,
       easing: Easing.out(Easing.quad),
       useNativeDriver: Platform.OS !== "web",
     });
@@ -137,13 +138,13 @@ export function Confetti({ burst }: { burst: number }) {
         left: 0,
         right: 0,
         top: -36,
-        height: 260,
+        height: 320,
         overflow: "hidden",
         zIndex: 10,
       }}
     >
-      {Array.from({ length: 34 }, (_, i) => {
-        const spread = (i - 16.5) * 9;
+      {Array.from({ length: 16 }, (_, i) => {
+        const spread = (i - 7.5) * 33;
         return (
           <Animated.View
             key={i}
@@ -151,12 +152,8 @@ export function Confetti({ burst }: { burst: number }) {
               position: "absolute",
               left: "50%",
               top: 55,
-              width: i % 3 === 0 ? 10 : 7,
-              height: i % 3 === 0 ? 10 : 14,
-              borderRadius: i % 3 === 0 ? 4 : 2,
-              backgroundColor: ["#86AD45", "#F2C44E", "#E89070", "#62B5AA"][
-                i % 4
-              ],
+              width: 48,
+              height: 44,
               opacity: value.interpolate({
                 inputRange: [0, 0.7, 1],
                 outputRange: [1, 1, 0],
@@ -179,13 +176,53 @@ export function Confetti({ burst }: { burst: number }) {
                     inputRange: [0, 1],
                     outputRange: [
                       "0deg",
-                      `${(i % 2 ? 1 : -1) * (180 + i * 20)}deg`,
+                      `${(i % 2 ? 1 : -1) * (35 + i * 7)}deg`,
                     ],
                   }),
                 },
               ],
             }}
-          />
+          >
+            <Svg width="48" height="44" viewBox="0 0 48 44">
+              <Path
+                d={i % 2 ? "M5 29L18 9L30 24L43 12" : "M5 12L18 29L32 9L43 31"}
+                stroke={["#CCB5FF", "#AFC9F8", "#C4E6D3"][i % 3]}
+                strokeWidth="0.9"
+                fill="none"
+                opacity="0.65"
+              />
+              {(i % 2
+                ? [
+                    [5, 29],
+                    [18, 9],
+                    [30, 24],
+                    [43, 12],
+                  ]
+                : [
+                    [5, 12],
+                    [18, 29],
+                    [32, 9],
+                    [43, 31],
+                  ]
+              ).map(([cx, cy], n) => (
+                <React.Fragment key={n}>
+                  <Circle
+                    cx={cx}
+                    cy={cy}
+                    r="4.5"
+                    fill="#C6ACFF"
+                    opacity="0.15"
+                  />
+                  <Circle
+                    cx={cx}
+                    cy={cy}
+                    r={n === 1 ? 2 : 1.3}
+                    fill="#F1E9FF"
+                  />
+                </React.Fragment>
+              ))}
+            </Svg>
+          </Animated.View>
         );
       })}
     </View>

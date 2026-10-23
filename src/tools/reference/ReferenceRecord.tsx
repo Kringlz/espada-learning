@@ -1,6 +1,7 @@
+import { MathCopy as Txt } from "../../math/MathCopy";
 import React from "react";
 import { View } from "react-native";
-import { Txt, useUITheme } from "../../components/ui";
+import { useUITheme } from "../../components/ui";
 import { ReferenceEntry, referenceTopics } from "./data";
 import { ReferenceMath } from "./ReferenceMath";
 import { ReferenceDiagram } from "./ReferenceDiagram";

@@ -1,3 +1,7 @@
+import { Formula } from "../math/Formula";
+import { MathText } from "../math/MathText";
+import { useSounds } from "../engagement/Sounds";
+import { editExpression, expressionLatex, Selection } from "./expressionEditor";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Keyboard, Pressable, ScrollView, TextInput, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -10,13 +14,16 @@ import { calculate, formatNumber } from "./arithmetic";
 type Entry = { expression: string; result: number };
 const keyRows = [
   ["(", ")", "√", "AC"],
+  ["a/b", "^", "π", "⇥"],
   ["7", "8", "9", "÷"],
   ["4", "5", "6", "×"],
   ["1", "2", "3", "−"],
   ["0", ",", "%", "+"],
-  ["π", "^", "⌫", "="],
+  ["⌫", "="],
 ];
 const keyLabels: Record<string, string> = {
+  "a/b": "Вставить дробь",
+  "⇥": "К следующему полю выражения",
   "(": "Открыть скобку",
   ")": "Закрыть скобку",
   "√": "Квадратный корень",
@@ -39,6 +46,8 @@ export function Calculator() {
 }
 function AccountCalculator({ actorId }: { actorId: string }) {
   const { colors } = useUITheme();
+  const { play } = useSounds();
+  const [selection, setSelection] = useState<Selection>({ start: 0, end: 0 });
   const [view, setView] = useState<"calculator" | "reference" | "history">(
     "calculator",
   );
@@ -108,6 +117,10 @@ function AccountCalculator({ actorId }: { actorId: string }) {
         ].slice(0, 20),
       );
       setExpression(String(result));
+      setSelection({
+        start: String(result).length,
+        end: String(result).length,
+      });
     } catch (e) {
       setMessage((e as Error).message);
     }
@@ -115,11 +128,12 @@ function AccountCalculator({ actorId }: { actorId: string }) {
   function press(value: string) {
     input.current?.blur();
     Keyboard.dismiss();
+    play("open");
     setMessage("");
     if (value === "=") return solve();
-    if (value === "AC") return setExpression("");
-    if (value === "⌫") return setExpression((s) => s.slice(0, -1));
-    setExpression((s) => (s + (value === "√" ? "sqrt(" : value)).slice(0, 240));
+    const next = editExpression(expression, selection, value);
+    setExpression(next.text);
+    setSelection(next.selection);
   }
   return (
     <View testID="calculator" style={{ gap: 18, minWidth: 0 }}>
@@ -155,13 +169,35 @@ function AccountCalculator({ actorId }: { actorId: string }) {
               gap: 8,
             }}
           >
+            <View
+              testID="calculator-formula"
+              style={{
+                minHeight: 64,
+                justifyContent: "center",
+                alignItems: "flex-end",
+              }}
+            >
+              <Formula
+                latex={expressionLatex(expression)}
+                source={expression || "0"}
+                size={30}
+                color={colors.ink}
+              />
+            </View>
             <TextInput
               ref={input}
               accessibilityLabel="Математическое выражение"
               value={expression}
-              onChangeText={setExpression}
+              selection={selection}
+              onSelectionChange={(event) =>
+                setSelection(event.nativeEvent.selection)
+              }
+              onChangeText={(text) => {
+                setExpression(text);
+                setMessage("");
+              }}
               maxLength={240}
-              placeholder="(24 + 6) ÷ 5"
+              placeholder="(1 + 2) / √(9)"
               placeholderTextColor={colors.muted}
               autoCapitalize="none"
               autoCorrect={false}
@@ -170,8 +206,8 @@ function AccountCalculator({ actorId }: { actorId: string }) {
               style={{
                 width: "100%",
                 minWidth: 0,
-                color: colors.ink,
-                fontSize: 21,
+                color: colors.muted,
+                fontSize: 16,
                 minHeight: 48,
                 textAlign: "right",
               }}
@@ -223,6 +259,10 @@ function AccountCalculator({ actorId }: { actorId: string }) {
               {message}
             </Txt>
           )}
+          <Txt size={12} color={colors.muted}>
+            Дробь и корень — кнопками. ⇥ — следующее пустое поле. Выражение
+            можно править с клавиатуры.
+          </Txt>
           <View testID="calculator-keypad" style={{ gap: 8 }}>
             {keyRows.map((row, index) => (
               <View key={index} style={{ flexDirection: "row", gap: 8 }}>
@@ -250,13 +290,22 @@ function AccountCalculator({ actorId }: { actorId: string }) {
                       opacity: pressed || (!ready && k === "=") ? 0.65 : 1,
                     })}
                   >
-                    <Txt
-                      size={23}
-                      weight="700"
-                      color={k === "=" ? colors.onPrimary : colors.ink}
-                    >
-                      {k}
-                    </Txt>
+                    {k === "a/b" ? (
+                      <Formula
+                        latex={"\\frac{a}{b}"}
+                        source="Дробь"
+                        size={22}
+                        color={colors.ink}
+                      />
+                    ) : (
+                      <Txt
+                        size={23}
+                        weight="700"
+                        color={k === "=" ? colors.onPrimary : colors.ink}
+                      >
+                        {k}
+                      </Txt>
+                    )}
                   </Pressable>
                 ))}
               </View>
@@ -280,6 +329,10 @@ function AccountCalculator({ actorId }: { actorId: string }) {
               onPress={() => {
                 setMessage("");
                 setExpression(entry.expression);
+                setSelection({
+                  start: entry.expression.length,
+                  end: entry.expression.length,
+                });
                 setView("calculator");
               }}
               style={{
@@ -289,9 +342,12 @@ function AccountCalculator({ actorId }: { actorId: string }) {
                 gap: 4,
               }}
             >
-              <Txt size={15} color={colors.muted} style={{ flexShrink: 1 }}>
-                {entry.expression}
-              </Txt>
+              <Formula
+                latex={expressionLatex(entry.expression)}
+                source={entry.expression}
+                size={21}
+                color={colors.muted}
+              />
               <Txt size={22} weight="700" style={{ flexShrink: 1 }}>
                 = {formatNumber(entry.result)}
               </Txt>

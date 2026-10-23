@@ -1,6 +1,7 @@
+import { MathCopy as Txt } from "../math/MathCopy";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, View } from "react-native";
-import { Button, Card, Icon, Pill, Txt, useUITheme } from "../components/ui";
+import { Button, Card, Icon, Pill, useUITheme } from "../components/ui";
 import { useLearning } from "../services/context";
 import { arenaService } from "./service";
 import { Room, remainingSeconds } from "./model";

@@ -1,3 +1,12 @@
+## 2026-10-23 — Cosmic appearance and mathematical typography
+
+- Based strictly on the latest deployed `adc28ee` release; no uncommitted work from the old checkout was imported.
+- Light mode changes the home header only. Space retains its stars and dark background with softer violet nebulae; reading and tools use the same cosmic surface.
+- Video notes, questions, choices, hints, explanations and reference prose render mathematical spans using bundled TeX/SVG. Existing authored content and scoring are preserved.
+- Calculator adds live typeset fractions, roots and grouped powers, selection-aware insertion, empty-field navigation and formatted history. Existing mobile sizing, account isolation and saved history are retained.
+- Quiet click feedback covers web controls and the space scene. Home has a persistent sound toggle. Correct submitted answers emit small animated constellations, respecting reduced motion.
+- Verified with TypeScript, the automated test suite, a web export and browser checks of light/dark space, mute persistence, a fraction with a root, lesson notes and a correct-answer burst. Native device playback was not tested.
+
 ## 2026-10-23 — Регистрация без группы и тема главного экрана
 
 - Ученик регистрируется без кода группы и получает личный код в профиле. Учитель добавляет его через «Добавить ученика»; повторный запрос не дублирует зачисление. Старые черновики с кодом группы больше не зачисляют автоматически.

@@ -1,6 +1,8 @@
+import { Confetti } from "../components/Motion";
+import { MathCopy as Txt } from "../math/MathCopy";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View } from "react-native";
-import { Button, Card, Icon, Pill, Txt, useUITheme } from "../components/ui";
+import { Button, Card, Icon, Pill, useUITheme } from "../components/ui";
 import { useRewards } from "../engagement/RewardContext";
 import {
   ArenaTopic,
@@ -31,6 +33,7 @@ export function Practice({
       daily ? 5 : 10,
     ),
   );
+  const [burst, setBurst] = useState(0);
   const [round, setRound] = useState(0);
   const [rows, setRows] = useState<Review[]>([]);
   const [selected, setSelected] = useState<number | null | undefined>(
@@ -49,6 +52,7 @@ export function Practice({
       const q = questions[round];
       const points = practiceScore(accepted === q.answer, elapsed);
       setSelected(accepted);
+      if (accepted === q.answer) setBurst((b) => b + 1);
       setRows((all) => [...all, { ...q, choice: accepted, points }]);
       if (daily && accepted === q.answer)
         rewards.award([{ kind: "question", id: `daily:${day}:${round}` }]);
@@ -117,6 +121,7 @@ export function Practice({
           {q.prompt}
         </Txt>
       </Card>
+      <Confetti burst={burst} />
       <Answers
         question={q}
         selected={selected}

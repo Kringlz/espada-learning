@@ -36,6 +36,7 @@ export type SpaceAction =
       type: "lesson" | "topic" | "navigate" | "retry";
       id: string;
     }
+  | { type: "feedback"; id: "tap" | "toggle" }
   | { type: "theme"; id: "light" | "dark" };
 export function makeSpaceData(
   progress: CourseProgress,
@@ -92,6 +93,7 @@ export function validSpaceAction(
   if (!value || typeof value !== "object") return false;
   const { type, id } = value as SpaceAction;
   if (typeof id !== "string") return false;
+  if (type === "feedback") return id === "tap" || id === "toggle";
   if (type === "theme") return id === "light" || id === "dark";
   if (type === "lesson")
     return data.ready && data.lessons.some((t) => t.id === id);

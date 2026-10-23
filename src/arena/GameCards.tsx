@@ -1,6 +1,7 @@
+import { MathCopy as Txt } from "../math/MathCopy";
 import React from "react";
 import { Pressable, View } from "react-native";
-import { Card, Txt, useUITheme } from "../components/ui";
+import { Card, useUITheme } from "../components/ui";
 import { ArenaQuestion, Review } from "./model";
 
 const tileColors = ["#D62C50", "#2461CA", "#A66A00", "#16805B"];

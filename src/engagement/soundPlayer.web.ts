@@ -24,11 +24,13 @@ export function createSoundPlayer() {
         item.pause();
         item.currentTime = 0;
       }
+      audio.volume = volume * (name === "open" ? 0.28 : 0.7);
       void audio.play().catch(() => {});
     },
     setVolume(value: number) {
       volume = value;
-      for (const item of players.values()) item.volume = volume;
+      for (const [name, item] of players)
+        item.volume = volume * (name === "open" ? 0.28 : 0.7);
       if (music) music.volume = volume;
     },
     async startMusic() {

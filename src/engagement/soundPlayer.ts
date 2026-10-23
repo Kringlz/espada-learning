@@ -20,6 +20,7 @@ export function createSoundPlayer() {
         players.set(name, player);
       }
       for (const item of players.values()) item.pause();
+      player.volume = volume * (name === "open" ? 0.28 : 0.7);
       const target = player;
       void target
         .seekTo(0)
@@ -30,7 +31,8 @@ export function createSoundPlayer() {
     },
     setVolume(value: number) {
       volume = value;
-      for (const item of players.values()) item.volume = volume;
+      for (const [name, item] of players)
+        item.volume = volume * (name === "open" ? 0.28 : 0.7);
       if (music) music.volume = volume;
     },
     async startMusic() {

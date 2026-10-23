@@ -1,3 +1,4 @@
+import { useSounds } from "../engagement/Sounds";
 import { useTheme } from "../theme/Theme";
 import { Asset } from "expo-asset";
 import React, { useEffect, useMemo, useRef } from "react";
@@ -16,6 +17,7 @@ export function SpaceFlight({
   reduced,
   onAction,
 }: SpaceFlightProps) {
+  const sounds = useSounds();
   const { dark, setPreference } = useTheme();
   const brandUri = Asset.fromModule(
     dark
@@ -23,12 +25,15 @@ export function SpaceFlight({
       : require("../../assets/brand/knight-light.jpg"),
   ).uri;
   const view = useRef<WebView>(null);
-  const html = useMemo(() => spaceDocument(data, reduced, brandUri, dark), []);
+  const html = useMemo(
+    () => spaceDocument(data, reduced, brandUri, dark, sounds.enabled),
+    [],
+  );
   const sync = () =>
     view.current?.injectJavaScript(
-      `window.postMessage(${JSON.stringify({ source: "espada-host", data, active, reduced, dark, brandUri }).replace(/</g, "\\u003c")}, '*'); true;`,
+      `window.postMessage(${JSON.stringify({ source: "espada-host", data, active, reduced, dark, brandUri, soundEnabled: sounds.enabled }).replace(/</g, "\\u003c")}, '*'); true;`,
     );
-  useEffect(sync, [data, active, reduced, dark, brandUri]);
+  useEffect(sync, [data, active, reduced, dark, brandUri, sounds.enabled]);
   return (
     <WebView
       ref={view}
@@ -48,7 +53,10 @@ export function SpaceFlight({
             message.source === "espada-space" &&
             validSpaceAction(message.action, data)
           ) {
-            if (message.action.type === "theme")
+            if (message.action.type === "feedback") {
+              if (message.action.id === "toggle") sounds.toggle();
+              else sounds.play("open");
+            } else if (message.action.type === "theme")
               setPreference(message.action.id);
             else onAction(message.action);
           }

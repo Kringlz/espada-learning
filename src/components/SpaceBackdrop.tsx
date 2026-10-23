@@ -30,14 +30,11 @@ export function SpaceBackdrop() {
       >
         <Defs>
           <RadialGradient id={id}>
-            <Stop
-              offset="0"
-              stopColor={dark ? "#528375" : "#A8C9B8"}
-              stopOpacity={dark ? 0.1 : 0.18}
-            />
-            <Stop offset="1" stopColor="#528375" stopOpacity="0" />
+            <Stop offset="0" stopColor="#9860D9" stopOpacity={0.2} />
+            <Stop offset="1" stopColor="#6C41AB" stopOpacity="0" />
           </RadialGradient>
         </Defs>
+        <Ellipse cx="160" cy="650" rx="600" ry="490" fill={`url(#${id})`} />
         <Ellipse cx="1050" cy="160" rx="620" ry="540" fill={`url(#${id})`} />
         {Array.from({ length: 72 }, (_, i) => (
           <Circle
@@ -45,7 +42,7 @@ export function SpaceBackdrop() {
             cx={(i * 7919 + 71) % 1200}
             cy={(i * 1877 + 19) % 900}
             r={i % 13 === 0 ? 1.1 : 0.55}
-            fill={dark ? "#CBDED7" : "#416D5A"}
+            fill="#DBCAFA"
             opacity={0.07 + (i % 5) * 0.025}
           />
         ))}

@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import { createSoundPlayer } from "./soundPlayer";
 import { SoundName } from "./soundAssets";
 const Context = createContext({
@@ -137,6 +137,21 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     },
     [getPlayer],
   );
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const feedback = (event: MouseEvent) => {
+      const element =
+        event.target instanceof Element
+          ? event.target.closest(
+              'button, [role="button"], [role="radio"], [role="tab"], [role="switch"]',
+            )
+          : null;
+      if (element && !element.matches(':disabled, [aria-disabled="true"]'))
+        play("open");
+    };
+    document.addEventListener("click", feedback, true);
+    return () => document.removeEventListener("click", feedback, true);
+  }, [play]);
   const toggle = () => {
     touched.current = true;
     current.current = !current.current;

@@ -9,6 +9,7 @@ const ordinarySub = "0123456789+-=()naehijklmoprstuvx";
 /** Convert the textbook's unambiguous arithmetic notation to TeX without changing the source. */
 export function toLatex(source: string): string {
   const normalized = source
+    .replace(/sqrt(?=\s*\()/g, "√")
     .replace(
       /[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿˣ]+/g,
       (s) => `^{${[...s].map((c) => ordinarySup[supers.indexOf(c)]).join("")}}`,
@@ -30,6 +31,8 @@ export function toLatex(source: string): string {
     λ: "\\lambda ",
     ω: "\\omega ",
     "−": "-",
+    "*": "\\cdot ",
+    "□": "\\square ",
     "·": "\\cdot ",
     "×": "\\times ",
     "÷": "\\div ",
@@ -48,7 +51,7 @@ export function toLatex(source: string): string {
     "′": "'",
   };
   const beginsAtom = () =>
-    /[0-9a-zA-Zα-ωΔ√({]/.test(normalized[i] ?? "") && i < normalized.length;
+    /[0-9a-zA-Zα-ωΔ√□({]/.test(normalized[i] ?? "") && i < normalized.length;
   const atom = (): string => {
     if (i >= normalized.length) return "";
     let value = "";
@@ -73,7 +76,18 @@ export function toLatex(source: string): string {
         // Keep log bases before their arguments.
         while (normalized[i] === "_" || normalized[i] === "^") {
           const script = normalized[i++];
-          value += script + atom();
+          const sign =
+            normalized[i] === "-" ||
+            normalized[i] === "+" ||
+            normalized[i] === "−"
+              ? normalized[i++].replace("−", "-")
+              : "";
+          const exponent = sign + atom();
+          value +=
+            script +
+            (exponent.startsWith("{")
+              ? exponent
+              : `{${exponent.startsWith("(") && exponent.endsWith(")") ? exponent.slice(1, -1) : exponent}}`);
         }
         while (normalized[i] === " ") i++;
         if (beginsAtom()) value += ` ${atom()}`;
@@ -84,7 +98,16 @@ export function toLatex(source: string): string {
     }
     while (normalized[i] === "^" || normalized[i] === "_") {
       const script = normalized[i++];
-      value += script + atom();
+      const sign =
+        normalized[i] === "-" || normalized[i] === "+" || normalized[i] === "−"
+          ? normalized[i++].replace("−", "-")
+          : "";
+      const exponent = sign + atom();
+      value +=
+        script +
+        (exponent.startsWith("{")
+          ? exponent
+          : `{${exponent.startsWith("(") && exponent.endsWith(")") ? exponent.slice(1, -1) : exponent}}`);
     }
     return value;
   };
@@ -109,11 +132,17 @@ export function toLatex(source: string): string {
       while (normalized[i] === "/") {
         i++;
         while (normalized[i] === " ") i++;
+        const sign =
+          normalized[i] === "-" ||
+          normalized[i] === "−" ||
+          normalized[i] === "+"
+            ? normalized[i++].replace("−", "-")
+            : "";
         if (!beginsAtom()) {
-          value += "/";
+          value += "/" + sign;
           break;
         }
-        const denominator = product();
+        const denominator = sign + product();
         const strip = (s: string) => {
           if (!s.startsWith("(") || !s.endsWith(")")) return s;
           let depth = 0;
@@ -159,13 +188,18 @@ function automatic(text: string): MathSegment[] {
     const before = text.slice(Math.max(0, start - 12), start);
     if (
       !value ||
-      !signal.test(value) ||
+      !(
+        signal.test(value) ||
+        /^[0-9]+(?:[.,][0-9]+)?%?$/.test(value) ||
+        /^[a-zA-Zα-ωΔ]{1,3}$/.test(value) ||
+        /[+−×÷·*\-]|\d/.test(value)
+      ) ||
       /(?:https?:\/\/|www\.)/.test(before + value) ||
       /\d{1,4}\/\d{1,2}\/\d{2,4}/.test(value)
     )
       continue;
     // Avoid treating Latin prose/URLs as algebra. Named functions remain supported.
-    if (/[A-Za-z]{4,}/.test(value.replace(/arcsin|arccos|arctan/g, "")))
+    if (/[A-Za-z]{4,}/.test(value.replace(/arcsin|arccos|arctan|sqrt/g, "")))
       continue;
     out.push(
       { text: text.slice(last, start) },

@@ -1,12 +1,13 @@
+import { MathCopy as Txt } from "../../math/MathCopy";
 import { useLearning } from "../../services/context";
 import { lessonSync } from "../../progress/service";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppState, Pressable, View, useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Path, Rect, Text as SvgText, Circle } from "react-native-svg";
-import { Button, Icon, Txt, useUITheme } from "../../components/ui";
+import { Button, Icon, useUITheme } from "../../components/ui";
 import { YouTubePlayer } from "../../components/YouTubePlayer";
-import { MotionActiveContext } from "../../components/Motion";
+import { Confetti, MotionActiveContext } from "../../components/Motion";
 import { ScreenAnchor, useScreenScroll } from "../../components/ScreenScroll";
 import { VideoLessonTheme } from "../../theme/Theme";
 import { useRewards } from "../../engagement/RewardContext";
@@ -68,6 +69,8 @@ function Lesson({
     if (!active) store.pause();
   }, [active]);
   const { award, earned, ready: rewardsReady } = useRewards();
+  const [burst, setBurst] = useState(0);
+  const lastCelebration = useRef("");
   const [reviewVideo, setReviewVideo] = useState(false);
   const [confirmFinish, setConfirmFinish] = useState(false);
   const [oldRun, setOldRun] = useState<string | null>(null);
@@ -192,10 +195,24 @@ function Lesson({
   );
   const inTasks = run.stage === "practice" || run.stage === "check";
   const control = taskControl(run);
+  function submitAnswer() {
+    if (!question || submitted || selected === undefined) return;
+    store.send({ type: "submit", at: now() });
+    const id = `${run!.id}:${run!.stage}:${question.id}`;
+    if (
+      run!.stage !== "intro" &&
+      selected === question.correct &&
+      lastCelebration.current !== id
+    ) {
+      lastCelebration.current = id;
+      setBurst((b) => b + 1);
+    }
+  }
   function finishCheck() {
     if (remaining && !confirmFinish) setConfirmFinish(true);
     else {
       store.send({ type: "finish", at: now() });
+      if (result(run!).correct > 0) setBurst((b) => b + 1);
       setConfirmFinish(false);
     }
   }
@@ -336,7 +353,10 @@ function Lesson({
               onPress={() => setOldRun(null)}
             />
           )}
-          <Result run={shownResult} />
+          <View>
+            <Confetti burst={burst} />
+            <Result run={shownResult} />
+          </View>
           <View style={{ alignItems: "flex-end" }}>
             <PrimaryAction
               label="Пройти ещё раз"
@@ -386,6 +406,7 @@ function Lesson({
             width: "100%",
           }}
         >
+          <Confetti burst={burst} />
           {inTasks && (
             <Txt size={14} weight="600" color={colors.green}>
               {stageLabel}
@@ -478,8 +499,7 @@ function Lesson({
               disabled={control.disabled}
               onAction={() => {
                 if (control.action === "finish") finishCheck();
-                else if (control.action === "submit")
-                  store.send({ type: "submit", at: now() });
+                else if (control.action === "submit") submitAnswer();
                 else
                   store.send({
                     type: control.action,
@@ -495,7 +515,7 @@ function Lesson({
               <PrimaryAction
                 label="Ответить"
                 disabled={selected === undefined}
-                onPress={() => store.send({ type: "submit", at: now() })}
+                onPress={submitAnswer}
               />
             </View>
           ) : null}

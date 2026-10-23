@@ -161,3 +161,13 @@ export function VideoLessonTheme({ children }: { children: React.ReactNode }) {
   );
   return <Ctx.Provider value={{ ...theme, colors }}>{children}</Ctx.Provider>;
 }
+
+/** Reading, practice and tools share the night sky; the header owns light mode. */
+export function CosmicSurface({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
+  return (
+    <Ctx.Provider value={{ ...theme, dark: true, colors: clarityDark }}>
+      {children}
+    </Ctx.Provider>
+  );
+}
