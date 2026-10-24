@@ -1,3 +1,9 @@
+## 2026-10-24 — Softer violet space glow
+
+- Broadened and softened the violet nebula, and slightly increased its colour intensity.
+- Composite nebula light with screen blending so its dark pixels no longer obscure the ambient purple glow.
+- Preserved the dark sky, crisp stars and the existing white header in light mode.
+
 ## 2026-10-23 — Cosmic appearance and mathematical typography
 
 - Based strictly on the latest deployed `adc28ee` release; no uncommitted work from the old checkout was imported.
