@@ -917,7 +917,7 @@ function VideoNotes({ notes }: { notes: string[] }) {
   const { colors } = useUITheme();
   return (
     <View testID="video-notes" style={{ gap: 12 }}>
-      {notes.map((text, index) => (
+      {notes.map((text) => (
         <View
           key={text}
           style={{ flexDirection: "row", gap: 10, alignItems: "flex-start" }}
@@ -933,8 +933,9 @@ function VideoNotes({ notes }: { notes: string[] }) {
           />
           <Txt
             prose
-            size={index === 1 ? 19 : 15}
-            color={index === 1 ? colors.ink : colors.muted}
+            book
+            size={16}
+            color={colors.ink}
             weight="400"
             style={{ flex: 1 }}
           >

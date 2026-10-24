@@ -11,6 +11,7 @@ export type RichTextProps = {
   weight?: "400" | "600" | "700";
   color?: string;
   heading?: boolean;
+  book?: boolean;
   align?: "left" | "center" | "right" | "auto" | "justify";
 };
 const superscript: Record<string, string> = Object.fromEntries(
@@ -38,6 +39,7 @@ export function RichText({
   weight = "400",
   color: providedColor,
   heading,
+  book = false,
   align,
 }: RichTextProps) {
   const { colors, styles } = useUITheme();
@@ -80,7 +82,7 @@ export function RichText({
                     selectable
                     style={{
                       fontSize: size,
-                      fontFamily: heading ? undefined : readingFont,
+                      fontFamily: book && !heading ? readingFont : undefined,
                       lineHeight: size * 1.75,
                       fontWeight: r.bold ? "600" : weight,
                       fontStyle: r.italic ? "italic" : undefined,
@@ -100,7 +102,7 @@ export function RichText({
       accessibilityRole={heading ? "header" : undefined}
       style={{
         fontSize: size,
-        fontFamily: heading ? undefined : readingFont,
+        fontFamily: book && !heading ? readingFont : undefined,
         lineHeight: size * (heading ? 1.3 : 1.75),
         fontWeight: weight,
         color,

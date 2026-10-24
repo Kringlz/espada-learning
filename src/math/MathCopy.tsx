@@ -12,6 +12,7 @@ export function MathCopy({
   weight = "400",
   style,
   prose = false,
+  book = false,
   ...props
 }: React.ComponentProps<typeof Txt>) {
   const { clarity } = useUITheme();
@@ -23,7 +24,7 @@ export function MathCopy({
       </Txt>
     );
   const text = parts.join("");
-  if (!prose && !mathSegments(text).some((s) => s.latex))
+  if (!prose && !book && !mathSegments(text).some((s) => s.latex))
     return (
       <Txt {...props} {...{ size, color, weight, style }}>
         {children}
@@ -42,6 +43,7 @@ export function MathCopy({
         color={color}
         weight={Number(weight) >= 600 ? "600" : "400"}
         heading={props.accessibilityRole === "header"}
+        book={book}
         align={flat?.textAlign}
       />
     </View>

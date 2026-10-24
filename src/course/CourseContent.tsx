@@ -284,7 +284,7 @@ function Block({
           •
         </Txt>
         <View style={{ flex: 1 }}>
-          <RichText runs={runs} />
+          <RichText runs={runs} book />
         </View>
       </View>
     );
