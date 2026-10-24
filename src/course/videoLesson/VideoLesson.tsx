@@ -7,10 +7,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Path, Rect, Text as SvgText, Circle } from "react-native-svg";
 import { Button, Icon, useUITheme } from "../../components/ui";
 import { YouTubePlayer } from "../../components/YouTubePlayer";
-import { Confetti, MotionActiveContext } from "../../components/Motion";
+import {
+  ConstellationCelebration,
+  MotionActiveContext,
+  SoftReveal,
+} from "../../components/Motion";
 import { ScreenAnchor, useScreenScroll } from "../../components/ScreenScroll";
 import { VideoLessonTheme } from "../../theme/Theme";
 import { useRewards } from "../../engagement/RewardContext";
+import { useSounds } from "../../engagement/Sounds";
 import { useLesson } from "./useLesson";
 import { getLessonContent, getLessonMeta, Question } from "./content";
 import {
@@ -69,6 +74,7 @@ function Lesson({
     if (!active) store.pause();
   }, [active]);
   const { award, earned, ready: rewardsReady } = useRewards();
+  const { play } = useSounds();
   const [burst, setBurst] = useState(0);
   const lastCelebration = useRef("");
   const [reviewVideo, setReviewVideo] = useState(false);
@@ -130,6 +136,7 @@ function Lesson({
     scrollToTask,
   ]);
   const sendNext = () => {
+    setBurst(0);
     if (run)
       store.send({ type: "next", from: run.stage, index: run.practiceIndex });
   };
@@ -206,6 +213,8 @@ function Lesson({
     ) {
       lastCelebration.current = id;
       setBurst((b) => b + 1);
+    } else if (run!.stage !== "intro" && selected !== question.correct) {
+      play("wrong");
     }
   }
   function finishCheck() {
@@ -354,7 +363,7 @@ function Lesson({
             />
           )}
           <View>
-            <Confetti burst={burst} />
+            <ConstellationCelebration burst={burst} />
             <Result run={shownResult} />
           </View>
           <View style={{ alignItems: "flex-end" }}>
@@ -364,6 +373,7 @@ function Lesson({
               onPress={() => {
                 setOldRun(null);
                 setConfirmFinish(false);
+                setBurst(0);
                 store.send({
                   type: "start",
                   lessonId,
@@ -406,35 +416,37 @@ function Lesson({
             width: "100%",
           }}
         >
-          <Confetti burst={burst} />
+          <ConstellationCelebration burst={burst} />
           {inTasks && (
             <Txt size={14} weight="600" color={colors.green}>
               {stageLabel}
             </Txt>
           )}
-          {run.stage === "intro" || run.stage === "return" ? (
-            <OpeningQuestion question={question} />
-          ) : (
-            <Txt
-              size={width < 380 ? 18 : 21}
-              weight="500"
-              accessibilityRole="header"
-            >
-              {question.prompt}
-            </Txt>
-          )}
-          <Choices
-            question={question}
-            value={selected}
-            disabled={!!submitted}
-            revealResult={!!submitted && run.stage !== "intro"}
-            onSelect={(choice) => {
-              setConfirmFinish(false);
-              store.send({ type: "choose", id: question.id, choice });
-            }}
-          />
+          <SoftReveal changeKey={question.id} style={{ gap: 20 }}>
+            {run.stage === "intro" || run.stage === "return" ? (
+              <OpeningQuestion question={question} />
+            ) : (
+              <Txt
+                size={width < 380 ? 18 : 21}
+                weight="500"
+                accessibilityRole="header"
+              >
+                {question.prompt}
+              </Txt>
+            )}
+            <Choices
+              question={question}
+              value={selected}
+              disabled={!!submitted}
+              revealResult={!!submitted && run.stage !== "intro"}
+              onSelect={(choice) => {
+                setConfirmFinish(false);
+                store.send({ type: "choose", id: question.id, choice });
+              }}
+            />
+          </SoftReveal>
           {submitted && run.stage === "practice" && (
-            <View
+            <SoftReveal
               style={{
                 gap: 8,
                 borderLeftWidth: 2,
@@ -457,8 +469,10 @@ function Lesson({
               >
                 {submitted.choice === question.correct ? "Верно" : "Разберёмся"}
               </Txt>
-              <Txt size={16}>{question.solution}</Txt>
-            </View>
+              <Txt testID="answer-explanation" prose size={18} weight="400">
+                {question.solution}
+              </Txt>
+            </SoftReveal>
           )}
           {run.stage === "check" && confirmFinish && remaining > 0 && (
             <View style={{ gap: 4 }}>
@@ -484,6 +498,7 @@ function Lesson({
               }
               total={run.stage === "practice" ? practice.length : check.length}
               onChange={(index) => {
+                setBurst(0);
                 setConfirmFinish(false);
                 store.send({
                   type:
@@ -538,7 +553,10 @@ function Lesson({
                 )}
                 <QuietAction
                   label="Видео"
-                  onPress={() => setReviewVideo(true)}
+                  onPress={() => {
+                    setBurst(0);
+                    setReviewVideo(true);
+                  }}
                   icon="play"
                 />
               </View>
@@ -552,7 +570,7 @@ function Lesson({
                   }}
                 >
                   {question.hints.slice(0, hints).map((hint, i) => (
-                    <Txt key={i} size={16}>
+                    <Txt prose key={i} size={18} weight="400">
                       {hint}
                     </Txt>
                   ))}
@@ -589,13 +607,17 @@ function PrimaryAction({
   compact?: boolean;
 }) {
   const { colors } = useUITheme();
+  const { play } = useSounds();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
       disabled={disabled}
-      onPress={onPress}
+      onPress={() => {
+        play(arrow ? "navigate" : "open");
+        onPress();
+      }}
       style={({ pressed }) => ({
         minHeight: 48,
         maxWidth: "100%",
@@ -638,6 +660,7 @@ function TaskControls({
   onAction: () => void;
 }) {
   const { colors } = useUITheme();
+  const { play } = useSounds();
   const arrow = (direction: number) => {
     const unavailable = index + direction < 0 || index + direction >= total;
     return (
@@ -648,7 +671,10 @@ function TaskControls({
         }
         accessibilityState={{ disabled: unavailable }}
         disabled={unavailable}
-        onPress={() => onChange(index + direction)}
+        onPress={() => {
+          play("navigate");
+          onChange(index + direction);
+        }}
         style={({ pressed }) => ({
           width: 44,
           height: 48,
@@ -672,13 +698,10 @@ function TaskControls({
       style={{
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent: "flex-end",
         gap: 8,
       }}
     >
-      <Txt size={12} color={colors.muted} style={{ flexShrink: 0 }}>
-        {index + 1} / {total}
-      </Txt>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <View style={{ flexDirection: "row", gap: 4 }}>
           {arrow(-1)}
@@ -725,11 +748,15 @@ function QuietAction({
   icon?: React.ComponentProps<typeof Icon>["name"];
 }) {
   const { colors } = useUITheme();
+  const { play } = useSounds();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      onPress={onPress}
+      onPress={() => {
+        play(icon === "play" ? "navigate" : "expand");
+        onPress();
+      }}
       style={({ pressed }) => ({
         minHeight: 44,
         flexDirection: "row",
@@ -756,6 +783,7 @@ function Fold({
 }) {
   const { colors } = useUITheme();
   const [open, setOpen] = useState(false);
+  const { play } = useSounds();
   return (
     <View
       style={{
@@ -769,7 +797,10 @@ function Fold({
         accessibilityLabel={title}
         accessibilityState={{ expanded: open }}
         aria-expanded={open}
-        onPress={() => setOpen((v) => !v)}
+        onPress={() => {
+          play(open ? "collapse" : "expand");
+          setOpen((v) => !v);
+        }}
         style={{
           minHeight: 48,
           flexDirection: "row",
@@ -805,6 +836,7 @@ function Choices({
   onSelect: (i: number) => void;
 }) {
   const { colors } = useUITheme();
+  const { play } = useSounds();
   const wrong = revealResult && value !== question.correct;
   const selectedColor = wrong ? colors.gold : colors.green;
   return (
@@ -821,7 +853,10 @@ function Choices({
           accessibilityState={{ checked: value === i, disabled }}
           aria-checked={value === i}
           disabled={disabled}
-          onPress={() => onSelect(i)}
+          onPress={() => {
+            play("select");
+            onSelect(i);
+          }}
           style={({ pressed }) => ({
             flexDirection: "row",
             alignItems: "center",
@@ -897,9 +932,10 @@ function VideoNotes({ notes }: { notes: string[] }) {
             }}
           />
           <Txt
+            prose
             size={index === 1 ? 19 : 15}
             color={index === 1 ? colors.ink : colors.muted}
-            weight={index === 1 ? "500" : "400"}
+            weight="400"
             style={{ flex: 1 }}
           >
             {text}

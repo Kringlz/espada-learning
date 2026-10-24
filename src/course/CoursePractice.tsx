@@ -3,7 +3,7 @@ import { AtlasImage } from "../components/AtlasImage";
 import { useSounds } from "../engagement/Sounds";
 import { sectionIllustrations } from "../components/SectionIllustrations";
 import { useRewards } from "../engagement/RewardContext";
-import { Confetti, SoftReveal } from "../components/Motion";
+import { ConstellationCelebration, SoftReveal } from "../components/Motion";
 import React, { useState, useEffect, useRef } from "react";
 import { Image, Pressable, View } from "react-native";
 import {
@@ -388,7 +388,7 @@ export function CoursePractice({
         ) : (
           <SoftReveal>
             <View style={{ gap: 12 }} accessibilityLiveRegion="polite">
-              <Confetti burst={burst} />
+              <ConstellationCelebration burst={burst} />
               <Txt
                 size={20}
                 weight="700"

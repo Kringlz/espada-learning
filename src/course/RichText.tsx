@@ -4,6 +4,7 @@ import { Text, View } from "react-native";
 import { TextRun } from "./content";
 import { mathRuns } from "../math/notation";
 import { Formula } from "../math/Formula";
+import { readingFont } from "./typography";
 export type RichTextProps = {
   runs: TextRun[];
   size?: number;
@@ -79,8 +80,9 @@ export function RichText({
                     selectable
                     style={{
                       fontSize: size,
+                      fontFamily: heading ? undefined : readingFont,
                       lineHeight: size * 1.75,
-                      fontWeight: r.bold ? "700" : weight,
+                      fontWeight: r.bold ? "600" : weight,
                       fontStyle: r.italic ? "italic" : undefined,
                       color,
                     }}
@@ -98,6 +100,7 @@ export function RichText({
       accessibilityRole={heading ? "header" : undefined}
       style={{
         fontSize: size,
+        fontFamily: heading ? undefined : readingFont,
         lineHeight: size * (heading ? 1.3 : 1.75),
         fontWeight: weight,
         color,
@@ -107,7 +110,7 @@ export function RichText({
         <Text
           key={i}
           style={{
-            fontWeight: r.bold ? "700" : undefined,
+            fontWeight: r.bold ? "600" : undefined,
             fontStyle: r.italic ? "italic" : undefined,
           }}
         >

@@ -264,7 +264,7 @@ function Shell() {
     return () => window.removeEventListener("hashchange", route);
   }, [actor.id, actor.role]);
   function navigate(next: string) {
-    sounds.play("open");
+    sounds.play("navigate");
     setTopic(null);
     setResult(null);
     if (next === "Learn") setLearnVisited(true);

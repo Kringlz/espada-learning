@@ -1,4 +1,5 @@
 import { useSounds } from "../engagement/Sounds";
+import { SoundName } from "../engagement/soundAssets";
 import { MotionActiveContext } from "./Motion";
 import React, { useContext, useState } from "react";
 import {
@@ -101,6 +102,7 @@ export function Button({
   label,
   math = false,
   fullWidth = false,
+  sound,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -112,6 +114,7 @@ export function Button({
   label?: string;
   math?: boolean;
   fullWidth?: boolean;
+  sound?: SoundName;
 }) {
   const { colors, styles, clarity } = useUITheme();
   const { play } = useSounds();
@@ -124,7 +127,14 @@ export function Button({
       aria-disabled={disabled}
       disabled={disabled}
       onPress={() => {
-        play("open");
+        play(
+          sound ??
+            (selected !== undefined
+              ? "select"
+              : icon === "arrow-right" || icon === "arrow-left"
+                ? "navigate"
+                : "open"),
+        );
         onPress();
       }}
       style={({ pressed }) => [
@@ -420,7 +430,7 @@ export function Disclosure({
         accessibilityState={{ expanded: open }}
         aria-expanded={open}
         onPress={() => {
-          if (!open) play("open");
+          play(open ? "collapse" : "expand");
           setOpen(!open);
         }}
         style={{

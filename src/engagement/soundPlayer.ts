@@ -1,5 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
-import { soundAssets, musicAsset, SoundName } from "./soundAssets";
+import { soundAssets, musicAsset, SoundName, soundGain } from "./soundAssets";
 export function createSoundPlayer() {
   const players = new Map<SoundName, ReturnType<typeof createAudioPlayer>>();
   let music: ReturnType<typeof createAudioPlayer> | null = null;
@@ -20,7 +20,7 @@ export function createSoundPlayer() {
         players.set(name, player);
       }
       for (const item of players.values()) item.pause();
-      player.volume = volume * (name === "open" ? 0.28 : 0.7);
+      player.volume = volume * soundGain[name];
       const target = player;
       void target
         .seekTo(0)
@@ -32,7 +32,7 @@ export function createSoundPlayer() {
     setVolume(value: number) {
       volume = value;
       for (const [name, item] of players)
-        item.volume = volume * (name === "open" ? 0.28 : 0.7);
+        item.volume = volume * soundGain[name];
       if (music) music.volume = volume;
     },
     async startMusic() {

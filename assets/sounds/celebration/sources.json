@@ -1,0 +1,9 @@
+{
+  "description": "Original procedural audio created for Espada. No third-party samples.",
+  "generator": "scripts/generate-celebration-sounds.py",
+  "files": [
+    "success.wav",
+    "successAlt.wav"
+  ],
+  "format": "Mono 16-bit PCM WAV, 44100 Hz, 360 ms"
+}

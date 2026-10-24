@@ -2,7 +2,7 @@ import { useStreak } from "../engagement/StreakContext";
 import { AtlasImage } from "../components/AtlasImage";
 import { useLessonFocus } from "../components/LessonFocus";
 import { useRewards } from "../engagement/RewardContext";
-import { Confetti } from "../components/Motion";
+import { ConstellationCelebration } from "../components/Motion";
 import { useUITheme } from "../components/ui";
 import { TopicCover, topicCover } from "../components/TopicCover";
 import { MathText } from "../math/MathText";
@@ -662,7 +662,7 @@ function TestAttempt({
   }
   return (
     <View style={{ gap: 14 }}>
-      <Confetti burst={burst} />
+      <ConstellationCelebration burst={burst} />
       <Button
         secondary
         small

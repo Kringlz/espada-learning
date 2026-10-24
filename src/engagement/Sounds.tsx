@@ -146,11 +146,24 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
               'button, [role="button"], [role="radio"], [role="tab"], [role="switch"]',
             )
           : null;
-      if (element && !element.matches(':disabled, [aria-disabled="true"]'))
-        play("open");
+      // Explicit component feedback takes precedence over this web fallback.
+      if (
+        !element ||
+        element.matches(':disabled, [aria-disabled="true"]') ||
+        Date.now() - last.current < 100
+      )
+        return;
+      const role = element.getAttribute("role");
+      play(
+        role === "radio" || role === "switch"
+          ? "select"
+          : role === "tab"
+            ? "navigate"
+            : "open",
+      );
     };
-    document.addEventListener("click", feedback, true);
-    return () => document.removeEventListener("click", feedback, true);
+    document.addEventListener("click", feedback);
+    return () => document.removeEventListener("click", feedback);
   }, [play]);
   const toggle = () => {
     touched.current = true;

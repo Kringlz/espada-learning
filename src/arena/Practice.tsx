@@ -1,4 +1,4 @@
-import { Confetti } from "../components/Motion";
+import { ConstellationCelebration } from "../components/Motion";
 import { MathCopy as Txt } from "../math/MathCopy";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View } from "react-native";
@@ -121,7 +121,7 @@ export function Practice({
           {q.prompt}
         </Txt>
       </Card>
-      <Confetti burst={burst} />
+      <ConstellationCelebration burst={burst} />
       <Answers
         question={q}
         selected={selected}

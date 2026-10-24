@@ -1,7 +1,7 @@
 import { useSounds } from "../engagement/Sounds";
 import { useScreenScroll } from "../components/ScreenScroll";
 import { useRewards } from "../engagement/RewardContext";
-import { Confetti } from "../components/Motion";
+import { ConstellationCelebration } from "../components/Motion";
 import { useUITheme } from "../components/ui";
 import { TopicCover } from "../components/TopicCover";
 import { MathText } from "../math/MathText";
@@ -348,7 +348,7 @@ export function Lesson({
                   borderRadius: 12,
                 }}
               >
-                <Confetti burst={burst} />
+                <ConstellationCelebration burst={burst} />
                 <Txt weight="600">
                   {guided === t.practice.answer
                     ? "That’s it. Nicely worked out."
@@ -427,7 +427,7 @@ export function Lesson({
       {stage === "complete" && (
         <>
           <Card style={{ backgroundColor: colors.light }}>
-            <Confetti burst={burst} />
+            <ConstellationCelebration burst={burst} />
             <Icon name="check-circle" size={35} color={colors.green} />
             <Txt size={29} weight="600">
               One more step forward.

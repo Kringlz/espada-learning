@@ -3,6 +3,7 @@ import React from "react";
 import { TextRun } from "./content";
 import { mathRuns } from "../math/notation";
 import { Formula } from "../math/Formula";
+import { readingFont } from "./typography";
 
 export type RichTextProps = {
   runs: TextRun[];
@@ -29,8 +30,9 @@ export function RichText({
       style={{
         margin: 0,
         textAlign: align === "auto" ? undefined : align,
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        fontFamily: heading
+          ? '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+          : readingFont,
         fontSize: size,
         fontWeight: weight,
         lineHeight: heading ? 1.25 : 1.75,
@@ -55,7 +57,7 @@ export function RichText({
         const value = (
           <span
             style={{
-              fontWeight: r.bold ? 700 : undefined,
+              fontWeight: r.bold ? 600 : undefined,
               fontStyle: r.italic ? "italic" : undefined,
             }}
           >

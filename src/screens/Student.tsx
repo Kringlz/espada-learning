@@ -1,4 +1,5 @@
 import { TeacherContactEditor } from "./Family";
+import { CopyCode } from "../components/CopyCode";
 import { useUITheme } from "../components/ui";
 import { MyGroups } from "../components/Groups";
 import React, { useState } from "react";
@@ -81,9 +82,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
               ? "Этот код понадобится родителю, чтобы увидеть ваш прогресс, или учителю — чтобы добавить вас в группу."
               : "Этот код — ваш личный идентификатор аккаунта."}
           </Txt>
-          <Txt selectable size={20} weight="700">
-            {actor.code}
-          </Txt>
+          <CopyCode code={actor.code} />
         </Card>
       )}
       {actor.role === "teacher" && <TeacherContactEditor key={actor.id} />}

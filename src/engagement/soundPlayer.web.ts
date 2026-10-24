@@ -1,5 +1,5 @@
 import { Asset } from "expo-asset";
-import { soundAssets, musicAsset, SoundName } from "./soundAssets";
+import { soundAssets, musicAsset, SoundName, soundGain } from "./soundAssets";
 export function createSoundPlayer() {
   const players = new Map<SoundName, HTMLAudioElement>();
   let music: HTMLAudioElement | null = null;
@@ -24,13 +24,13 @@ export function createSoundPlayer() {
         item.pause();
         item.currentTime = 0;
       }
-      audio.volume = volume * (name === "open" ? 0.28 : 0.7);
+      audio.volume = volume * soundGain[name];
       void audio.play().catch(() => {});
     },
     setVolume(value: number) {
       volume = value;
       for (const [name, item] of players)
-        item.volume = volume * (name === "open" ? 0.28 : 0.7);
+        item.volume = volume * soundGain[name];
       if (music) music.volume = volume;
     },
     async startMusic() {

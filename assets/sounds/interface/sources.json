@@ -1,0 +1,17 @@
+{
+  "author": "Kenney",
+  "source": "https://kenney.nl/assets/interface-sounds",
+  "license": "CC0-1.0",
+  "processing": "Mono PCM WAV, 2.8 kHz low-pass filter, peak limit 0.65, 5 ms fade-in / 10 ms fade-out.",
+  "files": {
+    "open": "drop_002",
+    "select": "select_002",
+    "navigate": "back_001",
+    "expand": "maximize_007",
+    "collapse": "minimize_007",
+    "copy": "confirmation_001",
+    "success": "confirmation_002",
+    "successAlt": "confirmation_004",
+    "wrong": "error_004"
+  }
+}
