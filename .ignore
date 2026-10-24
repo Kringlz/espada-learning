@@ -1,3 +1,7 @@
 node_modules/
 dist/
 .expo/
+
+# Historical material is never application source.
+/АРХИВ/
+/review/

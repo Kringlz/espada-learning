@@ -22,3 +22,7 @@ docs/PROJECT_BRIEF.md
 
 # Public release export
 dist-public/
+
+# Historical material is never application source.
+/АРХИВ/
+/review/

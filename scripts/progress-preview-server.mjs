@@ -7,7 +7,7 @@ requireDisposableDatabase();
 if (!process.argv.includes("--local-preview"))
   throw Error("Explicit --local-preview required.");
 const port = Number(process.env.ESPADA_PROGRESS_PORT || 55434),
-  root = new URL("../tmp/progress-private-files/", import.meta.url);
+  root = new URL("../АРХИВ/локальные-данные/progress-private-files/", import.meta.url);
 await mkdir(root, { recursive: true });
 const actors = [1, 2, 3, 4, 5, 450].map(
   (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`,

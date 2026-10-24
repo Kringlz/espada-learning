@@ -1,0 +1,37 @@
+{
+  "current": {
+    "label": "Текущее опубликованное приложение",
+    "commit": "c61a5139ab0786b1acb4068e4d63f62f1e9182f3",
+    "tag": "current-2026-10-24"
+  },
+  "previous": {
+    "label": "Предыдущая опубликованная версия",
+    "commit": "1110cda158225a0a6df5c679f40b14dd94cc8f8b",
+    "tag": "previous-2026-10-23"
+  },
+  "pre-cosmos": {
+    "label": "Контрольная: до космического интерфейса",
+    "commit": "63385bdd07ddb59a37d1c3327f5a01966d15818b",
+    "tag": "checkpoint/pre-cosmos-2026-10-20"
+  },
+  "cosmos-baseline": {
+    "label": "Контрольная: начало космического интерфейса",
+    "commit": "13eb2cfae8f1c535b2dc32086a792d2001aee915",
+    "tag": "checkpoint/cosmos-baseline"
+  },
+  "before-integration": {
+    "label": "Контрольная: перед объединением",
+    "commit": "02a731b998c8811c03d22212210127fc5461844a",
+    "tag": "checkpoint/before-integration"
+  },
+  "imported-progress": {
+    "label": "Контрольная: импорт прогресса",
+    "commit": "8973458288a2a9ba512e6de9bacd49494a657d15",
+    "tag": "checkpoint/imported-progress"
+  },
+  "pre-duo": {
+    "label": "Контрольная: до Duo",
+    "commit": "fee7d15dc8dcb7f09926e0681d43d8b85dc1fa14",
+    "tag": "pre-duo-2026-10-14"
+  }
+}

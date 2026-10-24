@@ -1,4 +1,4 @@
-"""Render the original design-lab/clarity-audio.js sine envelopes to portable PCM.
+"""Render the original АРХИВ/история/design-lab/clarity-audio.js sine envelopes to portable PCM.
 No external samples. Same 75 BPM pentatonic phrase, gains and note lengths.
 """
 import math, wave, struct

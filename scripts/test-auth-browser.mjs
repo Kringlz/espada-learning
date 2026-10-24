@@ -71,7 +71,7 @@ function token(user) {
 }
 const errors = [];
 const browser = await chromium.launch({ headless: true, channel: "chrome" });
-await mkdir(new URL("../review/", import.meta.url), { recursive: true });
+await mkdir(new URL("../АРХИВ/проверки/auth/", import.meta.url), { recursive: true });
 async function setup(context) {
   // All nonlocal requests are intercepted; unknown hosts cannot receive test data.
   await context.route("**/*", async (route) => {
@@ -217,7 +217,7 @@ try {
   for (const width of [320, 390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.screenshot({
-      path: new URL(`../review/auth-login-${width}.png`, import.meta.url)
+      path: new URL(`../АРХИВ/проверки/auth/auth-login-${width}.png`, import.meta.url)
         .pathname,
       fullPage: true,
     });
@@ -276,7 +276,7 @@ try {
   for (const width of [320, 390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.screenshot({
-      path: new URL(`../review/auth-register-${width}.png`, import.meta.url)
+      path: new URL(`../АРХИВ/проверки/auth/auth-register-${width}.png`, import.meta.url)
         .pathname,
       fullPage: true,
     });
@@ -519,7 +519,7 @@ try {
   for (const width of [320, 390, 1440]) {
     await p3.setViewportSize({ width, height: 900 });
     await p3.screenshot({
-      path: new URL(`../review/auth-reset-${width}.png`, import.meta.url)
+      path: new URL(`../АРХИВ/проверки/auth/auth-reset-${width}.png`, import.meta.url)
         .pathname,
       fullPage: true,
     });
@@ -594,7 +594,7 @@ try {
 } catch (e) {
   await page
     .screenshot({
-      path: new URL("../review/auth-failure.png", import.meta.url).pathname,
+      path: new URL("../АРХИВ/проверки/auth/auth-failure.png", import.meta.url).pathname,
       fullPage: true,
     })
     .catch(() => {});

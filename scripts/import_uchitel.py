@@ -42,7 +42,7 @@ class Article(HTMLParser):
         return '\n'.join(re.sub(r'\s+',' ',line).strip() for line in ''.join(self.parts).splitlines() if line.strip())
 
 def run():
-    ap=argparse.ArgumentParser(); ap.add_argument('--refresh',action='store_true'); ap.add_argument('--cache',default='tmp/uchitel'); args=ap.parse_args()
+    ap=argparse.ArgumentParser(); ap.add_argument('--refresh',action='store_true'); ap.add_argument('--cache',default='АРХИВ/кеш/uchitel'); args=ap.parse_args()
     root=pathlib.Path(__file__).resolve().parents[1]
     manifest=json.loads((root/'content/math-course/video-lessons/sources.json').read_text())
     cache=root/args.cache; cache.mkdir(parents=True,exist_ok=True); report=[]

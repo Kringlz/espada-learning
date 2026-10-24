@@ -9,7 +9,7 @@ const { chromium } = require(
 );
 const workTitle = `ТЕСТ · Школьная контрольная ${Date.now()}`;
 const base = "http://127.0.0.1:8104/",
-  out = new URL("../tmp/progress-browser/", import.meta.url).pathname;
+  out = new URL("../АРХИВ/проверки/progress/", import.meta.url).pathname;
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ headless: true, channel: "chrome" }),
   errors = [];

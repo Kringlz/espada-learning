@@ -15,6 +15,9 @@
   "exclude": [
     "node_modules",
     "dist",
-    "supabase/functions"
+    "supabase/functions",
+    "АРХИВ",
+    "РЕСЕТЫ",
+    "review"
   ]
 }
