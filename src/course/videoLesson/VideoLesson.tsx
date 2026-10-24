@@ -17,6 +17,13 @@ import { VideoLessonTheme } from "../../theme/Theme";
 import { useRewards } from "../../engagement/RewardContext";
 import { useSounds } from "../../engagement/Sounds";
 import { useLesson } from "./useLesson";
+import {
+  AnswerShake,
+  ChapterArt,
+  FinishAccent,
+  MistakeWash,
+  StagePrelude,
+} from "./LessonAtmosphere";
 import { getLessonContent, getLessonMeta, Question } from "./content";
 import {
   currentQuestion,
@@ -43,11 +50,11 @@ export function VideoLesson(props: {
   );
 }
 const stages: [Stage, string][] = [
-  ["intro", "Вопрос"],
-  ["video", "Видео"],
+  ["intro", "Введение"],
+  ["video", "Урок"],
   ["practice", "Тренировка"],
   ["return", "До и после"],
-  ["check", "Проверка"],
+  ["check", "Практика"],
 ];
 const now = () => new Date().toISOString();
 function Lesson({
@@ -76,6 +83,8 @@ function Lesson({
   const { award, earned, ready: rewardsReady } = useRewards();
   const { play } = useSounds();
   const [burst, setBurst] = useState(0);
+  const [mistake, setMistake] = useState(0);
+  const [prelude, setPrelude] = useState<"practice" | "check" | null>(null);
   const lastCelebration = useRef("");
   const [reviewVideo, setReviewVideo] = useState(false);
   const [confirmFinish, setConfirmFinish] = useState(false);
@@ -114,12 +123,13 @@ function Lesson({
       award([videoEvent]);
   }, [store.ready, progress.completed, lessonVideo.id, rewardsReady]);
   useScreenScroll(
-    `${run?.stage}:${run?.practiceIndex}:${run?.checkIndex}:${reviewVideo}:${oldRun}`,
+    `${run?.stage}:${run?.practiceIndex}:${run?.checkIndex}:${reviewVideo}:${oldRun}:${prelude}`,
   );
   useEffect(() => {
     if (
       !active ||
       reviewVideo ||
+      prelude ||
       !run ||
       !["practice", "check"].includes(run.stage)
     )
@@ -133,10 +143,14 @@ function Lesson({
     run?.practiceIndex,
     run?.checkIndex,
     reviewVideo,
+    prelude,
     scrollToTask,
   ]);
   const sendNext = () => {
     setBurst(0);
+    setMistake(0);
+    if (run?.stage === "video") setPrelude("practice");
+    if (run?.stage === "return") setPrelude("check");
     if (run)
       store.send({ type: "next", from: run.stage, index: run.practiceIndex });
   };
@@ -175,13 +189,13 @@ function Lesson({
     ? store.data.runs.find((r) => r.id === oldRun)!
     : run;
   const stageLabel = showVideo
-    ? "Видео"
+    ? "Урок"
     : run.stage === "practice"
       ? "Тренировка"
       : run.stage === "check"
-        ? "Проверка"
+        ? "Практика"
         : run.stage === "intro"
-          ? "Первый вопрос"
+          ? "Введение"
           : run.stage === "return"
             ? "До и после"
             : "Результат";
@@ -193,7 +207,7 @@ function Lesson({
             ? run.stage === "result"
               ? "К результату"
               : "К заданию"
-            : "Далее"
+            : "К тренировке"
         }
         arrow
         onPress={reviewVideo ? () => setReviewVideo(false) : sendNext}
@@ -214,6 +228,7 @@ function Lesson({
       lastCelebration.current = id;
       setBurst((b) => b + 1);
     } else if (run!.stage !== "intro" && selected !== question.correct) {
+      setMistake((n) => n + 1);
       play("wrong");
     }
   }
@@ -289,7 +304,10 @@ function Lesson({
           <QuietAction label="Повторить сохранение" onPress={store.retry} />
         </View>
       )}
-      {showVideo ? (
+      <MistakeWash trigger={mistake} />
+      {prelude ? (
+        <StagePrelude stage={prelude} onDone={() => setPrelude(null)} />
+      ) : showVideo ? (
         <>
           <View
             style={{
@@ -363,7 +381,7 @@ function Lesson({
             />
           )}
           <View>
-            <ConstellationCelebration burst={burst} />
+            <ConstellationCelebration burst={burst} immersive />
             <Result run={shownResult} />
           </View>
           <View style={{ alignItems: "flex-end" }}>
@@ -374,6 +392,7 @@ function Lesson({
                 setOldRun(null);
                 setConfirmFinish(false);
                 setBurst(0);
+                setMistake(0);
                 store.send({
                   type: "start",
                   lessonId,
@@ -411,14 +430,73 @@ function Lesson({
           style={{
             gap: 20,
             padding: width < 380 ? 14 : 24,
-            borderRadius: 18,
-            backgroundColor: colors.subtle,
+            borderRadius: run.stage === "intro" ? 28 : 18,
+            borderWidth: 1,
+            borderColor:
+              submitted &&
+              run.stage !== "intro" &&
+              submitted.choice !== question.correct
+                ? colors.red
+                : run.stage === "intro"
+                  ? "#8B79B94D"
+                  : run.stage === "check"
+                    ? "#AA99D34D"
+                    : run.stage === "return"
+                      ? "#D0B37A4D"
+                      : colors.line,
+            backgroundColor:
+              submitted &&
+              run.stage !== "intro" &&
+              submitted.choice !== question.correct
+                ? "#351C2A"
+                : run.stage === "intro"
+                  ? "#19162D"
+                  : run.stage === "check"
+                    ? "#1B1B30"
+                    : colors.subtle,
             width: "100%",
           }}
         >
-          <ConstellationCelebration burst={burst} />
+          <ConstellationCelebration burst={burst} immersive />
+          {run.stage === "intro" && (
+            <View testID="lesson-introduction" style={{ gap: 10 }}>
+              <Txt
+                size={13}
+                weight="600"
+                color="#D1BCF1"
+                style={{ letterSpacing: 2 }}
+              >
+                ВВЕДЕНИЕ
+              </Txt>
+              <Txt size={26} weight="500">
+                Всё начинается с вопроса
+              </Txt>
+              {question.id !== "g08-path" && <ChapterArt />}
+              <Txt size={15} color={colors.muted}>
+                Как ты думаешь? Здесь можно предположить — после урока вернёмся
+                к твоему ответу.
+              </Txt>
+            </View>
+          )}
+          {run.stage === "return" && (
+            <View style={{ gap: 6 }}>
+              <Txt size={13} color={colors.gold} weight="600">
+                ДО И ПОСЛЕ
+              </Txt>
+              <Txt size={23} weight="500">
+                Знакомый вопрос. Новый взгляд.
+              </Txt>
+              <Txt size={15} color={colors.muted}>
+                Посмотри на него ещё раз — что теперь стало понятнее?
+              </Txt>
+            </View>
+          )}
           {inTasks && (
-            <Txt size={14} weight="600" color={colors.green}>
+            <Txt
+              size={14}
+              weight="600"
+              color={run.stage === "check" ? "#C4B0FF" : colors.green}
+            >
               {stageLabel}
             </Txt>
           )}
@@ -439,6 +517,7 @@ function Lesson({
               value={selected}
               disabled={!!submitted}
               revealResult={!!submitted && run.stage !== "intro"}
+              mistake={mistake}
               onSelect={(choice) => {
                 setConfirmFinish(false);
                 store.send({ type: "choose", id: question.id, choice });
@@ -453,7 +532,7 @@ function Lesson({
                 borderLeftColor:
                   submitted.choice === question.correct
                     ? colors.green
-                    : colors.gold,
+                    : colors.red,
                 paddingLeft: 14,
               }}
             >
@@ -463,7 +542,7 @@ function Lesson({
                 color={
                   submitted.choice === question.correct
                     ? colors.green
-                    : colors.gold
+                    : colors.red
                 }
                 accessibilityLiveRegion="polite"
               >
@@ -499,6 +578,7 @@ function Lesson({
               total={run.stage === "practice" ? practice.length : check.length}
               onChange={(index) => {
                 setBurst(0);
+                setMistake(0);
                 setConfirmFinish(false);
                 store.send({
                   type:
@@ -506,16 +586,21 @@ function Lesson({
                   index,
                 });
               }}
+              finish={control.action === "finish"}
               label={
-                control.action === "finish" && confirmFinish
-                  ? "Отправить"
-                  : control.label
+                control.action === "finish"
+                  ? "Завершить урок"
+                  : control.label === "Завершить"
+                    ? "Продолжить"
+                    : control.label
               }
               disabled={control.disabled}
               onAction={() => {
                 if (control.action === "finish") finishCheck();
                 else if (control.action === "submit") submitAnswer();
-                else
+                else {
+                  setBurst(0);
+                  setMistake(0);
                   store.send({
                     type: control.action,
                     index:
@@ -523,6 +608,7 @@ function Lesson({
                         ? run.practiceIndex
                         : run.checkIndex,
                   });
+                }
               }}
             />
           ) : !submitted ? (
@@ -582,7 +668,7 @@ function Lesson({
           {submitted && run.stage !== "practice" && (
             <View style={{ alignItems: "flex-end" }}>
               <PrimaryAction
-                label={run.stage === "intro" ? "Смотреть видео" : "К проверке"}
+                label={run.stage === "intro" ? "Смотреть видео" : "К практике"}
                 arrow
                 onPress={sendNext}
               />
@@ -599,49 +685,58 @@ function PrimaryAction({
   disabled = false,
   arrow = false,
   compact = false,
+  finish = false,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   arrow?: boolean;
   compact?: boolean;
+  finish?: boolean;
 }) {
   const { colors } = useUITheme();
   const { play } = useSounds();
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={() => {
-        play(arrow ? "navigate" : "open");
-        onPress();
-      }}
-      style={({ pressed }) => ({
-        minHeight: 48,
-        maxWidth: "100%",
-        paddingHorizontal: compact ? 10 : 20,
-        paddingVertical: 12,
-        borderRadius: 24,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        backgroundColor: colors.primary,
-        opacity: disabled ? 0.4 : pressed ? 0.8 : 1,
-      })}
-    >
-      <Txt
-        size={compact ? 14 : 15}
-        weight="600"
-        color={colors.onPrimary}
-        style={{ flexShrink: 1 }}
+    <FinishAccent enabled={finish && !disabled}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ disabled }}
+        disabled={disabled}
+        onPress={() => {
+          play(arrow ? "navigate" : "open");
+          onPress();
+        }}
+        style={({ pressed }) => ({
+          minHeight: 48,
+          maxWidth: "100%",
+          paddingHorizontal: compact ? 10 : 20,
+          paddingVertical: 12,
+          borderRadius: 24,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          backgroundColor: colors.primary,
+          opacity: disabled ? 0.4 : pressed ? 0.8 : 1,
+        })}
       >
-        {label}
-      </Txt>
-      {arrow && <Icon name="arrow-right" size={18} color={colors.onPrimary} />}
-    </Pressable>
+        <Txt
+          size={compact ? 14 : 15}
+          weight="600"
+          color={colors.onPrimary}
+          style={{ flexShrink: 1 }}
+        >
+          {label}
+        </Txt>
+        {finish && (
+          <Icon name="check-circle" size={18} color={colors.onPrimary} />
+        )}
+        {arrow && (
+          <Icon name="arrow-right" size={18} color={colors.onPrimary} />
+        )}
+      </Pressable>
+    </FinishAccent>
   );
 }
 function TaskControls({
@@ -651,6 +746,7 @@ function TaskControls({
   label,
   disabled,
   onAction,
+  finish = false,
 }: {
   index: number;
   total: number;
@@ -658,6 +754,7 @@ function TaskControls({
   label: string;
   disabled: boolean;
   onAction: () => void;
+  finish?: boolean;
 }) {
   const { colors } = useUITheme();
   const { play } = useSounds();
@@ -702,14 +799,24 @@ function TaskControls({
         gap: 8,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          gap: 12,
+          flex: 1,
+        }}
+      >
         <View style={{ flexDirection: "row", gap: 4 }}>
           {arrow(-1)}
           {arrow(1)}
         </View>
-        <View style={{ width: 100, alignItems: "flex-end" }}>
+        <View style={{ maxWidth: "100%", alignItems: "flex-end" }}>
           <PrimaryAction
-            compact
+            compact={!finish}
+            finish={finish}
             label={label}
             disabled={disabled}
             onPress={onAction}
@@ -827,18 +934,20 @@ function Choices({
   value,
   disabled,
   revealResult,
+  mistake,
   onSelect,
 }: {
   question: Question;
   value?: number;
   disabled: boolean;
   revealResult: boolean;
+  mistake: number;
   onSelect: (i: number) => void;
 }) {
   const { colors } = useUITheme();
   const { play } = useSounds();
   const wrong = revealResult && value !== question.correct;
-  const selectedColor = wrong ? colors.gold : colors.green;
+  const selectedColor = wrong ? colors.red : colors.green;
   return (
     <View
       accessibilityRole="radiogroup"
@@ -846,69 +955,74 @@ function Choices({
       style={{ gap: 8 }}
     >
       {question.choices.map((choice, i) => (
-        <Pressable
-          key={i}
-          accessibilityRole="radio"
-          accessibilityLabel={choice}
-          accessibilityState={{ checked: value === i, disabled }}
-          aria-checked={value === i}
-          disabled={disabled}
-          onPress={() => {
-            play("select");
-            onSelect(i);
-          }}
-          style={({ pressed }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            minHeight: 54,
-            padding: 14,
-            borderWidth: 1,
-            borderColor: value === i ? selectedColor : "transparent",
-            borderRadius: 10,
-            backgroundColor:
-              value === i && !wrong ? colors.selected : colors.white,
-            opacity: pressed ? 0.8 : 1,
-          })}
-        >
-          <View
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 11,
-              borderWidth: 1,
-              borderColor: value === i ? selectedColor : colors.muted,
-              backgroundColor: value === i ? selectedColor : "transparent",
-              alignItems: "center",
-              justifyContent: "center",
+        <AnswerShake key={i} trigger={wrong && value === i ? mistake : 0}>
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityLabel={choice}
+            accessibilityState={{ checked: value === i, disabled }}
+            aria-checked={value === i}
+            disabled={disabled}
+            onPress={() => {
+              play("select");
+              onSelect(i);
             }}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              minHeight: 54,
+              padding: 14,
+              borderWidth: 1,
+              borderColor: value === i ? selectedColor : "transparent",
+              borderRadius: 10,
+              backgroundColor:
+                value === i
+                  ? wrong
+                    ? "#542536"
+                    : colors.selected
+                  : colors.white,
+              opacity: pressed ? 0.8 : 1,
+            })}
           >
-            {value === i &&
-              (revealResult ? (
-                <Icon
-                  name={wrong ? "x" : "check"}
-                  size={15}
-                  color={colors.onPrimary}
-                />
-              ) : (
-                <View
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: colors.onPrimary,
-                  }}
-                />
-              ))}
-          </View>
-          <Txt
-            size={16}
-            weight={value === i ? "600" : "400"}
-            style={{ flex: 1 }}
-          >
-            {choice}
-          </Txt>
-        </Pressable>
+            <View
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 11,
+                borderWidth: 1,
+                borderColor: value === i ? selectedColor : colors.muted,
+                backgroundColor: value === i ? selectedColor : "transparent",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {value === i &&
+                (revealResult ? (
+                  <Icon
+                    name={wrong ? "x" : "check"}
+                    size={15}
+                    color={colors.onPrimary}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: colors.onPrimary,
+                    }}
+                  />
+                ))}
+            </View>
+            <Txt
+              size={16}
+              weight={value === i ? "600" : "400"}
+              style={{ flex: 1 }}
+            >
+              {choice}
+            </Txt>
+          </Pressable>
+        </AnswerShake>
       ))}
     </View>
   );
@@ -1075,14 +1189,25 @@ function Result({ run }: { run: Run }) {
   const { colors } = useUITheme();
   const score = result(run);
   return (
-    <View style={{ gap: 20 }}>
+    <SoftReveal
+      style={{
+        gap: 20,
+        padding: 24,
+        borderRadius: 28,
+        backgroundColor: colors.subtle,
+      }}
+    >
+      <ChapterArt kind="result" />
+      <Txt size={26} weight="600">
+        Урок завершён
+      </Txt>
       <View style={{ gap: 6 }}>
         <Txt size={48} color={colors.green} weight="600">
           {Math.round(score.percent)}%
         </Txt>
         <Txt size={17}>
           {score.correct} из {score.total} ·{" "}
-          {score.repeat ? "Стоит повторить" : "Проверка пройдена"}
+          {score.repeat ? "Стоит повторить" : "Практика пройдена"}
         </Txt>
       </View>
       {score.repeat && (
@@ -1132,6 +1257,6 @@ function Result({ run }: { run: Run }) {
       <Fold title="До и после">
         <Comparison run={run} />
       </Fold>
-    </View>
+    </SoftReveal>
   );
 }

@@ -1,6 +1,7 @@
 import { CelebrationLayer } from "./CelebrationLayer";
 import Svg, {
   Circle,
+  Ellipse,
   G,
   Path,
   Defs,
@@ -262,12 +263,21 @@ function SkyDrawing({
   scene,
   value,
   dark,
+  width,
+  height,
 }: {
   scene: SkyScene;
   value: Animated.Value;
   dark: boolean;
+  width: number;
+  height: number;
 }) {
+  const unit = Math.min(4, width / 100, height / 100);
   const shape = skyShapes[scene.shape];
+  const points = shape.points.map(([x, y]) => [
+    (x * width) / 100,
+    (y * height) / 100,
+  ]);
   const palette = dark ? skyColors : dayColors;
   const color = palette[scene.tint];
   const accent = palette[(scene.tint + 1) % palette.length];
@@ -284,20 +294,26 @@ function SkyDrawing({
         })
       : shape.edges;
   return (
-    <Svg width="100%" height="100%" viewBox="0 0 100 100">
+    <Svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`}>
       <Defs>
         <RadialGradient id={gradientId}>
           <Stop offset="0" stopColor={color} stopOpacity={dark ? 0.13 : 0.08} />
           <Stop offset="1" stopColor={color} stopOpacity={0} />
         </RadialGradient>
       </Defs>
-      <Circle cx={50} cy={50} r={49} fill={`url(#${gradientId})`} />
+      <Ellipse
+        cx={width / 2}
+        cy={height / 2}
+        rx={width * 0.5}
+        ry={height * 0.5}
+        fill={`url(#${gradientId})`}
+      />
       {scene.stars.map((star, i) => (
         <AnimatedCircle
           key={`dust-${i}`}
-          cx={star.x}
-          cy={star.y}
-          r={star.r}
+          cx={(star.x * width) / 100}
+          cy={(star.y * height) / 100}
+          r={star.r * unit}
           fill={accent}
           opacity={value.interpolate({
             inputRange: [star.delay, star.delay + 0.15, 0.7, 1],
@@ -307,8 +323,8 @@ function SkyDrawing({
         />
       ))}
       {edges.map(([from, to], i) => {
-        const a = shape.points[from],
-          b = shape.points[to];
+        const a = points[from],
+          b = points[to];
         const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
         const start = scene.mode === 1 ? 0.12 + i * 0.009 : 0.06 + i * 0.035;
         return (
@@ -316,7 +332,7 @@ function SkyDrawing({
             key={`${from}-${to}`}
             d={`M${a[0]} ${a[1]}L${b[0]} ${b[1]}`}
             stroke={color}
-            strokeWidth={0.42}
+            strokeWidth={0.42 * unit}
             strokeLinecap="round"
             fill="none"
             strokeDasharray={[length, length]}
@@ -329,7 +345,7 @@ function SkyDrawing({
           />
         );
       })}
-      {shape.points.map(([x, y], i) => {
+      {points.map(([x, y], i) => {
         const start = scene.mode === 1 ? i * 0.012 : i * 0.026;
         const tint = i % 3 === 0 ? accent : color;
         return (
@@ -346,29 +362,34 @@ function SkyDrawing({
               cy={y}
               r={value.interpolate({
                 inputRange: [start, start + 0.1, start + 0.3],
-                outputRange: [1, 6.5, 4],
+                outputRange: [unit, 6.5 * unit, 4 * unit],
                 extrapolate: "clamp",
               })}
               fill={tint}
               opacity={0.1}
             />
-            <Circle cx={x} cy={y} r={2.1} fill={tint} opacity={0.2} />
+            <Circle cx={x} cy={y} r={2.1 * unit} fill={tint} opacity={0.2} />
             <Path
-              d={`M${x} ${y - 2.8}Q${x + 0.45} ${y - 0.45} ${x + 2.8} ${y}Q${x + 0.45} ${y + 0.45} ${x} ${y + 2.8}Q${x - 0.45} ${y + 0.45} ${x - 2.8} ${y}Q${x - 0.45} ${y - 0.45} ${x} ${y - 2.8}Z`}
+              d={`M${x} ${y - 2.8 * unit}Q${x + 0.45 * unit} ${y - 0.45 * unit} ${x + 2.8 * unit} ${y}Q${x + 0.45 * unit} ${y + 0.45 * unit} ${x} ${y + 2.8 * unit}Q${x - 0.45 * unit} ${y + 0.45 * unit} ${x - 2.8 * unit} ${y}Q${x - 0.45 * unit} ${y - 0.45 * unit} ${x} ${y - 2.8 * unit}Z`}
               fill={tint}
             />
-            <Circle cx={x} cy={y} r={0.8} fill={dark ? "#FFF9EB" : tint} />
+            <Circle
+              cx={x}
+              cy={y}
+              r={0.8 * unit}
+              fill={dark ? "#FFF9EB" : tint}
+            />
             {i === shape.points.length - 1 && (
               <AnimatedCircle
                 cx={x}
                 cy={y}
                 r={value.interpolate({
                   inputRange: [0.35, 0.7],
-                  outputRange: [2, 12],
+                  outputRange: [2 * unit, 12 * unit],
                   extrapolate: "clamp",
                 })}
                 stroke={accent}
-                strokeWidth={0.3}
+                strokeWidth={0.3 * unit}
                 fill="none"
                 opacity={value.interpolate({
                   inputRange: [0.34, 0.4, 0.7],
@@ -385,7 +406,13 @@ function SkyDrawing({
 }
 
 // A brief sky drawing celebrates a new answer; saved results do not trigger it.
-export function ConstellationCelebration({ burst }: { burst: number }) {
+export function ConstellationCelebration({
+  burst,
+  immersive = false,
+}: {
+  burst: number;
+  immersive?: boolean;
+}) {
   const { play } = useSounds();
   const { dark } = useTheme();
   const lastSound = useRef(false);
@@ -427,10 +454,14 @@ export function ConstellationCelebration({ burst }: { burst: number }) {
   }, [burst, reduced, active, value]);
   if (!visible || !scene) return null;
   const size = Math.min(width >= 1100 ? 280 : 250, width * 0.68, height * 0.38);
-  const centerX = width / 2 + scene.side * Math.min(56, width * 0.06);
-  const centerY = height * scene.height;
+  const drawingWidth = immersive ? width * 0.94 : size;
+  const drawingHeight = immersive ? height * 0.82 : size;
+  const centerX = immersive
+    ? width / 2
+    : width / 2 + scene.side * Math.min(56, width * 0.06);
+  const centerY = immersive ? height / 2 : height * scene.height;
   return (
-    <CelebrationLayer>
+    <CelebrationLayer fullScreen={immersive}>
       <View
         testID="success-constellation"
         onLayout={(event) => {
@@ -444,21 +475,37 @@ export function ConstellationCelebration({ burst }: { burst: number }) {
         aria-hidden
         style={{ flex: 1, overflow: "hidden" }}
       >
+        {immersive && (
+          <Animated.View
+            testID="celebration-dimmer"
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundColor: "#02040D",
+              opacity: value.interpolate({
+                inputRange: [0, 0.12, 0.65, 1],
+                outputRange: [0, 0.48, 0.48, 0],
+              }),
+            }}
+          />
+        )}
         {width > 0 && height > 0 && (
           <Animated.View
             testID="constellation-drawing"
             style={{
               position: "absolute",
-              left: centerX - size / 2,
-              top: centerY - size / 2,
-              width: size,
-              height: size,
+              left: centerX - drawingWidth / 2,
+              top: centerY - drawingHeight / 2,
+              width: drawingWidth,
+              height: drawingHeight,
               opacity: value.interpolate({
                 inputRange: [0, 0.05, 0.62, 1],
                 outputRange: [0, 1, 1, 0],
               }),
               transform: [
-                { rotate: `${scene.rotation}deg` },
+                {
+                  rotate: `${immersive ? scene.rotation * 0.25 : scene.rotation}deg`,
+                },
                 {
                   scale: value.interpolate({
                     inputRange: [0, 0.4, 1],
@@ -468,7 +515,13 @@ export function ConstellationCelebration({ burst }: { burst: number }) {
               ],
             }}
           >
-            <SkyDrawing scene={scene} value={value} dark={dark} />
+            <SkyDrawing
+              scene={scene}
+              value={value}
+              dark={immersive || dark}
+              width={drawingWidth}
+              height={drawingHeight}
+            />
           </Animated.View>
         )}
       </View>

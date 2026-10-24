@@ -1,7 +1,27 @@
 import React from "react";
-import { View } from "react-native";
+import { Modal, View } from "react-native";
 
-export function CelebrationLayer({ children }: { children: React.ReactNode }) {
+export function CelebrationLayer({
+  children,
+  fullScreen = false,
+}: {
+  children: React.ReactNode;
+  fullScreen?: boolean;
+}) {
+  if (fullScreen)
+    return (
+      <Modal
+        transparent
+        statusBarTranslucent
+        navigationBarTranslucent
+        animationType="none"
+        onRequestClose={() => {}}
+      >
+        <View pointerEvents="none" style={{ flex: 1 }}>
+          {children}
+        </View>
+      </Modal>
+    );
   return (
     <View
       pointerEvents="none"

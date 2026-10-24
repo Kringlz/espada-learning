@@ -1,7 +1,12 @@
 import React from "react";
 import { createPortal } from "react-dom";
 
-export function CelebrationLayer({ children }: { children: React.ReactNode }) {
+export function CelebrationLayer({
+  children,
+}: {
+  children: React.ReactNode;
+  fullScreen?: boolean;
+}) {
   // Outside transformed lesson cards: the sky drawing belongs to the viewport.
   if (typeof document === "undefined") return null;
   return createPortal(
