@@ -1,0 +1,17 @@
+{
+  "description": "Original procedural filtered-noise clicks created for Espada. No third-party samples or pitched oscillators.",
+  "generator": "scripts/generate-interface-clicks.py",
+  "files": [
+    "open",
+    "select",
+    "navigate",
+    "expand",
+    "collapse",
+    "copy",
+    "success",
+    "successAlt",
+    "wrong",
+    "level"
+  ],
+  "format": "Mono 16-bit PCM WAV, 44100 Hz; single clicks 32\u201372 ms, short confirmation sequences 87\u2013142 ms."
+}

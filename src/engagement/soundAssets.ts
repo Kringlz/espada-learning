@@ -1,14 +1,14 @@
 export const soundAssets = {
-  open: require("../../assets/sounds/interface/open.wav"),
-  select: require("../../assets/sounds/interface/select.wav"),
-  navigate: require("../../assets/sounds/interface/navigate.wav"),
-  expand: require("../../assets/sounds/interface/expand.wav"),
-  collapse: require("../../assets/sounds/interface/collapse.wav"),
-  copy: require("../../assets/sounds/interface/copy.wav"),
-  success: require("../../assets/sounds/celebration/success.wav"),
-  successAlt: require("../../assets/sounds/celebration/successAlt.wav"),
-  wrong: require("../../assets/sounds/interface/wrong.wav"),
-  level: require("../../assets/sounds/clarity/level.wav"),
+  open: require("../../assets/sounds/clicks/open.wav"),
+  select: require("../../assets/sounds/clicks/select.wav"),
+  navigate: require("../../assets/sounds/clicks/navigate.wav"),
+  expand: require("../../assets/sounds/clicks/expand.wav"),
+  collapse: require("../../assets/sounds/clicks/collapse.wav"),
+  copy: require("../../assets/sounds/clicks/copy.wav"),
+  success: require("../../assets/sounds/clicks/success.wav"),
+  successAlt: require("../../assets/sounds/clicks/successAlt.wav"),
+  wrong: require("../../assets/sounds/clicks/wrong.wav"),
+  level: require("../../assets/sounds/clicks/level.wav"),
 };
 export const musicAsset = require("../../assets/sounds/clarity/music.wav");
 export type SoundName = keyof typeof soundAssets;
