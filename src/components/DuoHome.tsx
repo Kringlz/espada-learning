@@ -1,3 +1,4 @@
+import { useLessonSummaries } from "../course/videoLesson/useLessonSummaries";
 import React, { useContext, useMemo } from "react";
 import { View } from "react-native";
 import { useCourseProgress } from "../course/storage";
@@ -20,12 +21,13 @@ export function DuoHome({
   const storage = useCourseProgress(actor.id);
   const active = useContext(MotionActiveContext);
   const reduced = useReducedMotion();
+  const videoLessons = useLessonSummaries(actor.id, active);
   const data: SpaceData = useMemo(
     () => ({
-      ...makeSpaceData(storage.progress),
+      ...makeSpaceData(storage.progress, videoLessons.summaries),
       name: actor.name.split(" ")[0],
       ready: storage.ready,
-      error: storage.error,
+      error: storage.error || videoLessons.error,
       signals: state.assignments
         .filter((a) => a.studentId === actor.id && !a.completedAt)
         .map((a) => ({
@@ -37,6 +39,8 @@ export function DuoHome({
     }),
     [
       storage.progress,
+      videoLessons.summaries,
+      videoLessons.error,
       storage.ready,
       storage.error,
       actor.id,
@@ -61,8 +65,10 @@ export function DuoHome({
         onAction={(action) => {
           if (action.type === "lesson") openCourse(action.id);
           else if (action.type === "topic") openTopic(action.id);
-          else if (action.type === "retry") storage.retry();
-          else navigate(action.id);
+          else if (action.type === "retry") {
+            storage.retry();
+            videoLessons.refresh();
+          } else navigate(action.id);
         }}
       />
     </View>

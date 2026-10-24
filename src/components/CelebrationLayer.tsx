@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, View } from "react-native";
+import { View } from "react-native";
 
 export function CelebrationLayer({
   children,
@@ -10,17 +10,13 @@ export function CelebrationLayer({
 }) {
   if (fullScreen)
     return (
-      <Modal
-        transparent
-        statusBarTranslucent
-        navigationBarTranslucent
-        animationType="none"
-        onRequestClose={() => {}}
+      <View
+        pointerEvents="none"
+        accessible={false}
+        style={{ position: "absolute", inset: 0, zIndex: 1000 }}
       >
-        <View pointerEvents="none" style={{ flex: 1 }}>
-          {children}
-        </View>
-      </Modal>
+        {children}
+      </View>
     );
   return (
     <View

@@ -1,3 +1,4 @@
+import { notifyLessonSaved } from "./completion";
 import { useEffect, useRef, useState } from "react";
 import { ProgressStorage } from "../useStoredCourseProgress";
 import {
@@ -123,6 +124,7 @@ export function useLesson(
             unsaved.current.delete(id);
           }
         await storage.setItem(key, value);
+        notifyLessonSaved(actorId);
       });
     queue.current = job;
     void job
@@ -193,6 +195,8 @@ export function useLesson(
           "choose",
           "hint",
           "submit",
+          "trainingTry",
+          "trainingAcknowledge",
           "finish",
           "checkContinue",
           "practiceContinue",
@@ -222,7 +226,11 @@ export function useLesson(
                   ? "independent"
                   : "practice";
         const meaningful =
-          seconds > 0 || action.type === "submit" || action.type === "finish";
+          seconds > 0 ||
+          action.type === "submit" ||
+          action.type === "trainingTry" ||
+          action.type === "trainingAcknowledge" ||
+          action.type === "finish";
         command = {
           type: "run",
           studentId: actorId,

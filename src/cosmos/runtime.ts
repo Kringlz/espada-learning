@@ -48,7 +48,8 @@ function updateUI(){
  document.body.classList.toggle('overview',overview);document.body.classList.toggle('free',free);
  $('lesson-number').textContent=(index+1)+' / '+topics.length+(selected.complete?' · Пройден':'');
  $('lesson-title').textContent=selected.title;
- $('launch').firstChild.textContent=!data.ready?'Загрузка ':selected.complete?'Открыть урок ':selected.started?'Продолжить ':'Начать урок ';
+ document.body.classList.toggle('lesson-complete',selected.complete);
+ $('launch').firstChild.textContent=!data.ready?'Загрузка ':selected.complete?'Пройти ещё раз ':selected.started?'Продолжить ':'Начать урок ';
  $('launch').disabled=!data.ready;
  var previous=adjacent(-1), next=adjacent(1);
  $('prev').disabled=!previous;$('next').disabled=!next;
@@ -58,7 +59,7 @@ function updateUI(){
  });
  $('overview').textContent=overview?'Классы':grade+' класс';
  $('overview').setAttribute('aria-label',overview?'Вернуться к уроку':'Выбрать класс');
- $('sr-status').textContent=selected.title+'. '+grade+' класс. '+(index+1)+' из '+topics.length;
+ $('sr-status').textContent=selected.title+'. '+grade+' класс. '+(index+1)+' из '+topics.length+(selected.complete?'. Урок пройден.':'');
  showError();
 }
 function setFree(){interacted=true;if(!free){free=true;updateUI()}}
@@ -75,14 +76,15 @@ document.querySelectorAll('[data-navigate]').forEach(function(b){b.onclick=funct
 // No planet-like rim or noisy surface; deterministic tint and size keep each star distinct.
 function drawSun(star,p,time){
  var amount=selectedSize[star.id]||0,base=2.2+(star.seed%9)*.20;
- var r=clamp((base+amount*(mobile?10:7))*p.scale,.65,26),col=colors[star.color],rgb=col.join(',');
- var emphasis=overview||star.grade===grade?1:.14;
+ var r=clamp((base+amount*(mobile?10:7))*p.scale,.65,26),col=star.complete?[80,255,205]:colors[star.color],rgb=col.join(',');
+ var emphasis=overview||star.grade===grade?1:star.complete?.5:.14;
  var pulse=reduced?1:1+.025*Math.sin(time*.0009+star.seed%31);
  ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=emphasis;
- var halo=r*(8+amount*7)*pulse;ctx.drawImage(glow(col),p.x-halo,p.y-halo,halo*2,halo*2);
+ var halo=r*(star.complete?14+amount*6:8+amount*7)*pulse;ctx.drawImage(glow(col),p.x-halo,p.y-halo,halo*2,halo*2);
  var bloom=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*3.8);
  bloom.addColorStop(0,'rgba(255,255,255,1)');bloom.addColorStop(.13,'rgba(255,250,241,.97)');bloom.addColorStop(.3,'rgba('+rgb+',.53)');bloom.addColorStop(.62,'rgba('+rgb+',.10)');bloom.addColorStop(1,'rgba('+rgb+',0)');
  ctx.fillStyle=bloom;ctx.beginPath();ctx.arc(p.x,p.y,r*3.8,0,Math.PI*2);ctx.fill();
+ if(star.complete){ctx.strokeStyle='rgba(99,255,207,.65)';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(8,r*2.8),0,Math.PI*2);ctx.stroke();}
  if(amount>.05){
   ctx.translate(p.x,p.y);ctx.rotate(.12+(star.seed%7)*.04);ctx.globalAlpha=emphasis*amount*.32;
   for(var axis=0;axis<2;axis++){var length=r*(axis?4:6);var ray=ctx.createLinearGradient(-length,0,length,0);ray.addColorStop(0,'rgba('+rgb+',0)');ray.addColorStop(.5,'rgba(255,250,240,.8)');ray.addColorStop(1,'rgba('+rgb+',0)');ctx.fillStyle=ray;ctx.fillRect(-length,-.5,length*2,1);ctx.rotate(Math.PI/2)}

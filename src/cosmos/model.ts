@@ -1,6 +1,7 @@
+import type { LessonSummaries } from "../course/videoLesson/completion";
 import { course, CourseProgress } from "../course/model";
 import { courseContent } from "../course/content";
-import { lessonStatus, nextLesson } from "../course/journey";
+import { lessonStatus } from "../course/journey";
 import {
   constellations,
   starIdentity,
@@ -40,6 +41,7 @@ export type SpaceAction =
   | { type: "theme"; id: "light" | "dark" };
 export function makeSpaceData(
   progress: CourseProgress,
+  videoLessons: LessonSummaries = {},
 ): Pick<SpaceData, "lessons" | "grades" | "initialId"> {
   const grades = Object.entries(constellations).map(([g, meta], i) => ({
     grade: Number(g),
@@ -67,24 +69,29 @@ export function makeSpaceData(
           z: center.z,
           seed: starIdentity(topic.id).seed,
           color: (i + topic.grade) % 5,
-          complete: status.complete,
-          started: status.started,
-          percent: status.percent,
+          complete: status.complete || !!videoLessons[topic.id]?.complete,
+          started: status.started || !!videoLessons[topic.id]?.started,
+          percent: videoLessons[topic.id]?.complete ? 100 : status.percent,
           parts: topic.pages.length,
           exercises: topic.practice.count,
         };
       }),
   );
-  const latest = course
-    .filter((t) => progress[t.id]?.updatedAt)
-    .sort((a, b) =>
-      progress[b.id].updatedAt.localeCompare(progress[a.id].updatedAt),
-    )[0];
-  const next = nextLesson(
-    course.filter((t) => t.grade === (latest?.grade ?? 5)),
-    progress,
-  );
-  return { lessons, grades, initialId: next?.id ?? course[0].id };
+  const updatedAt = (id: string) =>
+    [progress[id]?.updatedAt ?? "", videoLessons[id]?.updatedAt ?? ""]
+      .sort()
+      .at(-1)!;
+  const latest = lessons
+    .filter((t) => updatedAt(t.id))
+    .sort((a, b) => updatedAt(b.id).localeCompare(updatedAt(a.id)))[0];
+  const group = lessons.filter((t) => t.grade === (latest?.grade ?? 5));
+  const next =
+    group
+      .filter((t) => t.started && !t.complete)
+      .sort((a, b) => updatedAt(b.id).localeCompare(updatedAt(a.id)))[0] ??
+    group.find((t) => !t.complete) ??
+    group[0];
+  return { lessons, grades, initialId: next.id };
 }
 export function validSpaceAction(
   value: unknown,

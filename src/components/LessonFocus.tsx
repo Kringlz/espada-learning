@@ -17,3 +17,17 @@ export function useLessonFocus(active: boolean, exit: () => void) {
     return () => setFocus(null, id);
   }, [active, visible, id, setFocus]);
 }
+
+export type LessonScene = { color: string; progress: number };
+export const LessonSceneContext = createContext<
+  (scene: LessonScene | null) => void
+>(() => {});
+export function useLessonScene(color: string, progress: number) {
+  const setScene = useContext(LessonSceneContext);
+  const visible = useContext(MotionActiveContext);
+  useEffect(() => {
+    if (!visible) return;
+    setScene({ color, progress });
+    return () => setScene(null);
+  }, [color, progress, visible, setScene]);
+}

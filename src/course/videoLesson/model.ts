@@ -3,6 +3,11 @@ import { emptyWatch, WatchState } from "../../engagement/rewards";
 export type Stage =
   "intro" | "video" | "practice" | "return" | "check" | "result";
 export type Answer = { choice: number; at: string };
+export type TrainingAttempt = {
+  rejected: number[];
+  resolved: boolean;
+  acknowledged: boolean;
+};
 export type Run = {
   id: string;
   lessonId?: string;
@@ -14,6 +19,7 @@ export type Run = {
   initial?: Answer;
   revisited?: Answer;
   practice: Record<string, Answer>;
+  training?: Record<string, TrainingAttempt>;
   hints: Record<string, number>;
   drafts: Record<string, number>;
   check: Record<string, Answer>;
@@ -84,10 +90,21 @@ export function result(run: Run) {
     ],
   };
 }
+export function trainingComplete(run: Run, q: Question) {
+  return !!run.practice[q.id] && (run.training?.[q.id]?.acknowledged ?? true);
+}
+export function trainingAssisted(run: Run, q: Question) {
+  return (
+    (run.training?.[q.id]?.rejected.length ?? 0) > 0 ||
+    (!!run.practice[q.id] && run.practice[q.id].choice !== q.correct)
+  );
+}
 export type Action =
   | { type: "start"; id: string; at: string; lessonId?: string }
   | { type: "choose"; id: string; choice: number }
   | { type: "submit"; at: string }
+  | { type: "trainingTry"; id: string; choice: number; at: string }
+  | { type: "trainingAcknowledge"; id: string }
   | { type: "hint" }
   | { type: "next"; from: Stage; index: number }
   | { type: "practiceDone" }
@@ -117,7 +134,7 @@ export function taskControl(run: Run) {
   if (run.stage === "practice") {
     const q = practice[run.practiceIndex];
     const submitted = !!run.practice[q.id];
-    const complete = practice.every((item) => run.practice[item.id]);
+    const complete = practice.every((item) => trainingComplete(run, item));
     return {
       label: complete ? "Завершить" : submitted ? "Далее" : "Проверить",
       disabled: !submitted && run.drafts[draftId(run, q)] === undefined,
@@ -169,6 +186,27 @@ export function updateLesson(data: LessonData, action: Action): LessonData {
     return {
       ...data,
       runs: [...data.runs, newRun(action.id, action.at, action.lessonId)],
+      ...(previous?.finishedAt
+        ? {
+            video: {
+              ...data.video,
+              position: 0,
+              watch: { ...data.video.watch, clock: null, position: null },
+            },
+            videos:
+              data.videos &&
+              Object.fromEntries(
+                Object.entries(data.videos).map(([id, video]) => [
+                  id,
+                  {
+                    ...video,
+                    position: 0,
+                    watch: { ...video.watch, clock: null, position: null },
+                  },
+                ]),
+              ),
+          }
+        : {}),
     };
   }
   if (!previous || previous.finishedAt) return data;
@@ -183,7 +221,57 @@ export function updateLesson(data: LessonData, action: Action): LessonData {
         : run.stage === "practice" && question
           ? run.practice[question.id]
           : undefined;
-  if (
+  if (action.type === "trainingTry") {
+    if (
+      run.stage !== "practice" ||
+      !question ||
+      question.id !== action.id ||
+      !Number.isInteger(action.choice) ||
+      action.choice < 0 ||
+      action.choice >= question.choices.length ||
+      trainingComplete(run, question)
+    )
+      return data;
+    const previousAttempt = run.training?.[question.id];
+    if (
+      previousAttempt?.resolved ||
+      previousAttempt?.rejected.includes(action.choice)
+    )
+      return data;
+    const correct = action.choice === question.correct;
+    const rejected = [
+      ...(previousAttempt?.rejected ?? []),
+      ...(!correct ? [action.choice] : []),
+    ];
+    // The first answer is immutable evidence; later learning stays separate.
+    if (!run.practice[question.id])
+      run.practice = {
+        ...run.practice,
+        [question.id]: { choice: action.choice, at: action.at },
+      };
+    run.training = {
+      ...run.training,
+      [question.id]: {
+        rejected,
+        resolved: correct || rejected.length === question.choices.length - 1,
+        acknowledged: correct && rejected.length === 0,
+      },
+    };
+  } else if (action.type === "trainingAcknowledge") {
+    const attempt = question && run.training?.[question.id];
+    if (
+      run.stage !== "practice" ||
+      !question ||
+      action.id !== question.id ||
+      !attempt?.resolved ||
+      attempt.acknowledged
+    )
+      return data;
+    run.training = {
+      ...run.training,
+      [question.id]: { ...attempt, acknowledged: true },
+    };
+  } else if (
     action.type === "choose" &&
     question &&
     question.id === action.id &&
@@ -231,19 +319,26 @@ export function updateLesson(data: LessonData, action: Action): LessonData {
   ) {
     if (run.stage === "intro" && run.initial) run.stage = "video";
     else if (run.stage === "video") run.stage = "practice";
-    else if (run.stage === "practice" && submitted) {
+    else if (
+      run.stage === "practice" &&
+      question &&
+      trainingComplete(run, question)
+    ) {
       if (run.practiceIndex < practice.length - 1) run.practiceIndex++;
-      else if (practice.every((q) => run.practice[q.id])) run.stage = "return";
+      else if (practice.every((q) => trainingComplete(run, q)))
+        run.stage = "return";
     } else if (run.stage === "return" && run.revisited) run.stage = "check";
   } else if (
     action.type === "practiceContinue" &&
     run.stage === "practice" &&
     action.index === run.practiceIndex &&
-    submitted
+    question &&
+    trainingComplete(run, question)
   ) {
-    if (practice.every((q) => run.practice[q.id])) run.stage = "return";
+    if (practice.every((q) => trainingComplete(run, q))) run.stage = "return";
     else if (run.practiceIndex < practice.length - 1) run.practiceIndex++;
-    else run.practiceIndex = practice.findIndex((q) => !run.practice[q.id]);
+    else
+      run.practiceIndex = practice.findIndex((q) => !trainingComplete(run, q));
   } else if (
     action.type === "checkContinue" &&
     run.stage === "check" &&
@@ -255,7 +350,7 @@ export function updateLesson(data: LessonData, action: Action): LessonData {
   } else if (
     action.type === "practiceDone" &&
     run.stage === "practice" &&
-    practice.every((q) => run.practice[q.id])
+    practice.every((q) => trainingComplete(run, q))
   )
     run.stage = "return";
   else if (
@@ -343,6 +438,41 @@ export function parseLesson(
       !check.every((q) => validAnswer(r.check[q.id], q))
     )
       throw Error("Invalid attempt");
+    if (r.training !== undefined) {
+      if (
+        !r.training ||
+        typeof r.training !== "object" ||
+        Array.isArray(r.training)
+      )
+        throw Error("Invalid training");
+      for (const [id, attempt] of Object.entries(r.training)) {
+        const q = practice.find((item) => item.id === id);
+        if (
+          !q ||
+          !r.practice[id] ||
+          !attempt ||
+          !Array.isArray(attempt.rejected) ||
+          new Set(attempt.rejected).size !== attempt.rejected.length ||
+          !attempt.rejected.every(
+            (i) =>
+              Number.isInteger(i) &&
+              i >= 0 &&
+              i < q.choices.length &&
+              i !== q.correct,
+          ) ||
+          typeof attempt.resolved !== "boolean" ||
+          typeof attempt.acknowledged !== "boolean" ||
+          (attempt.acknowledged && !attempt.resolved) ||
+          (attempt.rejected.length === 0 &&
+            (!attempt.resolved ||
+              !attempt.acknowledged ||
+              r.practice[id].choice !== q.correct)) ||
+          (attempt.rejected.length > 0 &&
+            attempt.rejected[0] !== r.practice[id].choice)
+        )
+          throw Error("Invalid training attempt");
+      }
+    }
   }
   // A new playback session must not count the gap since the previous visit.
   d.video.watch = {

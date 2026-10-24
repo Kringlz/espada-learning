@@ -2,7 +2,16 @@ import { MathCopy as Txt } from "../../math/MathCopy";
 import { useLearning } from "../../services/context";
 import { lessonSync } from "../../progress/service";
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { AppState, Pressable, View, useWindowDimensions } from "react-native";
+import {
+  Animated,
+  Platform,
+  AppState,
+  Modal,
+  Pressable,
+  ScrollView,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Path, Rect, Text as SvgText, Circle } from "react-native-svg";
 import { Button, Icon, useUITheme } from "../../components/ui";
@@ -11,8 +20,10 @@ import {
   ConstellationCelebration,
   MotionActiveContext,
   SoftReveal,
+  useReducedMotion,
 } from "../../components/Motion";
-import { ScreenAnchor, useScreenScroll } from "../../components/ScreenScroll";
+import { useLessonScene } from "../../components/LessonFocus";
+import { useScreenScroll } from "../../components/ScreenScroll";
 import { VideoLessonTheme } from "../../theme/Theme";
 import { useRewards } from "../../engagement/RewardContext";
 import { useSounds } from "../../engagement/Sounds";
@@ -22,6 +33,7 @@ import {
   ChapterArt,
   FinishAccent,
   MistakeWash,
+  LessonLoading,
   StagePrelude,
 } from "./LessonAtmosphere";
 import { getLessonContent, getLessonMeta, Question } from "./content";
@@ -32,6 +44,8 @@ import {
   Run,
   Stage,
   taskControl,
+  trainingComplete,
+  trainingAssisted,
   videoProgress,
 } from "./model";
 
@@ -67,52 +81,128 @@ function Lesson({
   back: () => void;
 }) {
   const { colors } = useUITheme();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const wide = width >= 1100;
   const active = useContext(MotionActiveContext);
+  const reduced = useReducedMotion();
   const { actor } = useLearning();
-  const connectedSync = actor.role === "student" ? lessonSync : undefined;
-  const store = useLesson(actorId, AsyncStorage, lessonId, connectedSync);
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", () => store.pause());
-    return () => sub.remove();
-  }, []);
-  useEffect(() => {
-    if (!active) store.pause();
-  }, [active]);
+  const store = useLesson(
+    actorId,
+    AsyncStorage,
+    lessonId,
+    actor.role === "student" ? lessonSync : undefined,
+  );
   const { award, earned, ready: rewardsReady } = useRewards();
   const { play } = useSounds();
   const [burst, setBurst] = useState(0);
+  const [reviewingTask, setReviewingTask] = useState<string | null>(null);
+  const [entryReady, setEntryReady] = useState(false);
+  const entryHandled = useRef(false);
+  const taskOpacity = useRef(new Animated.Value(1)).current;
+  const transition = useRef<Animated.CompositeAnimation | null>(null);
+  const moving = useRef(false);
   const [mistake, setMistake] = useState(0);
+  const [wrongChoice, setWrongChoice] = useState<number>();
   const [prelude, setPrelude] = useState<"practice" | "check" | null>(null);
-  const lastCelebration = useRef("");
   const [reviewVideo, setReviewVideo] = useState(false);
   const [confirmFinish, setConfirmFinish] = useState(false);
   const [oldRun, setOldRun] = useState<string | null>(null);
+  const [explanation, setExplanation] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const run = store.data.runs.at(-1);
   const meta = getLessonMeta(lessonId);
-  const { opening, practice, check } = getLessonContent(
+  const { practice, check } = getLessonContent(
     run ?? { lessonId, contentVersion: meta.version },
   );
+  const question = run && currentQuestion(run);
+  const training = run?.stage === "practice";
+  const attempt = question && run?.training?.[question.id];
+  const completed = !!(
+    training &&
+    question &&
+    run &&
+    trainingComplete(run, question)
+  );
+  const needsExplanation =
+    training && attempt?.resolved && !attempt.acknowledged;
   const lessonVideo =
     meta.videos.find((v) => v.id === store.data.selectedVideo) ??
     meta.videos[0];
   const progress = videoProgress(store.data, lessonId, lessonVideo.id);
-  const taskRef = useRef<View>(null);
-  const scrollToTask = useContext(ScreenAnchor);
   const videoEvent = {
     kind: "video" as const,
     id: `youtube:${lessonVideo.id}`,
   };
+  const stage = run?.stage ?? "intro";
+  const background =
+    stage === "practice"
+      ? "#0B1719"
+      : stage === "check"
+        ? "#151321"
+        : "#0B111B";
+  const stageIndex =
+    stage === "result" ? 5 : stages.findIndex(([id]) => id === stage);
+  const fraction =
+    training && run
+      ? practice.filter((q) => trainingComplete(run, q)).length /
+        practice.length
+      : stage === "check" && run
+        ? Object.keys(run.check).length / check.length
+        : 0;
+  useLessonScene(background, (stageIndex + fraction) / 5);
+  const taskKey = `${run?.id}:${stage}:${run?.practiceIndex}:${run?.checkIndex}`;
+  function cancelAdvance() {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    advanceTimer.current = null;
+  }
   useEffect(() => {
-    if (store.ready && !run)
+    const timer = setTimeout(() => setLoaded(true), 420);
+    const sub = AppState.addEventListener("change", () => {
+      store.pause();
+      cancelAdvance();
+    });
+    return () => {
+      clearTimeout(timer);
+      sub.remove();
+      cancelAdvance();
+      transition.current?.stop();
+    };
+  }, []);
+  useEffect(() => {
+    if (!active) {
+      store.pause();
+      cancelAdvance();
+      transition.current?.stop();
+      moving.current = false;
+      taskOpacity.setValue(1);
+      setBurst(0);
+      setReviewingTask(null);
+    }
+  }, [active]);
+  useEffect(() => {
+    setExplanation(false);
+    setWrongChoice(undefined);
+    setMistake(0);
+    return cancelAdvance;
+  }, [taskKey]);
+  useEffect(() => {
+    if (!needsExplanation || !active) return;
+    const timer = setTimeout(() => setExplanation(true), 450);
+    return () => clearTimeout(timer);
+  }, [needsExplanation, taskKey, active]);
+  useEffect(() => {
+    if (!store.ready || entryHandled.current) return;
+    entryHandled.current = true;
+    if (!run || run.finishedAt)
       store.send({
         type: "start",
         lessonId,
         id: `${lessonId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         at: now(),
       });
-  }, [store.ready, !!run]);
+    setEntryReady(true);
+  }, [store.ready]);
   useEffect(() => {
     if (
       store.ready &&
@@ -122,560 +212,630 @@ function Lesson({
     )
       award([videoEvent]);
   }, [store.ready, progress.completed, lessonVideo.id, rewardsReady]);
-  useScreenScroll(
-    `${run?.stage}:${run?.practiceIndex}:${run?.checkIndex}:${reviewVideo}:${oldRun}:${prelude}`,
-  );
-  useEffect(() => {
-    if (
-      !active ||
-      reviewVideo ||
-      prelude ||
-      !run ||
-      !["practice", "check"].includes(run.stage)
-    )
+  useScreenScroll(`${taskKey}:${reviewVideo}:${oldRun}:${prelude}`);
+  function transitionTask(move: () => void) {
+    if (moving.current) return;
+    if (reduced) {
+      move();
       return;
-    const frame = requestAnimationFrame(() => scrollToTask(taskRef.current));
-    return () => cancelAnimationFrame(frame);
-  }, [
-    active,
-    run?.id,
-    run?.stage,
-    run?.practiceIndex,
-    run?.checkIndex,
-    reviewVideo,
-    prelude,
-    scrollToTask,
-  ]);
-  const sendNext = () => {
-    setBurst(0);
+    }
+    moving.current = true;
+    transition.current = Animated.timing(taskOpacity, {
+      toValue: 0,
+      duration: 180,
+      useNativeDriver: Platform.OS !== "web",
+    });
+    transition.current.start(({ finished }) => {
+      if (!finished) return;
+      move();
+      transition.current = Animated.timing(taskOpacity, {
+        toValue: 1,
+        duration: 280,
+        useNativeDriver: Platform.OS !== "web",
+      });
+      transition.current.start(() => {
+        moving.current = false;
+      });
+    });
+  }
+  function advanceTraining(delay = 2000) {
+    cancelAdvance();
+    const index = run!.practiceIndex;
+    advanceTimer.current = setTimeout(() => {
+      advanceTimer.current = null;
+      transitionTask(() => {
+        setBurst(0);
+        setReviewingTask(null);
+        store.send({ type: "practiceContinue", index });
+      });
+    }, delay);
+  }
+  function sendNext() {
     setMistake(0);
-    if (run?.stage === "video") setPrelude("practice");
-    if (run?.stage === "return") setPrelude("check");
+    setBurst(0);
+    if (stage === "video") setPrelude("practice");
+    if (stage === "return") setPrelude("check");
     if (run)
       store.send({ type: "next", from: run.stage, index: run.practiceIndex });
-  };
-  if (!store.ready || !run)
-    return (
-      <View style={{ gap: 14 }}>
-        <Txt>{store.error || "Загрузка урока…"}</Txt>
-        {!!store.error && (
-          <Button onPress={store.retry}>Повторить загрузку</Button>
-        )}
+  }
+  if (!store.ready || !run || !loaded || !entryReady)
+    return store.error ? (
+      <View style={{ padding: 28, gap: 16 }}>
+        <Txt accessibilityRole="alert">{store.error}</Txt>
+        <Button onPress={store.retry}>Повторить загрузку</Button>
         <Button secondary onPress={back}>
           К карте
         </Button>
       </View>
+    ) : (
+      <LessonLoading />
     );
-  const stageIndex =
-    run.stage === "result" ? 5 : stages.findIndex(([id]) => id === run.stage);
-  const question = currentQuestion(run);
   const submitted =
-    run.stage === "intro"
+    stage === "intro"
       ? run.initial
-      : run.stage === "return"
+      : stage === "return"
         ? run.revisited
-        : run.stage === "practice" && question
+        : training && completed && question
           ? run.practice[question.id]
           : undefined;
   const selected = question
-    ? run.stage === "check"
-      ? run.check[question.id]?.choice
-      : (submitted?.choice ?? run.drafts[draftId(run, question)])
+    ? training
+      ? completed || attempt?.resolved
+        ? question.correct
+        : undefined
+      : stage === "check"
+        ? run.check[question.id]?.choice
+        : (submitted?.choice ?? run.drafts[draftId(run, question)])
     : undefined;
-  const hints = question ? (run.hints[question.id] ?? 0) : 0;
-  const showVideo = run.stage === "video" || reviewVideo;
+  const showVideo = stage === "video" || reviewVideo;
   const remaining = check.length - Object.keys(run.check).length;
   const shownResult = oldRun
     ? store.data.runs.find((r) => r.id === oldRun)!
     : run;
-  const stageLabel = showVideo
-    ? "Урок"
-    : run.stage === "practice"
-      ? "Тренировка"
-      : run.stage === "check"
-        ? "Практика"
-        : run.stage === "intro"
-          ? "Введение"
-          : run.stage === "return"
-            ? "До и после"
-            : "Результат";
-  const videoNext = (
-    <View style={{ alignItems: "flex-end" }}>
-      <PrimaryAction
-        label={
-          reviewVideo
-            ? run.stage === "result"
-              ? "К результату"
-              : "К заданию"
-            : "К тренировке"
-        }
-        arrow
-        onPress={reviewVideo ? () => setReviewVideo(false) : sendNext}
-      />
-    </View>
-  );
-  const inTasks = run.stage === "practice" || run.stage === "check";
   const control = taskControl(run);
   function submitAnswer() {
     if (!question || submitted || selected === undefined) return;
     store.send({ type: "submit", at: now() });
-    const id = `${run!.id}:${run!.stage}:${question.id}`;
-    if (
-      run!.stage !== "intro" &&
-      selected === question.correct &&
-      lastCelebration.current !== id
-    ) {
-      lastCelebration.current = id;
-      setBurst((b) => b + 1);
-    } else if (run!.stage !== "intro" && selected !== question.correct) {
+    if (stage === "intro") {
+      store.send({ type: "next", from: "intro", index: run!.practiceIndex });
+    }
+  }
+  function choose(choice: number) {
+    if (!question || moving.current) return;
+    setConfirmFinish(false);
+    if (!training) {
+      store.send({ type: "choose", id: question.id, choice });
+      return;
+    }
+    if (completed || attempt?.resolved || attempt?.rejected.includes(choice))
+      return;
+    store.send({ type: "trainingTry", id: question.id, choice, at: now() });
+    if (choice !== question.correct) {
+      setWrongChoice(choice);
       setMistake((n) => n + 1);
       play("wrong");
+    } else if (!attempt?.rejected.length) {
+      setBurst((n) => n + 1);
+      play("success");
+      advanceTraining();
     }
   }
   function finishCheck() {
     if (remaining && !confirmFinish) setConfirmFinish(true);
     else {
       store.send({ type: "finish", at: now() });
-      if (result(run!).correct > 0) setBurst((b) => b + 1);
+      setBurst(0);
       setConfirmFinish(false);
     }
+  }
+  function visitTraining(index: number) {
+    cancelAdvance();
+    setExplanation(false);
+    transitionTask(() => {
+      setBurst(0);
+      setReviewingTask(
+        run && trainingComplete(run, practice[index])
+          ? practice[index].id
+          : null,
+      );
+      store.send({ type: "practiceIndex", index });
+    });
   }
   return (
     <View
       testID="video-lesson"
       style={{
-        gap: 20,
-        maxWidth: 840,
         width: "100%",
-        alignSelf: "center",
+        minHeight: height - 3,
+        backgroundColor: background,
       }}
     >
       <View
         style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 8,
+          paddingHorizontal: width < 600 ? 20 : 36,
+          height: 64,
+          justifyContent: "center",
         }}
       >
-        <QuietAction label="К карте" onPress={back} icon="arrow-left" />
-      </View>
-      <View style={{ gap: 10 }}>
-        <Txt
-          size={width < 600 ? 24 : 30}
-          weight="600"
-          accessibilityRole="header"
-        >
-          {meta.title}
-        </Txt>
-        <View
-          style={{ flexDirection: "row", gap: 5 }}
-          accessibilityLabel={`Этап ${Math.min(stageIndex + 1, 5)} из 5`}
-        >
-          {stages.map(([id], i) => (
-            <View
-              key={id}
-              style={{
-                flex: 1,
-                height: 2,
-                backgroundColor: i <= stageIndex ? colors.green : colors.line,
-              }}
-            />
-          ))}
-        </View>
-        {(showVideo || run.stage === "result") && (
-          <Txt size={14} color={colors.green} weight="600">
-            {stageLabel}
-          </Txt>
-        )}
-      </View>
-      {connectedSync && !store.error && (
-        <Txt size={12} color={colors.muted}>
-          {store.saving
-            ? "Ожидает подтверждения сервера…"
-            : "Сохранено на сервере"}
-        </Txt>
-      )}
-      {!!store.error && (
-        <View style={{ gap: 8 }}>
-          <Txt accessibilityRole="alert" color={colors.red}>
-            {store.error}
-          </Txt>
-          <QuietAction label="Повторить сохранение" onPress={store.retry} />
-        </View>
-      )}
-      <MistakeWash trigger={mistake} />
-      {prelude ? (
-        <StagePrelude stage={prelude} onDone={() => setPrelude(null)} />
-      ) : showVideo ? (
-        <>
-          <View
-            style={{
-              flexDirection: wide ? "row" : "column",
-              gap: wide ? 28 : 20,
-              alignItems: "flex-start",
-            }}
-          >
-            <View
-              style={{
-                flex: wide ? 1 : undefined,
-                width: wide ? undefined : "100%",
-                minWidth: 0,
-                gap: 20,
-              }}
-            >
-              {active && (
-                <YouTubePlayer
-                  key={lessonVideo.id}
-                  id={lessonVideo.id}
-                  title={lessonVideo.title}
-                  progress={progress}
-                  onProgress={(progress) =>
-                    store.send({ type: "video", id: lessonVideo.id, progress })
-                  }
-                  onWatched={() => award([videoEvent])}
-                />
-              )}
-            </View>
-            <View style={{ width: wide ? 220 : "100%" }}>
-              <VideoNotes notes={meta.notes} />
-            </View>
-          </View>
-          {meta.videos.length > 1 && (
-            <Fold title={`Видео по теме · ${meta.videos.length}`}>
-              {meta.videos.map((video, i) => (
-                <Pressable
-                  key={video.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${i + 1}. ${video.title}`}
-                  accessibilityState={{ selected: video.id === lessonVideo.id }}
-                  onPress={() =>
-                    store.send({ type: "selectVideo", id: video.id })
-                  }
-                  style={{ paddingVertical: 10, flexDirection: "row", gap: 10 }}
-                >
-                  <Txt
-                    color={
-                      video.id === lessonVideo.id ? colors.green : colors.muted
-                    }
-                    size={14}
-                    style={{ flex: 1 }}
-                  >
-                    {i + 1}. {video.title}
-                  </Txt>
-                  {video.id === lessonVideo.id && (
-                    <Icon name="check" size={18} color={colors.green} />
-                  )}
-                </Pressable>
-              ))}
-            </Fold>
-          )}
-          {videoNext}
-        </>
-      ) : run.stage === "result" ? (
-        <>
-          {oldRun && (
-            <QuietAction
-              label="Последний результат"
-              onPress={() => setOldRun(null)}
-            />
-          )}
-          <View>
-            <ConstellationCelebration burst={burst} immersive />
-            <Result run={shownResult} />
-          </View>
-          <View style={{ alignItems: "flex-end" }}>
-            <PrimaryAction
-              label="Пройти ещё раз"
-              disabled={store.saving || !!store.error}
-              onPress={() => {
-                setOldRun(null);
-                setConfirmFinish(false);
-                setBurst(0);
-                setMistake(0);
-                store.send({
-                  type: "start",
-                  lessonId,
-                  id: `${lessonId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                  at: now(),
-                });
-              }}
-            />
-          </View>
-          <QuietAction
-            label="Повторить видео"
-            onPress={() => setReviewVideo(true)}
-            icon="play"
-          />
-          <Fold
-            title={`История · ${store.data.runs.filter((r) => r.finishedAt).length}`}
-          >
-            {store.data.runs
-              .filter((r) => r.finishedAt)
-              .slice()
-              .reverse()
-              .map((r, index) => (
-                <QuietAction
-                  key={r.id}
-                  label={`Попытка ${store.data.runs.length - index} · ${new Date(r.finishedAt!).toLocaleDateString("ru-RU")} · ${Math.round(result(r).percent)}%`}
-                  onPress={() => setOldRun(r.id)}
-                />
-              ))}
-          </Fold>
-        </>
-      ) : question ? (
-        <View
-          ref={taskRef}
-          testID="lesson-tasks"
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="К карте"
+          onPress={back}
           style={{
-            gap: 20,
-            padding: width < 380 ? 14 : 24,
-            borderRadius: run.stage === "intro" ? 28 : 18,
-            borderWidth: 1,
-            borderColor:
-              submitted &&
-              run.stage !== "intro" &&
-              submitted.choice !== question.correct
-                ? colors.red
-                : run.stage === "intro"
-                  ? "#8B79B94D"
-                  : run.stage === "check"
-                    ? "#AA99D34D"
-                    : run.stage === "return"
-                      ? "#D0B37A4D"
-                      : colors.line,
-            backgroundColor:
-              submitted &&
-              run.stage !== "intro" &&
-              submitted.choice !== question.correct
-                ? "#351C2A"
-                : run.stage === "intro"
-                  ? "#19162D"
-                  : run.stage === "check"
-                    ? "#1B1B30"
-                    : colors.subtle,
-            width: "100%",
+            width: 44,
+            height: 44,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <ConstellationCelebration burst={burst} immersive />
-          {run.stage === "intro" && (
-            <View testID="lesson-introduction" style={{ gap: 10 }}>
-              <Txt
-                size={13}
-                weight="600"
-                color="#D1BCF1"
-                style={{ letterSpacing: 2 }}
-              >
-                ВВЕДЕНИЕ
-              </Txt>
-              <Txt size={26} weight="500">
-                Всё начинается с вопроса
-              </Txt>
-              {question.id !== "g08-path" && <ChapterArt />}
-              <Txt size={15} color={colors.muted}>
-                Как ты думаешь? Здесь можно предположить — после урока вернёмся
-                к твоему ответу.
-              </Txt>
-            </View>
-          )}
-          {run.stage === "return" && (
-            <View style={{ gap: 6 }}>
-              <Txt size={13} color={colors.gold} weight="600">
-                ДО И ПОСЛЕ
-              </Txt>
-              <Txt size={23} weight="500">
-                Знакомый вопрос. Новый взгляд.
-              </Txt>
-              <Txt size={15} color={colors.muted}>
-                Посмотри на него ещё раз — что теперь стало понятнее?
-              </Txt>
-            </View>
-          )}
-          {inTasks && (
-            <Txt
-              size={14}
-              weight="600"
-              color={run.stage === "check" ? "#C4B0FF" : colors.green}
-            >
-              {stageLabel}
+          <Icon name="x" size={20} color="#A7B3BE" />
+        </Pressable>
+      </View>
+      <MistakeWash trigger={mistake} />
+      <ConstellationCelebration
+        burst={burst}
+        immersive
+        duration={2100}
+        silent
+      />
+      {completed &&
+        reviewingTask === question?.id &&
+        burst === 0 &&
+        !explanation && (
+          <ConstellationCelebration
+            key={question?.id}
+            burst={1}
+            immersive
+            persistent
+            silent
+          />
+        )}
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          maxWidth: showVideo ? 1080 : 740,
+          alignSelf: "center",
+          paddingHorizontal: width < 380 ? 20 : width < 600 ? 26 : 40,
+          paddingTop: prelude ? 0 : width < 600 ? 16 : 34,
+          paddingBottom: 48,
+          justifyContent: stage === "intro" ? "center" : undefined,
+          gap: 26,
+        }}
+      >
+        {!!store.error && (
+          <View style={{ gap: 8 }}>
+            <Txt accessibilityRole="alert" color={colors.red}>
+              {store.error}
             </Txt>
-          )}
-          <SoftReveal changeKey={question.id} style={{ gap: 20 }}>
-            {run.stage === "intro" || run.stage === "return" ? (
-              <OpeningQuestion question={question} />
-            ) : (
-              <Txt
-                size={width < 380 ? 18 : 21}
-                weight="500"
-                accessibilityRole="header"
-              >
-                {question.prompt}
-              </Txt>
-            )}
-            <Choices
-              question={question}
-              value={selected}
-              disabled={!!submitted}
-              revealResult={!!submitted && run.stage !== "intro"}
-              mistake={mistake}
-              onSelect={(choice) => {
-                setConfirmFinish(false);
-                store.send({ type: "choose", id: question.id, choice });
-              }}
-            />
-          </SoftReveal>
-          {submitted && run.stage === "practice" && (
-            <SoftReveal
+            <QuietAction label="Повторить сохранение" onPress={store.retry} />
+          </View>
+        )}
+        {prelude ? (
+          <StagePrelude stage={prelude} onDone={() => setPrelude(null)} />
+        ) : showVideo ? (
+          <>
+            <View
               style={{
-                gap: 8,
-                borderLeftWidth: 2,
-                borderLeftColor:
-                  submitted.choice === question.correct
-                    ? colors.green
-                    : colors.red,
-                paddingLeft: 14,
+                flexDirection: wide ? "row" : "column",
+                gap: 30,
+                alignItems: "flex-start",
               }}
             >
-              <Txt
-                size={16}
-                weight="600"
-                color={
-                  submitted.choice === question.correct
-                    ? colors.green
-                    : colors.red
-                }
-                accessibilityLiveRegion="polite"
-              >
-                {submitted.choice === question.correct ? "Верно" : "Разберёмся"}
-              </Txt>
-              <Txt testID="answer-explanation" prose size={18} weight="400">
-                {question.solution}
-              </Txt>
-            </SoftReveal>
-          )}
-          {run.stage === "check" && confirmFinish && remaining > 0 && (
-            <View style={{ gap: 4 }}>
-              <Txt size={15} color={colors.gold} accessibilityRole="alert">
-                Без ответа: {remaining}. Они войдут в результат как неверные.
-              </Txt>
-              <QuietAction
-                label="К пропускам"
-                onPress={() => {
-                  setConfirmFinish(false);
-                  store.send({
-                    type: "checkIndex",
-                    index: check.findIndex((q) => !run.check[q.id]),
-                  });
+              <View
+                style={{
+                  flex: wide ? 1 : undefined,
+                  width: wide ? undefined : "100%",
+                  minWidth: 0,
                 }}
+              >
+                {active && (
+                  <YouTubePlayer
+                    key={lessonVideo.id}
+                    id={lessonVideo.id}
+                    title={lessonVideo.title}
+                    progress={progress}
+                    onProgress={(progress) =>
+                      store.send({
+                        type: "video",
+                        id: lessonVideo.id,
+                        progress,
+                      })
+                    }
+                    onWatched={() => award([videoEvent])}
+                  />
+                )}
+              </View>
+              <View style={{ width: wide ? 230 : "100%" }}>
+                <VideoNotes notes={meta.notes} />
+              </View>
+            </View>
+            {meta.videos.length > 1 && (
+              <Fold title={`Видео по теме · ${meta.videos.length}`}>
+                {meta.videos.map((video) => (
+                  <QuietAction
+                    key={video.id}
+                    label={video.title}
+                    onPress={() =>
+                      store.send({ type: "selectVideo", id: video.id })
+                    }
+                  />
+                ))}
+              </Fold>
+            )}
+            <View style={{ alignItems: "flex-end" }}>
+              <PrimaryAction
+                arrow
+                label={reviewVideo ? "К результату" : "К тренировке"}
+                onPress={reviewVideo ? () => setReviewVideo(false) : sendNext}
               />
             </View>
-          )}
-          {control ? (
-            <TaskControls
-              index={
-                run.stage === "practice" ? run.practiceIndex : run.checkIndex
-              }
-              total={run.stage === "practice" ? practice.length : check.length}
-              onChange={(index) => {
-                setBurst(0);
-                setMistake(0);
-                setConfirmFinish(false);
-                store.send({
-                  type:
-                    run.stage === "practice" ? "practiceIndex" : "checkIndex",
-                  index,
-                });
-              }}
-              finish={control.action === "finish"}
-              label={
-                control.action === "finish"
-                  ? "Завершить урок"
-                  : control.label === "Завершить"
-                    ? "Продолжить"
-                    : control.label
-              }
-              disabled={control.disabled}
-              onAction={() => {
-                if (control.action === "finish") finishCheck();
-                else if (control.action === "submit") submitAnswer();
-                else {
+          </>
+        ) : stage === "result" ? (
+          <>
+            {oldRun && (
+              <QuietAction
+                label="Последний результат"
+                onPress={() => setOldRun(null)}
+              />
+            )}
+            <Result run={shownResult} />
+            <View style={{ alignItems: "flex-end" }}>
+              <PrimaryAction
+                label="Пройти ещё раз"
+                disabled={store.saving || !!store.error}
+                onPress={() => {
+                  setOldRun(null);
+                  setConfirmFinish(false);
                   setBurst(0);
                   setMistake(0);
                   store.send({
-                    type: control.action,
-                    index:
-                      run.stage === "practice"
-                        ? run.practiceIndex
-                        : run.checkIndex,
+                    type: "start",
+                    lessonId,
+                    id: `${lessonId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    at: now(),
                   });
-                }
-              }}
-            />
-          ) : !submitted ? (
-            <View style={{ alignItems: "flex-end" }}>
-              <PrimaryAction
-                label="Ответить"
-                disabled={selected === undefined}
-                onPress={submitAnswer}
+                }}
               />
             </View>
-          ) : null}
-          {run.stage === "practice" && (
-            <>
+            <QuietAction
+              label="Повторить видео"
+              onPress={() => setReviewVideo(true)}
+              icon="play"
+            />
+            <Fold
+              title={`История · ${store.data.runs.filter((r) => r.finishedAt).length}`}
+            >
+              {store.data.runs
+                .filter((r) => r.finishedAt)
+                .slice()
+                .reverse()
+                .map((r, index) => (
+                  <QuietAction
+                    key={r.id}
+                    label={`Попытка ${store.data.runs.length - index} · ${new Date(r.finishedAt!).toLocaleDateString("ru-RU")} · ${Math.round(result(r).percent)}%`}
+                    onPress={() => setOldRun(r.id)}
+                  />
+                ))}
+            </Fold>
+          </>
+        ) : question ? (
+          <Animated.View
+            testID="lesson-tasks"
+            style={{
+              gap: 30,
+              opacity: taskOpacity,
+              flex: training ? 1 : undefined,
+            }}
+          >
+            {training && (
               <View
+                testID="training-stars"
                 style={{
                   flexDirection: "row",
-                  justifyContent: "space-between",
-                  gap: 12,
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                  gap: 4,
+                  marginBottom: 16,
                 }}
               >
-                {!submitted && hints < question.hints.length ? (
-                  <QuietAction
-                    label={hints ? "Ещё подсказка" : "Подсказка"}
-                    onPress={() => store.send({ type: "hint" })}
-                  />
-                ) : (
-                  <View />
-                )}
-                <QuietAction
-                  label="Видео"
-                  onPress={() => {
-                    setBurst(0);
-                    setReviewVideo(true);
-                  }}
-                  icon="play"
-                />
-              </View>
-              {hints > 0 && (
-                <View
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Предыдущая задача"
+                  disabled={run.practiceIndex === 0}
+                  accessibilityState={{ disabled: run.practiceIndex === 0 }}
+                  onPress={() => visitTraining(run.practiceIndex - 1)}
                   style={{
-                    gap: 10,
-                    borderLeftWidth: 2,
-                    borderLeftColor: colors.green,
-                    paddingLeft: 14,
+                    width: 32,
+                    height: 48,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: run.practiceIndex === 0 ? 0.2 : 1,
                   }}
                 >
-                  {question.hints.slice(0, hints).map((hint, i) => (
-                    <Txt prose key={i} size={18} weight="400">
-                      {hint}
-                    </Txt>
-                  ))}
+                  <Icon name="chevron-left" size={20} color="#AABEC0" />
+                </Pressable>
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                  }}
+                >
+                  {practice.map((q, index) => {
+                    const lit = trainingComplete(run, q),
+                      assisted = trainingAssisted(run, q);
+                    const color = lit
+                      ? assisted
+                        ? "#E8C781"
+                        : "#A1E4C4"
+                      : "#54636C";
+                    return (
+                      <Pressable
+                        key={q.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Задание ${index + 1}: ${lit ? (assisted ? "с разбором" : "верно") : "не завершено"}`}
+                        accessibilityState={{
+                          selected: run.practiceIndex === index,
+                        }}
+                        onPress={() => visitTraining(index)}
+                        style={{
+                          width: 40,
+                          height: 48,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <Svg width={25} height={25} viewBox="0 0 24 24">
+                          <Path
+                            d="M12 2L14.9 8.6L22 9.6L16.8 14.5L18 21.6L12 18.2L6 21.6L7.2 14.5L2 9.6L9.1 8.6Z"
+                            stroke={color}
+                            strokeWidth={1.1}
+                            strokeLinejoin="round"
+                            fill={lit ? color : "none"}
+                          />
+                        </Svg>
+                        <View
+                          style={{
+                            height: 3,
+                            width: 3,
+                            borderRadius: 2,
+                            backgroundColor:
+                              run.practiceIndex === index
+                                ? "#DDE9EA"
+                                : "transparent",
+                          }}
+                        />
+                      </Pressable>
+                    );
+                  })}
                 </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Следующая задача"
+                  disabled={
+                    run.practiceIndex === practice.length - 1 && !completed
+                  }
+                  accessibilityState={{
+                    disabled:
+                      run.practiceIndex === practice.length - 1 && !completed,
+                  }}
+                  onPress={() => {
+                    if (run.practiceIndex < practice.length - 1)
+                      visitTraining(run.practiceIndex + 1);
+                    else {
+                      cancelAdvance();
+                      transitionTask(() => {
+                        setBurst(0);
+                        setReviewingTask(null);
+                        store.send({
+                          type: "practiceContinue",
+                          index: run.practiceIndex,
+                        });
+                      });
+                    }
+                  }}
+                  style={{
+                    width: 32,
+                    height: 48,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity:
+                      run.practiceIndex === practice.length - 1 && !completed
+                        ? 0.2
+                        : 1,
+                  }}
+                >
+                  <Icon name="chevron-right" size={20} color="#AABEC0" />
+                </Pressable>
+              </View>
+            )}
+            {stage === "check" && (
+              <Txt size={12} color="#B4A9CB" style={{ letterSpacing: 2 }}>
+                ПРАКТИКА
+              </Txt>
+            )}
+            {stage === "return" && (
+              <Txt size={12} color="#B8C6CB" style={{ letterSpacing: 1 }}>
+                ПОСМОТРИ ЕЩЁ РАЗ
+              </Txt>
+            )}
+            <SoftReveal changeKey={question.id} style={{ gap: 26 }}>
+              {stage === "intro" || stage === "return" ? (
+                <OpeningQuestion question={question} />
+              ) : (
+                <Txt
+                  size={width < 380 ? 21 : 24}
+                  weight="400"
+                  accessibilityRole="header"
+                >
+                  {question.prompt}
+                </Txt>
               )}
-            </>
-          )}
-          {submitted && run.stage === "return" && <Comparison run={run} />}
-          {submitted && run.stage !== "practice" && (
+              <Choices
+                question={question}
+                value={selected}
+                disabled={!!submitted || !!attempt?.resolved}
+                revealResult={
+                  (training && (completed || !!attempt?.resolved)) ||
+                  (stage === "return" && !!submitted)
+                }
+                rejected={training ? attempt?.rejected : undefined}
+                wrongChoice={wrongChoice}
+                mistake={mistake}
+                onSelect={choose}
+              />
+            </SoftReveal>
+            {training ? (
+              <View
+                style={{
+                  alignItems: "flex-end",
+                  justifyContent: "flex-end",
+                  flex: 1,
+                  minHeight: 68,
+                  paddingTop: 20,
+                }}
+              >
+                {completed && reviewingTask === question.id && (
+                  <View style={{ alignSelf: "flex-end" }}>
+                    <QuietAction
+                      label="Почему?"
+                      onPress={() => {
+                        cancelAdvance();
+                        setExplanation(true);
+                      }}
+                    />
+                  </View>
+                )}
+              </View>
+            ) : stage === "check" && control ? (
+              <>
+                {confirmFinish && remaining > 0 && (
+                  <View style={{ gap: 4 }}>
+                    <Txt
+                      size={15}
+                      color={colors.gold}
+                      accessibilityRole="alert"
+                    >
+                      Без ответа: {remaining}. Они войдут в результат как
+                      неверные.
+                    </Txt>
+                    <QuietAction
+                      label="К пропускам"
+                      onPress={() => {
+                        setConfirmFinish(false);
+                        store.send({
+                          type: "checkIndex",
+                          index: check.findIndex((q) => !run.check[q.id]),
+                        });
+                      }}
+                    />
+                  </View>
+                )}
+                <TaskControls
+                  index={run.checkIndex}
+                  total={check.length}
+                  finish={control.action === "finish"}
+                  label={
+                    control.action === "finish" ? "Завершить урок" : "Далее"
+                  }
+                  disabled={control.disabled}
+                  onChange={(index) => {
+                    setConfirmFinish(false);
+                    transitionTask(() =>
+                      store.send({ type: "checkIndex", index }),
+                    );
+                  }}
+                  onAction={() =>
+                    control.action === "finish"
+                      ? finishCheck()
+                      : transitionTask(() =>
+                          store.send({
+                            type: "checkContinue",
+                            index: run.checkIndex,
+                          }),
+                        )
+                  }
+                />
+              </>
+            ) : !submitted ? (
+              <View style={{ alignItems: "flex-end" }}>
+                <PrimaryAction
+                  label={stage === "intro" ? "Узнать ответ" : "Ответить"}
+                  disabled={selected === undefined}
+                  onPress={submitAnswer}
+                />
+              </View>
+            ) : (
+              <>
+                {stage === "return" && <Comparison run={run} />}
+                <View style={{ alignItems: "flex-end" }}>
+                  <PrimaryAction label="К практике" arrow onPress={sendNext} />
+                </View>
+              </>
+            )}
+          </Animated.View>
+        ) : null}
+      </View>
+      <Modal
+        visible={!!explanation && !!question && active}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!needsExplanation) setExplanation(false);
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#03070BE8",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: width < 380 ? 18 : 28,
+          }}
+        >
+          <View
+            accessibilityViewIsModal
+            testID="answer-explanation-dialog"
+            style={{
+              width: "100%",
+              maxWidth: 620,
+              maxHeight: "85%",
+              padding: width < 380 ? 22 : 32,
+              borderRadius: 24,
+              backgroundColor: "#172329",
+              gap: 24,
+            }}
+          >
+            <Txt accessibilityRole="header" size={24} weight="400">
+              Почему так?
+            </Txt>
+            <ScrollView>
+              <Txt testID="answer-explanation" prose size={18} weight="400">
+                {question?.solution}
+              </Txt>
+            </ScrollView>
             <View style={{ alignItems: "flex-end" }}>
               <PrimaryAction
-                label={run.stage === "intro" ? "Смотреть видео" : "К практике"}
-                arrow
-                onPress={sendNext}
+                label="Понятно"
+                onPress={() => {
+                  setExplanation(false);
+                  if (needsExplanation && question) {
+                    store.send({
+                      type: "trainingAcknowledge",
+                      id: question.id,
+                    });
+                    play("success");
+                    advanceTraining(450);
+                  }
+                }}
               />
             </View>
-          )}
+          </View>
         </View>
-      ) : null}
+      </Modal>
     </View>
   );
 }
@@ -935,6 +1095,8 @@ function Choices({
   disabled,
   revealResult,
   mistake,
+  rejected = [],
+  wrongChoice,
   onSelect,
 }: {
   question: Question;
@@ -942,6 +1104,8 @@ function Choices({
   disabled: boolean;
   revealResult: boolean;
   mistake: number;
+  rejected?: number[];
+  wrongChoice?: number;
   onSelect: (i: number) => void;
 }) {
   const { colors } = useUITheme();
@@ -954,76 +1118,87 @@ function Choices({
       accessibilityLabel="Варианты ответа"
       style={{ gap: 8 }}
     >
-      {question.choices.map((choice, i) => (
-        <AnswerShake key={i} trigger={wrong && value === i ? mistake : 0}>
-          <Pressable
-            accessibilityRole="radio"
-            accessibilityLabel={choice}
-            accessibilityState={{ checked: value === i, disabled }}
-            aria-checked={value === i}
-            disabled={disabled}
-            onPress={() => {
-              play("select");
-              onSelect(i);
-            }}
-            style={({ pressed }) => ({
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              minHeight: 54,
-              padding: 14,
-              borderWidth: 1,
-              borderColor: value === i ? selectedColor : "transparent",
-              borderRadius: 10,
-              backgroundColor:
-                value === i
-                  ? wrong
-                    ? "#542536"
-                    : colors.selected
-                  : colors.white,
-              opacity: pressed ? 0.8 : 1,
-            })}
+      {question.choices.map((choice, i) => {
+        const failed = rejected.includes(i) || (wrong && value === i);
+        const optionDisabled = disabled || rejected.includes(i);
+        const optionColor = failed ? "#F29BA7" : selectedColor;
+        return (
+          <AnswerShake
+            key={i}
+            trigger={failed && (wrongChoice === i || value === i) ? mistake : 0}
           >
-            <View
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 11,
-                borderWidth: 1,
-                borderColor: value === i ? selectedColor : colors.muted,
-                backgroundColor: value === i ? selectedColor : "transparent",
-                alignItems: "center",
-                justifyContent: "center",
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityLabel={choice}
+              accessibilityState={{
+                checked: value === i,
+                disabled: optionDisabled,
               }}
+              aria-checked={value === i}
+              disabled={optionDisabled}
+              onPress={() => {
+                play("select");
+                onSelect(i);
+              }}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                minHeight: 54,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: failed
+                  ? "#F29BA74D"
+                  : value === i
+                    ? optionColor
+                    : "#FFFFFF12",
+                borderRadius: 10,
+                backgroundColor: failed
+                  ? "#672D3B55"
+                  : value === i
+                    ? "#98DCC217"
+                    : "#FFFFFF04",
+                opacity: pressed ? 0.8 : 1,
+              })}
             >
-              {value === i &&
-                (revealResult ? (
-                  <Icon
-                    name={wrong ? "x" : "check"}
-                    size={15}
-                    color={colors.onPrimary}
-                  />
-                ) : (
-                  <View
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: colors.onPrimary,
-                    }}
-                  />
-                ))}
-            </View>
-            <Txt
-              size={16}
-              weight={value === i ? "600" : "400"}
-              style={{ flex: 1 }}
-            >
-              {choice}
-            </Txt>
-          </Pressable>
-        </AnswerShake>
-      ))}
+              <View
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  borderWidth: 1,
+                  borderColor: value === i || failed ? optionColor : "#74858C",
+                  backgroundColor:
+                    value === i || failed ? optionColor : "transparent",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {(value === i || failed) &&
+                  (revealResult || failed ? (
+                    <Icon
+                      name={failed ? "x" : "check"}
+                      size={15}
+                      color={colors.onPrimary}
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: colors.onPrimary,
+                      }}
+                    />
+                  ))}
+              </View>
+              <Txt size={16} weight="400" style={{ flex: 1 }}>
+                {choice}
+              </Txt>
+            </Pressable>
+          </AnswerShake>
+        );
+      })}
     </View>
   );
 }
@@ -1192,9 +1367,6 @@ function Result({ run }: { run: Run }) {
     <SoftReveal
       style={{
         gap: 20,
-        padding: 24,
-        borderRadius: 28,
-        backgroundColor: colors.subtle,
       }}
     >
       <ChapterArt kind="result" />

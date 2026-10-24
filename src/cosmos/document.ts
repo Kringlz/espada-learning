@@ -32,6 +32,7 @@ body.free #reset{display:block}
 #prev{left:28px}#next{right:28px}
 .bottom{position:absolute;bottom:max(38px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(460px,calc(100% - 48px));text-align:center;pointer-events:none}
 #lesson-number{font-size:11px;letter-spacing:2px;color:#7f8b9d}
+.lesson-complete #lesson-number{color:#75ffd4}.lesson-complete #launch{background:#123c32;color:#b0ffe7;box-shadow:0 0 28px #50ffcd20}.lesson-complete #launch:hover{background:#205647}
 #lesson-title{font-size:clamp(22px,2.4vw,30px);font-weight:400;letter-spacing:-.65px;line-height:1.25;margin:14px auto 22px;max-width:430px;text-wrap:balance}
 #launch{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;gap:22px;min-width:182px;padding:14px 24px;border-radius:30px;background:#b3d9bf;color:#102319;font-size:14px;transition:background .2s,transform .2s}
 #launch:hover{background:#ccebd5;transform:translateY(-2px)}#launch svg{width:28px;height:18px}

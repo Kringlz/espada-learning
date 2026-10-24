@@ -1,5 +1,12 @@
+import { EdgeGlow } from "../../components/EdgeGlow";
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Animated, Easing, Platform, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Platform,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import Svg, {
   Circle,
   Defs,
@@ -9,7 +16,7 @@ import Svg, {
   Path,
   Stop,
 } from "react-native-svg";
-import { Button, Txt, useUITheme } from "../../components/ui";
+import { Txt, useUITheme } from "../../components/ui";
 import { MotionActiveContext, useReducedMotion } from "../../components/Motion";
 import { CelebrationLayer } from "../../components/CelebrationLayer";
 
@@ -152,6 +159,7 @@ export function ChapterArt({
   );
 }
 
+const DrawnPath = Animated.createAnimatedComponent(Path);
 export function StagePrelude({
   stage,
   onDone,
@@ -159,9 +167,9 @@ export function StagePrelude({
   stage: "practice" | "check";
   onDone: () => void;
 }) {
-  const { colors } = useUITheme();
   const reduced = useReducedMotion();
   const active = useContext(MotionActiveContext);
+  const { height } = useWindowDimensions();
   const value = useRef(new Animated.Value(0)).current;
   const done = useRef(onDone);
   done.current = onDone;
@@ -171,79 +179,145 @@ export function StagePrelude({
     const animation = Animated.timing(value, {
       toValue: 1,
       duration: 1600,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: Platform.OS !== "web",
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: false,
     });
     if (!reduced) animation.start();
-    const timer = setTimeout(() => done.current(), 2200);
+    const timer = setTimeout(() => done.current(), reduced ? 600 : 2100);
     return () => {
       clearTimeout(timer);
       animation.stop();
     };
   }, [active, reduced, value]);
-  const title = stage === "practice" ? "Тренировка" : "Практика";
+  const color = stage === "practice" ? "#B0E3D0" : "#D5C6F1";
   return (
     <View
       testID={`stage-prelude-${stage}`}
       style={{
-        minHeight: 410,
-        padding: 24,
+        minHeight: height - 95,
         alignItems: "center",
         justifyContent: "center",
-        gap: 18,
-        borderRadius: 28,
-        backgroundColor: colors.subtle,
+        gap: 32,
+      }}
+    >
+      <Svg accessible={false} width={180} height={180} viewBox="0 0 180 180">
+        <DrawnPath
+          d={
+            stage === "practice"
+              ? "M32 124L66 82L94 104L146 49M122 51L146 49L144 73"
+              : "M90 28L109 71L152 90L109 109L90 152L71 109L28 90L71 71Z"
+          }
+          fill="none"
+          stroke={color}
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray={[500, 500]}
+          strokeDashoffset={value.interpolate({
+            inputRange: [0, 1],
+            outputRange: [500, 0],
+          })}
+        />
+        {(stage === "practice"
+          ? [
+              [32, 124],
+              [66, 82],
+              [94, 104],
+              [146, 49],
+            ]
+          : [
+              [90, 28],
+              [152, 90],
+              [90, 152],
+              [28, 90],
+            ]
+        ).map(([x, y], i) => (
+          <Circle key={i} cx={x} cy={y} r={2.4} fill={color} opacity={0.85} />
+        ))}
+      </Svg>
+      <Animated.View
+        style={{
+          opacity: value.interpolate({
+            inputRange: [0, 0.4, 1],
+            outputRange: [0, 0, 1],
+          }),
+        }}
+      >
+        <Txt
+          accessibilityRole="header"
+          accessibilityLiveRegion="polite"
+          size={24}
+          weight="400"
+          color={color}
+          style={{ letterSpacing: 1 }}
+        >
+          {stage === "practice" ? "Тренировка" : "Практика"}
+        </Txt>
+      </Animated.View>
+    </View>
+  );
+}
+
+export function LessonLoading() {
+  const { height } = useWindowDimensions();
+  const reduced = useReducedMotion();
+  const active = useContext(MotionActiveContext);
+  const value = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (reduced || !active) return;
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(value, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(value, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [active, reduced, value]);
+  return (
+    <View
+      testID="lesson-loading"
+      accessibilityLabel="Загрузка урока"
+      accessibilityRole="progressbar"
+      style={{
+        minHeight: height - 3,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#0B111B",
       }}
     >
       <Animated.View
         style={{
-          width: "100%",
-          maxWidth: 460,
-          opacity: value.interpolate({
-            inputRange: [0, 0.3, 1],
-            outputRange: [0, 1, 1],
-          }),
-          transform: [
-            {
-              scale: value.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.82, 1],
-              }),
-            },
-            {
-              rotate: value.interpolate({
-                inputRange: [0, 1],
-                outputRange: ["-9deg", "0deg"],
-              }),
-            },
-          ],
+          opacity: reduced
+            ? 1
+            : value.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }),
         }}
       >
-        <ChapterArt kind={stage} />
+        <Svg width={100} height={100} viewBox="0 0 100 100">
+          <Path
+            d="M20 65L40 30L65 58L82 37"
+            fill="none"
+            stroke="#BCD7D9"
+            strokeOpacity={0.5}
+          />
+          {[
+            [20, 65],
+            [40, 30],
+            [65, 58],
+            [82, 37],
+          ].map(([x, y], i) => (
+            <Circle key={i} cx={x} cy={y} r={2.2} fill="#E7F3EF" />
+          ))}
+        </Svg>
       </Animated.View>
-      <Txt
-        accessibilityRole="header"
-        accessibilityLiveRegion="polite"
-        size={34}
-        weight="600"
-        color={stage === "practice" ? colors.green : "#C4B0FF"}
-      >
-        {title}
-      </Txt>
-      <Txt
-        size={16}
-        color={colors.muted}
-        style={{ textAlign: "center", maxWidth: 390 }}
-      >
-        {stage === "practice"
-          ? "Пробуй, используй подсказки и разбирай каждый шаг."
-          : "Теперь самостоятельно. Собери всё, что узнал, в решениях."}
-      </Txt>
-      <View style={{ alignSelf: "center" }}>
-        <Button secondary small onPress={onDone}>
-          Начать
-        </Button>
-      </View>
     </View>
   );
 }
@@ -288,13 +362,14 @@ export function MistakeWash({ trigger }: { trigger: number }) {
         pointerEvents="none"
         style={{
           flex: 1,
-          backgroundColor: "#BF2448",
           opacity: value.interpolate({
             inputRange: [0, 1],
-            outputRange: [0, 0.14],
+            outputRange: [0, 1],
           }),
         }}
-      />
+      >
+        <EdgeGlow color="#F05B70" />
+      </Animated.View>
     </CelebrationLayer>
   );
 }

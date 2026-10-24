@@ -161,9 +161,9 @@ export function Learn({
   useLessonFocus(!!courseRequest, back);
   if (!courseRequest) return null;
   return (
-    <View style={{ maxWidth: 1120, width: "100%", alignSelf: "center" }}>
+    <View style={{ width: "100%" }}>
       <VideoLesson
-        key={`${actor.id}:${courseRequest.id}`}
+        key={`${actor.id}:${courseRequest.id}:${courseRequest.key}`}
         actorId={actor.id}
         lessonId={courseRequest.id}
         back={back}

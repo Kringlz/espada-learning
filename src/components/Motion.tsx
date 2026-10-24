@@ -1,3 +1,4 @@
+import { EdgeGlow } from "./EdgeGlow";
 import { CelebrationLayer } from "./CelebrationLayer";
 import Svg, {
   Circle,
@@ -409,19 +410,25 @@ function SkyDrawing({
 export function ConstellationCelebration({
   burst,
   immersive = false,
+  persistent = false,
+  silent = false,
+  duration = 2100,
 }: {
   burst: number;
   immersive?: boolean;
+  persistent?: boolean;
+  silent?: boolean;
+  duration?: number;
 }) {
   const { play } = useSounds();
   const { dark } = useTheme();
   const lastSound = useRef(false);
   useEffect(() => {
-    if (burst) {
+    if (burst && !silent) {
       lastSound.current = !lastSound.current;
       play(lastSound.current ? "success" : "successAlt");
     }
-  }, [burst, play]);
+  }, [burst, play, silent]);
   const reduced = useReducedMotion();
   const active = useContext(MotionActiveContext);
   const value = useRef(new Animated.Value(0)).current;
@@ -440,18 +447,38 @@ export function ConstellationCelebration({
     setScene(next);
     value.setValue(0);
     setVisible(true);
-    const animation = Animated.timing(value, {
-      toValue: 1,
-      duration: 2100,
+    const draw = Animated.timing(value, {
+      toValue: persistent ? 0.6 : 1,
+      duration: persistent ? 1800 : duration,
       easing: Easing.linear,
-      // The same clock draws SVG strokes and lights stars on web and native.
       useNativeDriver: false,
     });
+    const animation = persistent
+      ? Animated.sequence([
+          draw,
+          Animated.loop(
+            Animated.sequence([
+              Animated.timing(value, {
+                toValue: 0.64,
+                duration: 2400,
+                easing: Easing.inOut(Easing.sin),
+                useNativeDriver: false,
+              }),
+              Animated.timing(value, {
+                toValue: 0.6,
+                duration: 2400,
+                easing: Easing.inOut(Easing.sin),
+                useNativeDriver: false,
+              }),
+            ]),
+          ),
+        ])
+      : draw;
     animation.start(({ finished }) => {
-      if (finished) setVisible(false);
+      if (finished && !persistent) setVisible(false);
     });
     return () => animation.stop();
-  }, [burst, reduced, active, value]);
+  }, [burst, reduced, active, value, persistent, duration]);
   if (!visible || !scene) return null;
   const size = Math.min(width >= 1100 ? 280 : 250, width * 0.68, height * 0.38);
   const drawingWidth = immersive ? width * 0.94 : size;
@@ -484,10 +511,17 @@ export function ConstellationCelebration({
               backgroundColor: "#02040D",
               opacity: value.interpolate({
                 inputRange: [0, 0.12, 0.65, 1],
-                outputRange: [0, 0.48, 0.48, 0],
+                outputRange: [
+                  0,
+                  persistent ? 0.22 : 0.38,
+                  persistent ? 0.22 : 0.38,
+                  0,
+                ],
               }),
             }}
-          />
+          >
+            <EdgeGlow />
+          </Animated.View>
         )}
         {width > 0 && height > 0 && (
           <Animated.View

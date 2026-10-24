@@ -1,3 +1,4 @@
+import { LessonLoading } from "../course/videoLesson/LessonAtmosphere";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -280,6 +281,7 @@ export function AuthScreen(p: AuthScreenProps) {
       )}
     </>
   );
+  if (p.loading) return <LessonLoading />;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
       <SpaceBackdrop />
