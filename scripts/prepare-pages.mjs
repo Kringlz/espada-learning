@@ -1,5 +1,10 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { execFileSync } from "node:child_process";
+
+for (const name of ["АРХИВ", "РЕСЕТЫ", "design-lab", "review", "tmp", ".git"]) {
+  if (existsSync(resolve("dist", name))) throw new Error(`Refusing to publish historical/private directory: ${name}`);
+}
 
 const base = (process.env.GITHUB_PAGES_BASE_PATH ?? "").replace(/\/$/, "");
 const html = readFileSync("dist/index.html", "utf8");
@@ -18,6 +23,13 @@ if (!assets.some((asset) => asset.endsWith(".js")))
 writeFileSync("dist/.nojekyll", "");
 // The app currently uses in-memory navigation. Preserve entry loading if a URL path is shared.
 writeFileSync("dist/404.html", html);
+const commit = process.env.GITHUB_SHA ?? execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+if (!/^[a-f0-9]{40}$/.test(commit)) throw new Error("Missing exact build commit.");
+writeFileSync("dist/release.json", JSON.stringify({
+  commit,
+  branch: process.env.GITHUB_REF_NAME ?? execFileSync("git", ["branch", "--show-current"], { encoding: "utf8" }).trim(),
+  builtAt: new Date().toISOString(),
+}, null, 2) + "\n");
 console.log(
   `Verified ${assets.length} root assets for ${base || "/"}; GitHub Pages files ready.`,
 );

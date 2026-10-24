@@ -1,13 +1,11 @@
 {
   "current": {
     "label": "Текущее опубликованное приложение",
-    "commit": "c61a5139ab0786b1acb4068e4d63f62f1e9182f3",
-    "tag": "current-2026-10-24"
+    "ref": "refs/tags/release/current"
   },
   "previous": {
     "label": "Предыдущая опубликованная версия",
-    "commit": "1110cda158225a0a6df5c679f40b14dd94cc8f8b",
-    "tag": "previous-2026-10-23"
+    "ref": "refs/tags/release/previous"
   },
   "pre-cosmos": {
     "label": "Контрольная: до космического интерфейса",

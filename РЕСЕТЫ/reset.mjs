@@ -11,6 +11,15 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const versions = JSON.parse(readFileSync(join(root, "РЕСЕТЫ/versions.json"), "utf8"));
 const [name = "list", ...flags] = process.argv.slice(2);
 const git = (...args) => execFileSync("git", ["-C", root, ...args], { encoding: "utf8" }).trim();
+const resolveVersion = (version) => {
+  if (version.ref && !/^refs\/tags\/release\/(current|previous)$/.test(version.ref)) {
+    throw new Error("Недопустимая ссылка в каталоге.");
+  }
+  const ref = version.ref ?? version.commit;
+  if (!version.ref && !/^[a-f0-9]{40}$/.test(ref ?? "")) throw new Error("Некорректный коммит.");
+  try { return git("rev-parse", "--verify", `${ref}^{commit}`); }
+  catch { throw new Error(`Точка ${ref} не найдена. Обновите метки: git fetch origin '+refs/tags/*:refs/tags/*'`); }
+};
 const present = (path) => {
   try { lstatSync(path); return true; } catch (error) {
     if (error.code === "ENOENT") return false;
@@ -28,11 +37,11 @@ if (flags.some((flag) => flag !== "--apply") || flags.length > 1) {
 if (name === "list") {
   if (flags.length) throw new Error("list не принимает --apply.");
   for (const [key, version] of Object.entries(versions)) {
-    console.log(`${key.padEnd(20)} ${version.commit.slice(0, 7)}  ${version.label}`);
+    console.log(`${key.padEnd(20)} ${resolveVersion(version).slice(0, 7)}  ${version.label}`);
   }
 } else {
   if (!Object.hasOwn(versions, name)) throw new Error(`Неизвестная точка: ${name}`);
-  const version = versions[name];
+  const version = { ...versions[name], commit: resolveVersion(versions[name]) };
   if (!/^[a-f0-9]{40}$/.test(version.commit)) throw new Error("Некорректный коммит в каталоге.");
   if (git("rev-parse", "--show-toplevel") !== root) throw new Error("Ожидался корень репозитория Espada.");
   if (git("rev-parse", `${version.commit}^{commit}`) !== version.commit) throw new Error("Коммит не найден.");

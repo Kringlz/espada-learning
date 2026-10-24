@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: pages-production
   cancel-in-progress: false
 
 jobs:
@@ -90,17 +90,23 @@ jobs:
       - run: sh scripts/test-database.sh
 
   deploy:
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/codex/unified-local-20261023'))
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: [build, database]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      contents: write
       pages: write
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Deploy GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Record current and previous successful releases
+        run: node scripts/promote-release.mjs

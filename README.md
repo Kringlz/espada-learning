@@ -3,9 +3,10 @@
 Единственная рабочая папка: `/Users/skebobr/Desktop/Espada`.
 Сайт: https://kringlz.github.io/espada-learning/
 
-Проверенная публикация на 24 октября 2026: **`c61a513`**, ветка
-**`codex/unified-local-20261023`**. Удалённая `main` старее сайта.
-Локальная уборка структуры не является новым опубликованным релизом.
+**Единственная рабочая и публикуемая ветка — `main`.**
+Текущий успешный релиз отмечен `release/current`, предыдущий — `release/previous`.
+Точный коммит работающего сайта: [release.json](https://kringlz.github.io/espada-learning/release.json).
+Метки обновляются автоматически только после успешного развёртывания.
 
 ## Структура
 
@@ -45,6 +46,7 @@ npm run build:pages
 ## Восстановление
 
 ```sh
+git fetch origin '+refs/tags/*:refs/tags/*'
 node РЕСЕТЫ/reset.mjs list
 node РЕСЕТЫ/reset.mjs current
 node РЕСЕТЫ/reset.mjs current --apply
