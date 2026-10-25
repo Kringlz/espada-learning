@@ -839,13 +839,14 @@ function Lesson({
     </View>
   );
 }
-function PrimaryAction({
+export function PrimaryAction({
   label,
   onPress,
   disabled = false,
   arrow = false,
   compact = false,
   finish = false,
+  large = false,
 }: {
   label: string;
   onPress: () => void;
@@ -853,6 +854,7 @@ function PrimaryAction({
   arrow?: boolean;
   compact?: boolean;
   finish?: boolean;
+  large?: boolean;
 }) {
   const { colors } = useUITheme();
   const { play } = useSounds();
@@ -868,7 +870,7 @@ function PrimaryAction({
           onPress();
         }}
         style={({ pressed }) => ({
-          minHeight: 48,
+          minHeight: large ? 58 : 48,
           maxWidth: "100%",
           paddingHorizontal: compact ? 10 : 20,
           paddingVertical: 12,
@@ -882,7 +884,7 @@ function PrimaryAction({
         })}
       >
         <Txt
-          size={compact ? 14 : 15}
+          size={large ? 17 : compact ? 14 : 15}
           weight="600"
           color={colors.onPrimary}
           style={{ flexShrink: 1 }}
@@ -986,7 +988,7 @@ function TaskControls({
     </View>
   );
 }
-function OpeningQuestion({ question }: { question: Question }) {
+export function OpeningQuestion({ question }: { question: Question }) {
   const { width } = useWindowDimensions();
   const split = question.prompt.lastIndexOf(". ") + 2;
   if (question.id !== "g08-path")
@@ -1005,7 +1007,7 @@ function OpeningQuestion({ question }: { question: Question }) {
     </View>
   );
 }
-function QuietAction({
+export function QuietAction({
   label,
   onPress,
   icon,
@@ -1041,7 +1043,7 @@ function QuietAction({
     </Pressable>
   );
 }
-function Fold({
+export function Fold({
   title,
   children,
 }: {
@@ -1089,7 +1091,7 @@ function Fold({
     </View>
   );
 }
-function Choices({
+export function Choices({
   question,
   value,
   disabled,
@@ -1202,7 +1204,7 @@ function Choices({
     </View>
   );
 }
-function VideoNotes({ notes }: { notes: string[] }) {
+export function VideoNotes({ notes }: { notes: string[] }) {
   const { colors } = useUITheme();
   return (
     <View testID="video-notes" style={{ gap: 12 }}>

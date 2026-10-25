@@ -1,3 +1,4 @@
+import { TrainerState, parseTrainer } from "./trainer/model";
 import rawCatalog from "../../content/math-course/catalog.json";
 import { QuizAttempts, parseQuizAttempts } from "./quiz";
 import { supplemental } from "./supplemental";
@@ -60,6 +61,9 @@ export function searchCourse(
   );
 }
 export type TopicProgress = {
+  interested?: boolean;
+  trainer?: TrainerState;
+  practiceUpdatedAt?: string;
   page: number;
   readPages: number[];
   notes: string;
@@ -87,6 +91,13 @@ export function parseProgress(raw: string | null): CourseProgress {
     const p = (value as Record<string, any>)[topic.id];
     if (!p || typeof p !== "object") continue;
     result[topic.id] = {
+      ...(typeof p.interested === "boolean"
+        ? { interested: p.interested }
+        : {}),
+      ...(typeof p.practiceUpdatedAt === "string" &&
+      Number.isFinite(Date.parse(p.practiceUpdatedAt))
+        ? { practiceUpdatedAt: p.practiceUpdatedAt }
+        : {}),
       page: Number.isInteger(p.page)
         ? Math.max(0, Math.min(p.page, topic.pages.length - 1))
         : 0,
@@ -104,6 +115,9 @@ export function parseProgress(raw: string | null): CourseProgress {
         : [],
       notes: typeof p.notes === "string" ? p.notes.slice(0, 12000) : "",
       quiz: parseQuizAttempts(p.quiz, topic.id, topic.practice.count),
+      ...(parseTrainer(p.trainer, topic.id)
+        ? { trainer: parseTrainer(p.trainer, topic.id) }
+        : {}),
       reviewed: Object.fromEntries(
         Object.entries(p.reviewed ?? {}).filter(
           ([key, v]) =>

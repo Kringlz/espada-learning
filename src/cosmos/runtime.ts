@@ -1,12 +1,16 @@
+import { progressRuntime } from "./progressView";
 /** Self-contained renderer shared by the browser frame and native WebView. No network or storage access. */
 export const spaceRuntime = String.raw`
 (function(){
 'use strict';
 var initial=window.SPACE_INITIAL, data=initial.data, reduced=initial.reduced, active=true, dark=initial.dark!==false;
 var canvas=document.getElementById('space'), ctx=canvas.getContext('2d',{alpha:false});
+var focusCanvas=document.getElementById('focus-star'), focusCtx=focusCanvas.getContext('2d');
 var $=function(id){return document.getElementById(id)};
 var selected=data.lessons.find(function(t){return t.id===data.initialId})||data.lessons[0];
 var grade=selected.grade, overview=false, free=false, disposed=false, interacted=false;
+var preview=$('preview'), previewLesson=selected, previewReveal=0, previewDistance=710, restoreAfterOrbit=false, orbitIdle=0;
+var previewCards=[$('preview-content'),$('preview-title')];
 if(!ctx){$('error').style.display='block';$('error').textContent='Не удалось открыть космическую сцену. ';var fallback=document.createElement('button');fallback.textContent='Повторить';fallback.onclick=function(){location.reload()};$('error').appendChild(fallback);return}
 var width=innerWidth,height=innerHeight,dpr=1, focal=700, mobile=false, lastTime=0, frame=0, ticks=0;
 var focus={x:selected.x,y:selected.y,z:selected.z}, aim={x:focus.x,y:focus.y,z:focus.z};
@@ -38,18 +42,19 @@ var nebula=document.createElement('canvas');nebula.width=900;nebula.height=650;
  }c.putImageData(im,0,0);var soft=document.createElement('canvas');soft.width=900;soft.height=650;var sc=soft.getContext('2d');sc.filter='blur(28px)';sc.drawImage(nebula,0,0);c.clearRect(0,0,900,650);c.drawImage(soft,0,0);})();
 var camera={x:0,y:0,z:0},axes={};
 function cameraAxes(){var sy=Math.sin(orbit.yaw),cy=Math.cos(orbit.yaw),sp=Math.sin(orbit.pitch),cp=Math.cos(orbit.pitch);camera={x:focus.x+sy*cp*orbit.distance,y:focus.y+sp*orbit.distance,z:focus.z+cy*cp*orbit.distance};axes={rx:cy,rz:-sy,ux:-sy*sp,uy:cp,uz:-cy*sp,fx:-sy*cp,fy:-sp,fz:-cy*cp};}
-function project(p){var x=p.x-camera.x,y=p.y-camera.y,z=p.z-camera.z,depth=x*axes.fx+y*axes.fy+z*axes.fz;if(depth<35)return null;var scale=focal*(overview&&mobile?1.8:1)/depth;return{x:width*(mobile?.42:.5)+(x*axes.rx+z*axes.rz)*scale,y:height*.43-(x*axes.ux+y*axes.uy+z*axes.uz)*scale,scale:scale,depth:depth};}
-function resize(){width=canvas.clientWidth||innerWidth;height=canvas.clientHeight||innerHeight;mobile=width<700;dpr=Math.min(devicePixelRatio||1,mobile?1.5:1.75);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);focal=mobile?width*.82:Math.min(width*1.65,height)*1.08;draw(0);}
+function project(p){var x=p.x-camera.x,y=p.y-camera.y,z=p.z-camera.z,depth=x*axes.fx+y*axes.fy+z*axes.fz;if(depth<35)return null;var scale=focal*(overview&&mobile?1.8:1)/depth;return{x:width*.5+(x*axes.rx+z*axes.rz)*scale,y:height*(overview?.43:.5)-(x*axes.ux+y*axes.uy+z*axes.uz)*scale,scale:scale,depth:depth};}
+function resize(){width=canvas.clientWidth||innerWidth;height=canvas.clientHeight||innerHeight;mobile=width<700;dpr=Math.min(devicePixelRatio||1,mobile?1.5:1.75);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);focusCanvas.width=canvas.width;focusCanvas.height=canvas.height;ctx.setTransform(dpr,0,0,dpr,0,0);focal=mobile?width*.82:Math.min(width*1.65,height)*1.08;draw(0);}
 function pointInScreen(p,margin){return p&&p.x>-margin&&p.x<width+margin&&p.y>-margin&&p.y<height+margin}
 function showError(){var e=$('error');e.textContent='';if(data.error){e.style.display='block';var t=document.createElement('span');t.textContent=data.error+' ';e.appendChild(t);var b=document.createElement('button');b.textContent='Повторить';b.onclick=function(){send({type:'retry',id:''})};e.appendChild(b)}else e.style.display='none'}
 function currentTopics(){return data.lessons.filter(function(t){return t.grade===grade})}
 function updateUI(){
  var topics=currentTopics(),index=topics.findIndex(function(t){return t.id===selected.id});
+ document.body.classList.toggle('preview',!overview&&!free);
  document.body.classList.toggle('overview',overview);document.body.classList.toggle('free',free);
- $('lesson-number').textContent=(index+1)+' / '+topics.length+(selected.complete?' · Пройден':'');
- $('lesson-title').textContent=selected.title;
+ $('lesson-number').textContent=(index+1)+' / '+topics.length+(selected.complete?' · Пройден':selected.practicing?' · Практика продолжается':'');
+ if(previewLesson.id===selected.id)paintPreview(selected);
  document.body.classList.toggle('lesson-complete',selected.complete);
- $('launch').firstChild.textContent=!data.ready?'Загрузка ':selected.complete?'Пройти ещё раз ':selected.started?'Продолжить ':'Начать урок ';
+ $('launch').firstChild.textContent=!data.ready?'Загрузка ':selected.complete?'Тренироваться ещё ':selected.started?'Продолжить ':'Открыть тему ';
  $('launch').disabled=!data.ready;
  var previous=adjacent(-1), next=adjacent(1);
  $('prev').disabled=!previous;$('next').disabled=!next;
@@ -61,17 +66,60 @@ function updateUI(){
  $('overview').setAttribute('aria-label',overview?'Вернуться к уроку':'Выбрать класс');
  $('sr-status').textContent=selected.title+'. '+grade+' класс. '+(index+1)+' из '+topics.length+(selected.complete?'. Урок пройден.':'');
  showError();
+ if(progressMode)renderProgress();
 }
-function setFree(){interacted=true;if(!free){free=true;updateUI()}}
-function selectStar(star){interacted=true;selected=star;grade=star.grade;seenGrades[grade]=star.id;overview=false;free=false;aim={x:star.x,y:star.y,z:star.z};destination={yaw:-.12,pitch:.08,distance:mobile?650:710};if(reduced){focus={...aim};orbit={...destination}}updateUI();wake();}
+function paintPreview(star){
+ previewLesson=star;
+ $('lesson-title').textContent=star.title;
+ $('formula-image').src=star.formulaImage;
+ $('formula-image').alt='Основная формула: '+star.title;
+ $('preview-topics').replaceChildren();star.topics.forEach(function(title){var li=document.createElement('li');li.textContent=title;$('preview-topics').appendChild(li)});
+}
+// Use the camera's actual depth: wheel/pinch and their easing stay in sync with the star.
+// Cards remain mounted while leaving, and their content changes only after they fade out.
+function animatePreview(dt){
+ var point=project(previewLesson), changed=previewLesson.id!==selected.id;
+ var depth=point?point.depth:13000, distance=depth/previewDistance;
+ var target=progressMode||overview||free||jumpTimer||changed||!point?0:clamp((4-distance)/1.5,0,1);
+ previewReveal=lerp(previewReveal,target,reduced?1:1-Math.exp(-dt*9));
+ if(Math.abs(previewReveal-target)<.002)previewReveal=target;
+ if(changed&&previewReveal<.015){paintPreview(selected);point=project(selected);depth=point?point.depth:13000;distance=depth/previewDistance;}
+ var scale=clamp(Math.pow(1/Math.max(.1,distance),.75),.25,mobile||height<540?1.04:1.12);
+ var x=point?clamp(point.x-width*.5,-width,width):0,y=point?clamp(point.y-height*.5,-height,height):0;
+ preview.style.transform='translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) scale('+scale.toFixed(4)+')';
+ previewCards.forEach(function(card,index){
+  var amount=index?previewReveal*previewReveal:previewReveal,hidden=amount<.002;
+  card.style.setProperty('--reveal',amount.toFixed(4));
+  card.style.visibility=hidden?'hidden':'visible';
+  card.style.pointerEvents=target>.5&&amount>.9?'auto':'none';
+ });
+ preview.setAttribute('aria-hidden',String(target===0));
+ preview.inert=target===0;
+ document.body.classList.toggle('preview',!overview&&!free&&previewReveal>.02);
+}
+${progressRuntime}
+function setFree(restorePreview){
+ // Only an orbit around the selected star returns automatically; free flight stays free.
+ restoreAfterOrbit=!!restorePreview&&!overview&&(!free||restoreAfterOrbit);
+ orbitIdle=0;interacted=true;if(!free){free=true;updateUI()}
+}
+function selectStar(star){restoreAfterOrbit=false;interacted=true;selected=star;grade=star.grade;seenGrades[grade]=star.id;overview=false;free=false;aim={x:star.x,y:star.y,z:star.z};destination={yaw:-.12,pitch:.08,distance:mobile?650:710};previewDistance=destination.distance;if(reduced){focus={...aim};orbit={...destination}}updateUI();wake();}
 function adjacent(direction){var list=currentTopics(),index=list.findIndex(function(t){return t.id===selected.id});if(list[index+direction])return list[index+direction];var targetGrade=grade+direction;if(targetGrade<5||targetGrade>11)return null;var target=data.lessons.filter(function(t){return t.grade===targetGrade});return (direction>0?target[0]:target[target.length-1])||null}
 function move(direction){var next=adjacent(direction);if(next)selectStar(next)}
 function chooseGrade(g){var t=data.lessons.find(function(t){return t.id===seenGrades[g]})||data.lessons.find(function(t){return t.grade===g&&!t.complete})||data.lessons.find(function(t){return t.grade===g});selectStar(t)}
-function toggleOverview(){interacted=true;if(overview){selectStar(selected);return}overview=true;free=false;aim={x:400,y:0,z:-2400};destination={yaw:0,pitch:.12,distance:mobile?12200:7800};if(reduced){focus={...aim};orbit={...destination}}updateUI();wake()}
+function toggleOverview(){restoreAfterOrbit=false;interacted=true;if(overview){selectStar(selected);return}overview=true;free=false;aim={x:400,y:0,z:-2400};destination={yaw:0,pitch:.12,distance:mobile?12200:7800};if(reduced){focus={...aim};orbit={...destination}}updateUI();wake()}
 function launch(){if(!data.ready||jumpTimer)return;if(reduced){send({type:'lesson',id:selected.id});return}var id=selected.id;aim={x:selected.x,y:selected.y,z:selected.z};destination.distance=100;document.body.classList.add('jumping');jumpTimer=setTimeout(function(){send({type:'lesson',id:id});document.body.classList.remove('jumping');jumpTimer=null;destination.distance=mobile?650:710;},420)}
 data.grades.forEach(function(g){var label=document.createElement('button');label.dataset.grade=g.grade;label.textContent=g.grade+' класс';label.setAttribute('aria-label','Выбрать '+g.grade+' класс');label.onclick=function(){chooseGrade(g.grade)};$('grade-labels').appendChild(label)});
 $('prev').onclick=function(){move(-1)};$('next').onclick=function(){move(1)};$('launch').onclick=launch;$('reset').onclick=function(){selectStar(selected)};$('overview').onclick=toggleOverview;$('profile').onclick=function(){send({type:'navigate',id:'Profile'})};
 document.querySelectorAll('[data-navigate]').forEach(function(b){b.onclick=function(){send({type:'navigate',id:b.dataset.navigate})}});
+function normalizeSearch(s){return s.toLocaleLowerCase('ru').replace(/ё/g,'е').trim()}
+function closeSearch(){ $('search-results').hidden=true;$('lesson-search').setAttribute('aria-expanded','false'); }
+function searchLessons(){var query=normalizeSearch($('lesson-search').value);$('clear-search').hidden=!query;var box=$('search-results');box.replaceChildren();if(!query){closeSearch();return}var words=query.split(/\s+/),matches=data.lessons.filter(function(t){var text=normalizeSearch(t.searchText+' '+t.title+' '+t.id);return words.every(function(w){return text.includes(w)})});box.hidden=false;$('lesson-search').setAttribute('aria-expanded','true');if(!matches.length){var empty=document.createElement('div');empty.id='search-empty';empty.textContent='Ничего не найдено. Попробуй другое слово или номер класса.';box.appendChild(empty)}matches.forEach(function(t){var b=document.createElement('button');b.textContent=t.title;var meta=document.createElement('small');meta.textContent=t.grade+' класс · '+t.exercises+' заданий';b.appendChild(meta);b.onclick=function(){selectStar(t);closeSearch();$('lesson-search').blur();$('launch').focus()};box.appendChild(b)})}
+$('lesson-search').addEventListener('input',searchLessons);$('lesson-search').addEventListener('focus',searchLessons);
+$('clear-search').onclick=function(){$('lesson-search').value='';searchLessons();$('lesson-search').focus()};
+$('lesson-search').addEventListener('keydown',function(e){if(e.key==='Escape'){closeSearch();$('lesson-search').blur();canvas.focus()}else if(e.key==='ArrowDown'){e.preventDefault();var first=$('search-results').querySelector('button');if(first)first.focus()}else if(e.key==='Enter'){var first=$('search-results').querySelector('button');if(first){e.preventDefault();first.click()}}});
+$('search-results').addEventListener('keydown',function(e){var buttons=Array.from(this.querySelectorAll('button')),i=buttons.indexOf(document.activeElement);if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();var next=buttons[i+(e.key==='ArrowDown'?1:-1)];if(next)next.focus();else if(e.key==='ArrowUp')$('lesson-search').focus()}if(e.key==='Escape'){$('lesson-search').focus();closeSearch()}});
+document.addEventListener('pointerdown',function(e){if(!e.target.closest('.search'))closeSearch()});
 // Photometric stars: a small white core, a smooth bloom and restrained diffraction.
 // No planet-like rim or noisy surface; deterministic tint and size keep each star distinct.
 function drawSun(star,p,time){
@@ -102,7 +150,8 @@ function draw(time){
  var gl=$('grade-labels').querySelector('[data-grade="'+g.grade+'"]'),gp=project({x:g.x+700,y:g.y-140,z:g.z-180});if(overview&&pointInScreen(gp,50)){var lx=clamp(gp.x,70,width-70),ly=gp.y+12;for(var offset of [0,55,-55,110,-110,165,-165]){var candidate=clamp(gp.y+12+offset,130,height-100);if(!placedLabels.some(function(q){return Math.abs(q.x-lx)<120&&Math.abs(q.y-candidate)<52})){ly=candidate;break}}placedLabels.push({x:lx,y:ly});ctx.strokeStyle='#8fa3ba35';ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(gp.x,gp.y);ctx.lineTo(lx,ly+10);ctx.stroke();gl.style.display='block';gl.style.left=lx+'px';gl.style.top=ly+'px'}else gl.style.display='none';
  });
  var sorted=data.lessons.map(function(s){return{s:s,p:project(s)}}).filter(function(v){return pointInScreen(v.p,240)}).sort(function(a,b){return b.p.depth-a.p.depth});
- sorted.forEach(function(v){drawSun(v.s,v.p,time);visibleStars.push({star:v.s,p:v.p})});
+ sorted.forEach(function(v){if(overview||free||v.s.id!==selected.id)drawSun(v.s,v.p,time);visibleStars.push({star:v.s,p:v.p})});
+ if(focusCtx){focusCtx.setTransform(dpr,0,0,dpr,0,0);focusCtx.clearRect(0,0,width,height);if(!overview&&!free){var focused=sorted.find(function(v){return v.s.id===selected.id}),point=focused&&focused.p;if(point){var background=ctx;ctx=focusCtx;drawSun(selected,point,time);ctx=background;}}}
 }
 
 function animation(time){frame=0;if(!active||document.hidden||disposed)return;var dt=Math.min(.05,(time-lastTime)/1000||.016);lastTime=time;var speed=keys.Shift?650:220,travel=dt*speed;
@@ -111,22 +160,27 @@ function animation(time){frame=0;if(!active||document.hidden||disposed)return;va
   aim.x+=(axes.rx*dx+axes.fx*dz)*travel;aim.y+=(dy+axes.fy*dz)*travel;aim.z+=(axes.rz*dx+axes.fz*dz)*travel;setFree();
  }
  var smooth=reduced?1:1-Math.exp(-dt*5.5);focus.x=lerp(focus.x,aim.x,smooth);focus.y=lerp(focus.y,aim.y,smooth);focus.z=lerp(focus.z,aim.z,smooth);orbit.yaw=lerp(orbit.yaw,destination.yaw,smooth);orbit.pitch=lerp(orbit.pitch,destination.pitch,smooth);orbit.distance=lerp(orbit.distance,destination.distance,smooth);
+ // Wait for the released gesture and camera easing, then reveal at the current angle/zoom.
+ if(restoreAfterOrbit&&!pointers.size&&!overview){
+  orbitIdle+=dt;
+  if(orbitIdle>.25&&Math.abs(orbit.yaw-destination.yaw)+Math.abs(orbit.pitch-destination.pitch)<.015){restoreAfterOrbit=false;free=false;updateUI();}
+ }
  data.lessons.forEach(function(s){selectedSize[s.id]=lerp(selectedSize[s.id]||0,s.id===selected.id&&!overview?1:0,reduced?1:smooth)});
- draw(reduced?0:time);ticks++;frame=requestAnimationFrame(animation);
+ draw(reduced?0:time);animatePreview(dt);ticks++;frame=requestAnimationFrame(animation);
 }
 function wake(){if(!frame&&active&&!document.hidden&&!disposed){lastTime=performance.now();frame=requestAnimationFrame(animation)}}
-function pause(){if(frame)cancelAnimationFrame(frame);frame=0;keys={};pointers.clear();drag=null;pinch=null;canvas.classList.remove('dragging')}
-canvas.addEventListener('pointerdown',function(e){canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:0};else if(pointers.size===2){var a=Array.from(pointers.values());pinch={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom:destination.distance};if(drag)drag.moved=99}canvas.classList.add('dragging')});
-canvas.addEventListener('pointermove',function(e){if(!pointers.has(e.pointerId)){canvas.style.cursor=visibleStars.some(function(v){return Math.hypot(v.p.x-e.clientX,v.p.y-e.clientY)<Math.max(22,v.p.r+8)})?'pointer':'grab';return}pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2&&pinch){var a=Array.from(pointers.values()),distance=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);destination.distance=clamp(pinch.zoom*pinch.distance/Math.max(10,distance),200,13000);setFree();return}if(!drag||pointers.size!==1)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved=Math.max(drag.moved,Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY));destination.yaw-=dx*.004;destination.pitch=clamp(destination.pitch+dy*.003,-1.3,1.3);drag.x=e.clientX;drag.y=e.clientY;if(drag.moved>5)setFree();wake()});
+function pause(){stopProgressMotion();if(frame)cancelAnimationFrame(frame);frame=0;keys={};pointers.clear();drag=null;pinch=null;canvas.classList.remove('dragging')}
+canvas.addEventListener('pointerdown',function(e){orbitIdle=0;canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:0};else if(pointers.size===2){var a=Array.from(pointers.values());pinch={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom:destination.distance};if(drag)drag.moved=99}canvas.classList.add('dragging')});
+canvas.addEventListener('pointermove',function(e){if(!pointers.has(e.pointerId)){canvas.style.cursor=visibleStars.some(function(v){return Math.hypot(v.p.x-e.clientX,v.p.y-e.clientY)<Math.max(22,v.p.r+8)})?'pointer':'grab';return}pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2&&pinch){var a=Array.from(pointers.values()),distance=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);destination.distance=clamp(pinch.zoom*pinch.distance/Math.max(10,distance),200,13000);interacted=true;wake();return}if(!drag||pointers.size!==1)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved=Math.max(drag.moved,Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY));destination.yaw-=dx*.004;destination.pitch=clamp(destination.pitch+dy*.003,-1.3,1.3);drag.x=e.clientX;drag.y=e.clientY;if(drag.moved>5)setFree(true);wake()});
 canvas.addEventListener('pointerup',function(e){if(drag&&drag.moved<6&&pointers.size===1){var hit=visibleStars.filter(function(v){return Math.hypot(v.p.x-e.clientX,v.p.y-e.clientY)<Math.max(22,v.p.r+8)}).sort(function(a,b){return a.p.depth-b.p.depth})[0];if(hit){send({type:'feedback',id:'tap'});if(hit.star.id===selected.id&&!overview){launch()}else selectStar(hit.star)}}pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size){drag=null;canvas.classList.remove('dragging')}else if(drag){var p=Array.from(pointers.values())[0];drag.x=p.x;drag.y=p.y;drag.moved=99}});
 canvas.addEventListener('pointercancel',function(){pointers.clear();drag=null;pinch=null;canvas.classList.remove('dragging')});
-canvas.addEventListener('wheel',function(e){e.preventDefault();destination.distance=clamp(destination.distance*Math.exp(e.deltaY*.0012),200,13000);setFree();wake()},{passive:false});
-window.addEventListener('keydown',function(e){if(e.key==='Tab')return;var k=e.key.length===1?e.key.toLowerCase():e.key;
+canvas.addEventListener('wheel',function(e){e.preventDefault();destination.distance=clamp(destination.distance*Math.exp(e.deltaY*.0012),200,13000);interacted=true;wake()},{passive:false});
+window.addEventListener('keydown',function(e){if(e.key==='Tab'||progressMode||$('space-sheet').open||e.target.closest('.search, #space-switch'))return;var k=e.key.length===1?e.key.toLowerCase():e.key;
  if(['ArrowRight','ArrowLeft','Home','End','w','a','s','d','q','e','r','Shift'].includes(k))e.preventDefault();
  if(k==='ArrowRight')move(1);else if(k==='ArrowLeft')move(-1);else if(k==='Home')selectStar(currentTopics()[0]);else if(k==='End'){var t=currentTopics();selectStar(t[t.length-1])}else if(k==='r')selectStar(selected);else if(k==='Escape'&&overview)selectStar(selected);else if(k==='Enter'&&e.target===canvas)launch();
  keys[k]=true;wake();
 });window.addEventListener('keyup',function(e){keys[e.key.length===1?e.key.toLowerCase():e.key]=false});window.addEventListener('blur',function(){keys={};pointers.clear();drag=null;pinch=null});
-window.addEventListener('message',function(event){var m=event.data;if(!m||m.source!=='espada-host'||(event.source&&event.source!==parent&&event.source!==window))return;if(m.data){var resume=!data.ready&&m.data.ready&&!interacted;data=m.data;selected=data.lessons.find(function(t){return t.id===(resume?data.initialId:selected.id)})||data.lessons[0];grade=selected.grade;if(resume)selectStar(selected);else updateUI()}if(typeof m.soundEnabled==='boolean')applySound(m.soundEnabled);if(typeof m.dark==='boolean')applyTheme(m.dark,m.brandUri);if(typeof m.reduced==='boolean')reduced=m.reduced;if(typeof m.active==='boolean')active=m.active;if(active)wake();else pause()});
+window.addEventListener('message',function(event){var m=event.data;if(!m||m.source!=='espada-host'||(event.source&&event.source!==parent&&event.source!==window))return;if(m.data){var resume=!data.ready&&m.data.ready&&!interacted;data=m.data;selected=data.lessons.find(function(t){return t.id===(resume?data.initialId:selected.id)})||data.lessons[0];grade=selected.grade;if(resume)selectStar(selected);else updateUI()}if(typeof m.soundEnabled==='boolean')applySound(m.soundEnabled);if(typeof m.dark==='boolean')applyTheme(m.dark,m.brandUri);if(typeof m.reduced==='boolean'){reduced=m.reduced;if(reduced)stopProgressMotion()}if(typeof m.active==='boolean')active=m.active;if(active)wake();else pause()});
 var sizeObserver=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;if(sizeObserver)sizeObserver.observe(canvas);
 document.addEventListener('visibilitychange',function(){if(document.hidden)pause();else wake()});window.addEventListener('resize',resize);window.addEventListener('pagehide',function(){disposed=true;pause();if(sizeObserver)sizeObserver.disconnect();if(jumpTimer)clearTimeout(jumpTimer)});
 applySound(initial.soundEnabled!==false);applyTheme(dark,initial.brandUri);selectedSize[selected.id]=1;updateUI();resize();wake();tellReady();

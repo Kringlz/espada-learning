@@ -1,11 +1,16 @@
+import { useLearning } from "../services/context";
+import { usePracticeSharing } from "./trainer/usePracticeSharing";
 import { useStreak } from "../engagement/StreakContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext } from "react";
 import { useStoredCourseProgress } from "./useStoredCourseProgress";
 
-const CourseProgressContext = createContext<ReturnType<
-  typeof useStoredCourseProgress
-> | null>(null);
+const CourseProgressContext = createContext<
+  | (ReturnType<typeof useStoredCourseProgress> & {
+      practiceSync: ReturnType<typeof usePracticeSharing>;
+    })
+  | null
+>(null);
 export function CourseProgressProvider({
   actorId,
   children,
@@ -15,9 +20,16 @@ export function CourseProgressProvider({
 }) {
   const { mark } = useStreak();
   const storage = useStoredCourseProgress(actorId, AsyncStorage, mark);
+  const { actor } = useLearning();
+  const practiceSync = usePracticeSharing(
+    actorId,
+    actor.role === "student",
+    storage.ready,
+    storage.progress,
+  );
   return React.createElement(
     CourseProgressContext.Provider,
-    { value: storage },
+    { value: { ...storage, practiceSync } },
     children,
   );
 }

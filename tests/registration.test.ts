@@ -135,3 +135,47 @@ test("students register and resume without a group code; old drafts never enroll
     );
   }
 });
+
+test("invited teacher drafts stay distinct from public signup and never authorize admin", async () => {
+  const { validateInvitedTeacherRegistration } =
+    await import("../src/services/registration");
+  assert.equal(
+    validateInvitedTeacherRegistration({ ...student, role: "teacher" }, true)
+      .role,
+    "teacher",
+  );
+  for (const role of ["student", "parent", "admin"])
+    assert.throws(() =>
+      validateInvitedTeacherRegistration({ ...student, role }, true),
+    );
+  assert.throws(() =>
+    validateInvitedTeacherRegistration(
+      { ...student, role: "teacher", email: "bad" },
+      true,
+    ),
+  );
+  assert.deepEqual(
+    parsePendingRegistration(
+      JSON.stringify({ ...student, role: "teacher", invitedTeacher: true }),
+    ),
+    {
+      name: "Анна",
+      role: "teacher",
+      code: "",
+      email: "test@example.com",
+      invitedTeacher: true,
+    },
+  );
+  assert.equal(
+    parsePendingRegistration(
+      JSON.stringify({ ...student, role: "teacher", invitedTeacher: "true" }),
+    ),
+    null,
+  );
+  assert.equal(
+    parsePendingRegistration(
+      JSON.stringify({ ...student, role: "admin", invitedTeacher: true }),
+    ),
+    null,
+  );
+});

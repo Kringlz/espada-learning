@@ -26,6 +26,7 @@ jobs:
       # protects data). Never put service-role keys or SMTP passwords here.
       # Repository variables, if set, override these defaults.
       EXPO_PUBLIC_DATA_MODE: ${{ vars.EXPO_PUBLIC_DATA_MODE || 'supabase' }}
+      EXPO_PUBLIC_SUPPORT_TELEGRAM: ${{ vars.EXPO_PUBLIC_SUPPORT_TELEGRAM }}
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://kjijtninzvphymzwnmqm.supabase.co' }}
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable__qM0ZNJti-eZXsQHo87XEA_Oi5QqQTg' }}
       APP_ENV: github-pages

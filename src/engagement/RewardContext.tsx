@@ -28,7 +28,7 @@ const Context = createContext({
   ready: false,
   error: "",
   notice: "",
-  award: (_: RewardEvent[]) => {},
+  award: (_: RewardEvent[], _celebrate = true) => {},
   earned: (_: RewardEvent): boolean => false,
   retry: () => {},
 });
@@ -152,9 +152,9 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
         ready,
         error,
         notice,
-        award: (events) => {
+        award: (events, celebrate = true) => {
           if (events.length) mark();
-          record(events, true);
+          record(events, celebrate);
         },
         earned: (event) => !!ledger[rewardKey(event)],
         retry: () =>

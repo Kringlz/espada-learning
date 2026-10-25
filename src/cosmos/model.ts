@@ -1,6 +1,8 @@
+import { makeSpaceProgress, SpaceProgress } from "./progress";
+import { trainerPreview } from "../course/trainer/preview";
+import { trainerBank } from "../course/trainer/bank";
 import type { LessonSummaries } from "../course/videoLesson/completion";
 import { course, CourseProgress } from "../course/model";
-import { courseContent } from "../course/content";
 import { lessonStatus } from "../course/journey";
 import {
   constellations,
@@ -9,6 +11,10 @@ import {
 } from "../course/constellation";
 
 export type SpaceLesson = {
+  hook: string;
+  topics: string[];
+  formulaImage: string;
+  searchText: string;
   id: string;
   grade: number;
   title: string;
@@ -18,12 +24,14 @@ export type SpaceLesson = {
   seed: number;
   color: number;
   complete: boolean;
+  practicing: boolean;
   started: boolean;
   percent: number;
   parts: number;
   exercises: number;
 };
 export type SpaceData = {
+  progress: SpaceProgress;
   lessons: SpaceLesson[];
   grades: { grade: number; name: string; x: number; y: number; z: number }[];
   initialId: string;
@@ -37,12 +45,13 @@ export type SpaceAction =
       type: "lesson" | "topic" | "navigate" | "retry";
       id: string;
     }
+  | { type: "interest"; id: string; enabled: boolean }
   | { type: "feedback"; id: "tap" | "toggle" }
   | { type: "theme"; id: "light" | "dark" };
 export function makeSpaceData(
   progress: CourseProgress,
   videoLessons: LessonSummaries = {},
-): Pick<SpaceData, "lessons" | "grades" | "initialId"> {
+): Pick<SpaceData, "lessons" | "grades" | "initialId" | "progress"> {
   const grades = Object.entries(constellations).map(([g, meta], i) => ({
     grade: Number(g),
     name: `${g} класс`,
@@ -61,19 +70,31 @@ export function makeSpaceData(
           course.filter((t) => t.grade === topic.grade).length,
         );
         return {
+          ...trainerPreview(topic.id),
+          searchText: `${topic.title} ${trainerPreview(topic.id).topics.join(" ")} ${topic.grade} класс`,
           id: topic.id,
           grade: topic.grade,
-          title: courseContent[topic.id].pages[0].title,
+          title: topic.title,
           x: center.x + point.x * 1600,
           y: center.y + (0.5 - point.y) * 950,
           z: center.z,
           seed: starIdentity(topic.id).seed,
           color: (i + topic.grade) % 5,
-          complete: status.complete || !!videoLessons[topic.id]?.complete,
+          complete: !!progress[topic.id]?.trainer?.mastered,
+          practicing:
+            !!progress[topic.id]?.trainer?.totalAnswered &&
+            !progress[topic.id]?.trainer?.mastered,
           started: status.started || !!videoLessons[topic.id]?.started,
-          percent: videoLessons[topic.id]?.complete ? 100 : status.percent,
+          percent: progress[topic.id]?.trainer?.mastered
+            ? 100
+            : Math.min(
+                99,
+                Math.round(
+                  ((progress[topic.id]?.trainer?.correct ?? 0) / 15) * 100,
+                ),
+              ),
           parts: topic.pages.length,
-          exercises: topic.practice.count,
+          exercises: trainerBank(topic.id).length,
         };
       }),
   );
@@ -91,7 +112,12 @@ export function makeSpaceData(
       .sort((a, b) => updatedAt(b.id).localeCompare(updatedAt(a.id)))[0] ??
     group.find((t) => !t.complete) ??
     group[0];
-  return { lessons, grades, initialId: next.id };
+  return {
+    lessons,
+    grades,
+    initialId: next.id,
+    progress: makeSpaceProgress(progress),
+  };
 }
 export function validSpaceAction(
   value: unknown,
@@ -100,12 +126,18 @@ export function validSpaceAction(
   if (!value || typeof value !== "object") return false;
   const { type, id } = value as SpaceAction;
   if (typeof id !== "string") return false;
+  if (type === "interest")
+    return (
+      data.ready &&
+      data.lessons.some((t) => t.id === id) &&
+      typeof (value as { enabled?: unknown }).enabled === "boolean"
+    );
   if (type === "feedback") return id === "tap" || id === "toggle";
   if (type === "theme") return id === "light" || id === "dark";
   if (type === "lesson")
     return data.ready && data.lessons.some((t) => t.id === id);
   if (type === "topic") return data.signals.some((s) => s.id === id);
   if (type === "navigate")
-    return ["Progress", "Calculator", "Profile"].includes(id);
+    return ["Progress", "Formulas", "Profile"].includes(id);
   return type === "retry";
 }

@@ -44,7 +44,7 @@ export function AuthScreen(p: AuthScreenProps) {
   const [repeatChecked, setRepeatChecked] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [name, setName] = useState("");
-  const [role, setRole] = useState<RegistrationRole>("student");
+  const [role, setRole] = useState<RegistrationRole | "teacher">("student");
   const [code, setCode] = useState("");
   const [otp, setOtp] = useState("");
   const [remember, setRemember] = useState(false);
@@ -97,7 +97,11 @@ export function AuthScreen(p: AuthScreenProps) {
       const pending = p.pendingRegistration;
       setName(pending.name);
       setCode(pending.code ?? "");
-      if (isRegistrationRole(pending.role)) setRole(pending.role);
+      if (
+        isRegistrationRole(pending.role) ||
+        (pending.role === "teacher" && pending.invitedTeacher)
+      )
+        setRole(pending.role);
       setEmail(pending.email ?? "");
       change("confirm");
     }
@@ -380,24 +384,38 @@ export function AuthScreen(p: AuthScreenProps) {
                         ) : (
                           <Button onPress={p.retry}>Открыть демо</Button>
                         )}
-                        {link("Создать аккаунт", () => change("register"))}
+                        {link("Создать аккаунт", () => {
+                          setRole("student");
+                          change("register");
+                        })}
+                        {mode === "supabase" &&
+                          link("Учитель · по приглашению", () => {
+                            setRole("teacher");
+                            change("register");
+                          })}
                       </>
                     )}
                     {screen === "register" && (
                       <>
-                        <View style={{ flexDirection: "row", gap: 8 }}>
-                          {registrationRoles.map((r) => (
-                            <Button
-                              key={r}
-                              small
-                              secondary={role !== r}
-                              disabled={busy}
-                              onPress={() => setRole(r)}
-                            >
-                              {r === "student" ? "Ученик" : "Родитель"}
-                            </Button>
-                          ))}
-                        </View>
+                        {role === "teacher" ? (
+                          <Txt size={14} color={colors.muted}>
+                            Учитель · по приглашению администратора
+                          </Txt>
+                        ) : (
+                          <View style={{ flexDirection: "row", gap: 8 }}>
+                            {registrationRoles.map((r) => (
+                              <Button
+                                key={r}
+                                small
+                                secondary={role !== r}
+                                disabled={busy}
+                                onPress={() => setRole(r)}
+                              >
+                                {r === "student" ? "Ученик" : "Родитель"}
+                              </Button>
+                            ))}
+                          </View>
+                        )}
                         <AuthField
                           label="Имя"
                           value={name}
@@ -430,7 +448,7 @@ export function AuthScreen(p: AuthScreenProps) {
                             учителю код из своего профиля — он добавит вас в
                             группу.
                           </Txt>
-                        ) : (
+                        ) : role === "parent" ? (
                           <AuthField
                             ref={codeRef}
                             label="Код ученика"
@@ -447,7 +465,12 @@ export function AuthScreen(p: AuthScreenProps) {
                                 : ""
                             }
                           />
-                        )}
+                        ) : null}
+                        {mode === "supabase" &&
+                          role !== "teacher" &&
+                          link("Я учитель · есть приглашение", () =>
+                            setRole("teacher"),
+                          )}
                         {credentials && rememberControl}
                         <Button
                           fullWidth

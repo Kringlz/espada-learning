@@ -1,3 +1,5 @@
+import { useCourseProgress } from "../course/storage";
+import { Support } from "./Support";
 import { TeacherContactEditor } from "./Family";
 import { CopyCode } from "../components/CopyCode";
 import { useUITheme } from "../components/ui";
@@ -19,8 +21,11 @@ export { Home, Learn, Progress } from "./Reports";
 export function Profile({ switchDemo }: { switchDemo?: () => void }) {
   const { colors, styles, preference, setPreference } = useUITheme();
   const { actor, mode, state: s, dispatch, signOut, refresh } = useLearning();
+  const { practiceSync } = useCourseProgress(actor.id);
   const [confirm, setConfirm] = useState(false);
+  const [support, setSupport] = useState(false);
   const requested = s.deletionRequests.some((r) => r.studentId === actor.id);
+  if (support) return <Support back={() => setSupport(false)} />;
   return (
     <View
       style={{ gap: 24, maxWidth: 800, width: "100%", alignSelf: "center" }}
@@ -87,6 +92,15 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
       )}
       {actor.role === "teacher" && <TeacherContactEditor key={actor.id} />}
       {actor.role === "student" && <MyGroups />}
+      {actor.role === "student" &&
+        mode === "supabase" &&
+        practiceSync.status !== "saved" && (
+          <Button secondary onPress={practiceSync.retry}>
+            {practiceSync.status === "pending"
+              ? "Сохраняем практику…"
+              : "Повторить отправку практики"}
+          </Button>
+        )}
       <Button secondary icon="refresh-cw" onPress={() => void refresh()}>
         Обновить учебные данные
       </Button>
@@ -95,6 +109,9 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           Сменить демоаккаунт
         </Button>
       )}
+      <Button secondary icon="message-circle" onPress={() => setSupport(true)}>
+        Связаться с техподдержкой
+      </Button>
       <Disclosure title="Об Espada" icon="info">
         <Txt>
           Espada хранит результаты работ, состояния тем и учебную активность
@@ -106,8 +123,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           участвуют. Учебные данные не передаются ИИ-сервисам.
         </Txt>
         <Txt size={13} color={colors.muted}>
-          Need help? Bring a tricky question to your next tutoring session. Your
-          teacher can see completed checks and choose a useful next step.
+          Вопросы по заданиям можно обсудить с учителем.
         </Txt>
         <View style={{ gap: 4 }}>
           <Txt
@@ -171,7 +187,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
       </Disclosure>
       {mode === "supabase" && (
         <Button secondary onPress={() => void signOut().catch(() => {})}>
-          Sign out
+          Выйти из аккаунта
         </Button>
       )}
     </View>

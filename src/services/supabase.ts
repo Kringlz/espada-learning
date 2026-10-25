@@ -89,10 +89,37 @@ export async function remoteRegister(
   code?: string,
 ): Promise<void> {
   if (!backend) throw Error("Backend not configured.");
+  // Auth events can accept an invitation concurrently with signup completion.
+  // Read the live, RLS-protected profile so completing the same signup is idempotent.
+  const claimed = await claimTeacherInvitation();
+  if (claimed) return;
+  const { data: session } = await backend.auth.getSession();
+  if (session.session) {
+    const { data: profile, error } = await backend
+      .from("profiles")
+      .select("role,active")
+      .eq("id", session.session.user.id)
+      .maybeSingle();
+    if (error) throw Error(error.message);
+    if (profile?.role === "teacher" && profile.active) return;
+  }
+  if (role === "teacher")
+    throw Error(
+      "Приглашение не найдено или истекло. Попросите администратора проверить вашу почту.",
+    );
   const { error } = await backend.rpc("register_profile", {
     p_name: name,
     p_role: role,
     p_code: code ?? null,
   });
   if (error) throw Error(error.message);
+}
+
+export async function claimTeacherInvitation(): Promise<boolean> {
+  if (!backend) throw Error("Backend not configured.");
+  const { data, error } = await backend.rpc("claim_teacher_invitation");
+  // An older server remains usable until the additive migration is deployed.
+  if (error?.code === "PGRST202") return false;
+  if (error) throw Error(error.message);
+  return data === true;
 }

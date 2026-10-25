@@ -17,7 +17,7 @@ import { course } from "../course/model";
 import { useCourseProgress } from "../course/storage";
 import { lessonStorageReady } from "../lessons/service";
 import { useScreenScroll } from "../components/ScreenScroll";
-import { VideoLesson } from "../course/videoLesson/VideoLesson";
+import { TrainerLesson } from "../course/trainer/TrainerLesson";
 import { useLessonFocus } from "../components/LessonFocus";
 import { LessonLibrary } from "../lessons/LessonLibrary";
 import React, { useEffect, useState } from "react";
@@ -162,7 +162,7 @@ export function Learn({
   if (!courseRequest) return null;
   return (
     <View style={{ width: "100%" }}>
-      <VideoLesson
+      <TrainerLesson
         key={`${actor.id}:${courseRequest.id}:${courseRequest.key}`}
         actorId={actor.id}
         lessonId={courseRequest.id}

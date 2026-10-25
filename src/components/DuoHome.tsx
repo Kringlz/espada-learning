@@ -64,6 +64,8 @@ export function DuoHome({
         reduced={reduced}
         onAction={(action) => {
           if (action.type === "lesson") openCourse(action.id);
+          else if (action.type === "interest")
+            storage.update(action.id, { interested: action.enabled });
           else if (action.type === "topic") openTopic(action.id);
           else if (action.type === "retry") {
             storage.retry();

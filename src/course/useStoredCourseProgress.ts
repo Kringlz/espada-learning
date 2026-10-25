@@ -84,12 +84,26 @@ export function useStoredCourseProgress(
   ) {
     if (!ready) return;
     const current = latest.current[id] ?? emptyProgress();
+    const changes = typeof patch === "function" ? patch(current) : patch;
+    const preferenceOnly =
+      Object.keys(changes).length > 0 &&
+      Object.keys(changes).every((key) => key === "interested");
     const data = {
       ...latest.current,
       [id]: {
         ...current,
-        ...(typeof patch === "function" ? patch(current) : patch),
-        updatedAt: new Date().toISOString(),
+        ...changes,
+        ...(changes.trainer &&
+        (changes.trainer.correct !== current.trainer?.correct ||
+          changes.trainer.incorrect !== current.trainer?.incorrect ||
+          changes.trainer.cursor !== current.trainer?.cursor ||
+          changes.trainer.submitted !== current.trainer?.submitted ||
+          changes.trainer.finished !== current.trainer?.finished)
+          ? { practiceUpdatedAt: new Date().toISOString() }
+          : {}),
+        updatedAt: preferenceOnly
+          ? current.updatedAt
+          : new Date().toISOString(),
       },
     };
     if (didStudy(current, data[id])) mark();

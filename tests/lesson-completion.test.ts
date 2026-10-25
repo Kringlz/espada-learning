@@ -42,7 +42,7 @@ test("a new visit to a finished lesson creates a clean run without deleting hist
     next,
   );
 });
-test("completed stars stay lit when replay begins and come from any finished attempt", () => {
+test("legacy completion stays in history but does not bypass trainer mastery on the map", () => {
   const first = {
     ...newRun("done", at, "A05-02"),
     stage: "result" as const,
@@ -52,10 +52,10 @@ test("completed stars stay lit when replay begins and come from any finished att
   const summaries = summarizeRuns([first, replay]);
   assert.equal(summaries["A05-02"].complete, true);
   const map = makeSpaceData({}, summaries);
-  assert.equal(map.lessons.find((s) => s.id === "A05-02")?.complete, true);
-  assert.equal(map.lessons.find((s) => s.id === "A05-02")?.percent, 100);
+  assert.equal(map.lessons.find((s) => s.id === "A05-02")?.complete, false);
+  assert.equal(map.lessons.find((s) => s.id === "A05-02")?.percent, 0);
   assert.equal(map.lessons.find((s) => s.id === "A05-01")?.complete, false);
-  assert.notEqual(map.initialId, "A05-02");
+  assert.equal(map.initialId, "A05-02");
 });
 test("local and server histories merge without losing completion or treating unfinished exercises as complete", () => {
   const local = summarizeRuns([

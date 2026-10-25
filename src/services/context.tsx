@@ -10,6 +10,7 @@ import {
 } from "./recovery";
 import {
   validateRegistration,
+  validateInvitedTeacherRegistration,
   isRegistrationRole,
   parsePendingRegistration,
 } from "./registration";
@@ -41,6 +42,7 @@ import {
   mode,
   remoteDispatch,
   remoteRead,
+  claimTeacherInvitation,
   remoteRegister,
   secureStorage,
   setRememberMe,
@@ -63,6 +65,7 @@ type PendingRegistration = {
   role: Role;
   code?: string;
   email?: string;
+  invitedTeacher?: true;
 };
 async function readPendingRegistration(): Promise<PendingRegistration | null> {
   const raw = await secureStorage.getItem(PENDING_KEY);
@@ -197,6 +200,8 @@ export function LearningProvider({
           setActorId(null);
           return;
         }
+        await claimTeacherInvitation();
+        if (stale() || closing.current) return;
         let s: State;
         try {
           s = await remoteRead();
@@ -226,7 +231,8 @@ export function LearningProvider({
           );
           if (
             !pendingMatches(pending, data.session.user.email) ||
-            !isRegistrationRole(pending?.role)
+            (!isRegistrationRole(pending?.role) &&
+              !(pending?.role === "teacher" && pending.invitedTeacher))
           ) {
             setError(null);
             return;
@@ -362,7 +368,11 @@ export function LearningProvider({
     remember?: boolean;
   }): Promise<"ready" | "confirmEmail"> {
     setError(null);
-    input = validateRegistration(input);
+    const validate =
+      mode === "supabase" && input.role === "teacher"
+        ? validateInvitedTeacherRegistration
+        : validateRegistration;
+    input = validate(input);
     if (mode === "demo") {
       const id = await repo.registerProfile(input.name, input.role, input.code);
       await switchAccount(id);
@@ -373,7 +383,7 @@ export function LearningProvider({
     const { data: existing } = await backend.auth.getSession();
     if (!existing.session) {
       await setRememberMe(input.remember ?? false);
-      input = validateRegistration(input, true);
+      input = validate(input, true);
       if (!input.email || !input.password)
         throw Error("Укажите email и пароль.");
       const data = await confirmationMailer.send(input.email, async (email) => {
@@ -382,7 +392,9 @@ export function LearningProvider({
           password: input.password!,
           options: {
             emailRedirectTo:
-              Platform.OS === "web" ? webAuthRedirect(window.location) : undefined,
+              Platform.OS === "web"
+                ? webAuthRedirect(window.location)
+                : undefined,
           },
         });
         if (error) throw error;
@@ -399,6 +411,9 @@ export function LearningProvider({
           role: input.role,
           code: input.code,
           email: normalizeEmail(input.email),
+          ...(input.role === "teacher"
+            ? { invitedTeacher: true as const }
+            : {}),
         };
         await secureStorage.setItem(PENDING_KEY, JSON.stringify(pending));
         setPendingRegistration(pending);
@@ -431,7 +446,9 @@ export function LearningProvider({
         email: address,
         options: {
           emailRedirectTo:
-            Platform.OS === "web" ? webAuthRedirect(window.location) : undefined,
+            Platform.OS === "web"
+              ? webAuthRedirect(window.location)
+              : undefined,
         },
       });
       if (error) throw error;

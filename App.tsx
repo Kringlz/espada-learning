@@ -3,7 +3,7 @@ import { lessonFromHash } from "./src/course/navigation";
 import { SpaceBackdrop } from "./src/components/SpaceBackdrop";
 import { AuthScreen } from "./src/screens/Auth";
 import { Arena } from "./src/arena/Arena";
-import { Calculator } from "./src/tools/Calculator";
+import { FormulaTools } from "./src/tools/FormulaTools";
 import { StreakProvider } from "./src/engagement/StreakContext";
 import { ClarityControls } from "./src/components/ClarityControls";
 import { LessonFocus, FocusedLesson } from "./src/components/LessonFocus";
@@ -45,7 +45,7 @@ import { Txt, Icon, Button, Card, Pill } from "./src/components/ui";
 const navIcons: Record<string, any> = {
   Home: "compass",
   Arena: "zap",
-  Calculator: "hash",
+  Formulas: "book-open",
   FamilyProgress: "bar-chart-2",
   Homework: "book-open",
   Contacts: "phone",
@@ -185,7 +185,7 @@ function Shell() {
   }, []);
   const tabs =
     actor.role === "student"
-      ? ["Home", "Progress", "Calculator"]
+      ? ["Home", "Progress", "Formulas"]
       : actor.role === "parent"
         ? ["FamilyProgress", "Homework", "Contacts"]
         : [
@@ -194,7 +194,7 @@ function Shell() {
             "Students",
             "Curriculum",
             "Arena",
-            "Calculator",
+            "Formulas",
             ...(actor.role === "admin" ? ["Manage"] : []),
           ];
   useEffect(() => {
@@ -279,8 +279,8 @@ function Shell() {
   const tabLabel = (name: string) =>
     name === "Arena"
       ? "Арена"
-      : name === "Calculator"
-        ? "Лаборатория"
+      : name === "Formulas"
+        ? "Формулы"
         : actor.role === "parent"
           ? ({
               FamilyProgress: "Прогресс",
@@ -372,7 +372,7 @@ function Shell() {
                   : colors.muted
               }
             >
-              {mobile && t === "Calculator" ? "Кальк." : tabLabel(t)}
+              {mobile && t === "Formulas" ? "Формулы" : tabLabel(t)}
             </Txt>
           )}
         </Pressable>
@@ -771,9 +771,9 @@ function Shell() {
                               {!topic && !result && tab === "Arena" && (
                                 <Arena />
                               )}
-                              {!topic && !result && tab === "Calculator" && (
+                              {!topic && !result && tab === "Formulas" && (
                                 <VideoLessonTheme>
-                                  <Calculator />
+                                  <FormulaTools />
                                 </VideoLessonTheme>
                               )}
                               {!topic && !result && tab === "Profile" && (
@@ -804,9 +804,9 @@ function Shell() {
                             </SoftReveal>
                           ) : tab === "Arena" ? (
                             <Arena />
-                          ) : tab === "Calculator" ? (
+                          ) : tab === "Formulas" ? (
                             <VideoLessonTheme>
-                              <Calculator />
+                              <FormulaTools />
                             </VideoLessonTheme>
                           ) : tab === "Profile" ? (
                             <Profile switchDemo={() => setAccountOpen(true)} />

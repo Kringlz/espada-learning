@@ -1,3 +1,4 @@
+import { PracticeSummary } from "../course/trainer/PracticeSummary";
 import { VideoLessonTheme } from "../theme/Theme";
 import React, { useState, useRef } from "react";
 import { View, Linking, useWindowDimensions } from "react-native";
@@ -904,7 +905,8 @@ function GroupStudent({
             {name}
           </Button>
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, gap: 12 }}>
+          <PracticeSummary studentId={studentId} compact />
           <Txt weight="600">
             {data.observedSince
               ? `${a.days.length} ${a.days.length === 1 ? "день" : a.days.length >= 2 && a.days.length <= 4 ? "дня" : "дней"} занятий`
@@ -953,7 +955,14 @@ export function StudentProgress(props: {
             Мой прогресс
           </Txt>
         )}
-        <StudentProgressContent {...props} />
+        <PracticeSummary studentId={props.studentId} />
+        {actor.role === "student" ? (
+          <StudentProgressContent {...props} />
+        ) : (
+          <Disclosure title="Работы и история занятий">
+            <StudentProgressContent {...props} />
+          </Disclosure>
+        )}
       </View>
     </VideoLessonTheme>
   );

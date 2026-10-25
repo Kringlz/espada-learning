@@ -47,6 +47,22 @@ export function validateRegistration(
   }
   return { ...input, name, code, email, role: input.role };
 }
+// This validates the form only; the server checks the invitation and confirmed email.
+export function validateInvitedTeacherRegistration(
+  input: Parameters<typeof validateRegistration>[0],
+  needsCredentials = false,
+) {
+  if (input.role !== "teacher")
+    throw new AuthFlowError(
+      "Нужно приглашение администратора.",
+      "registration_role_closed",
+    );
+  const value = validateRegistration(
+    { ...input, role: "student" },
+    needsCredentials,
+  );
+  return { ...value, role: "teacher" as const };
+}
 export function parsePendingRegistration(raw: string | null) {
   if (!raw) return null;
   try {
@@ -54,20 +70,31 @@ export function parsePendingRegistration(raw: string | null) {
     if (!p || typeof p !== "object" || Array.isArray(p)) return null;
     const value = p as Record<string, unknown>;
     if (
-      !isRegistrationRole(value.role) ||
+      (!isRegistrationRole(value.role) &&
+        !(value.role === "teacher" && value.invitedTeacher === true)) ||
       typeof value.name !== "string" ||
       typeof value.email !== "string" ||
       (value.code !== undefined && typeof value.code !== "string")
     )
       return null;
     if (!validEmail(value.email)) return null;
-    const { name, role, code, email } = validateRegistration({
+    const validate =
+      value.role === "teacher"
+        ? validateInvitedTeacherRegistration
+        : validateRegistration;
+    const { name, role, code, email } = validate({
       name: value.name,
-      role: value.role,
+      role: value.role as string,
       code: value.code,
       email: value.email,
     });
-    return { name, role, code, email };
+    return {
+      name,
+      role,
+      code,
+      email,
+      ...(role === "teacher" ? { invitedTeacher: true as const } : {}),
+    };
   } catch {
     return null;
   }

@@ -1,3 +1,4 @@
+import { TeacherAccess } from "./TeacherAccess";
 import { GroupProgress, StudentProgress } from "../progress/ProgressScreen";
 import { GroupRoster } from "../components/GroupRoster";
 import {
@@ -393,6 +394,7 @@ function Management() {
           <Txt accessibilityRole="alert">{notice}</Txt>
         </Card>
       )}
+      <TeacherAccess />
       <Disclosure title="Аккаунты" icon="users">
         {s.profiles.map((p) => (
           <View
@@ -424,52 +426,40 @@ function Management() {
             )}
           </View>
         ))}
-        <Disclosure title="Добавить аккаунт вручную" icon="user-plus">
-          <Field
-            label="New account display name"
-            value={profile.name}
-            onChangeText={(name) => setProfile({ ...profile, name })}
-          />
-          {mode === "supabase" && (
-            <>
-              <Txt size={13}>
-                Create the authentication user in the Supabase dashboard first.
-                Paste its UUID here; no passwords or privileged keys enter this
-                console.
-              </Txt>
-              <Field
-                label="Existing authentication user UUID"
-                value={profile.id}
-                onChangeText={(id) => setProfile({ ...profile, id })}
-              />
-            </>
-          )}
-          <View style={[styles.row, { flexWrap: "wrap" }]}>
-            {(["student", "parent", "teacher", "admin"] as const).map(
-              (role) => (
-                <Button
-                  key={role}
-                  small
-                  secondary={profile.role !== role}
-                  onPress={() => setProfile({ ...profile, role })}
-                >
-                  {role}
-                </Button>
-              ),
-            )}
-          </View>
-          <Button
-            disabled={saving || !profile.name.trim()}
-            onPress={() =>
-              void act(
-                { type: "saveProfile", profile },
-                "Account saved. Assign class membership below to grant access.",
-              )
-            }
-          >
-            Save account
-          </Button>
-        </Disclosure>
+        {mode === "demo" && (
+          <Disclosure title="Добавить аккаунт вручную" icon="user-plus">
+            <Field
+              label="New account display name"
+              value={profile.name}
+              onChangeText={(name) => setProfile({ ...profile, name })}
+            />
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              {(["student", "parent", "teacher", "admin"] as const).map(
+                (role) => (
+                  <Button
+                    key={role}
+                    small
+                    secondary={profile.role !== role}
+                    onPress={() => setProfile({ ...profile, role })}
+                  >
+                    {role}
+                  </Button>
+                ),
+              )}
+            </View>
+            <Button
+              disabled={saving || !profile.name.trim()}
+              onPress={() =>
+                void act(
+                  { type: "saveProfile", profile },
+                  "Account saved. Assign class membership below to grant access.",
+                )
+              }
+            >
+              Save account
+            </Button>
+          </Disclosure>
+        )}
       </Disclosure>
       <Disclosure title="Группы" icon="grid">
         <View style={[styles.row, { flexWrap: "wrap" }]}>

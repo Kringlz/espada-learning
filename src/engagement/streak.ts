@@ -68,10 +68,20 @@ export const streakKey = (id: string) =>
   `espada.streak.v1:${encodeURIComponent(id)}`;
 
 export function didStudy(
-  before: { readPages: number[]; quiz: Record<string, { submitted: boolean }> },
-  after: { readPages: number[]; quiz: Record<string, { submitted: boolean }> },
+  before: {
+    readPages: number[];
+    quiz: Record<string, { submitted: boolean }>;
+    trainer?: { totalAnswered: number };
+  },
+  after: {
+    readPages: number[];
+    quiz: Record<string, { submitted: boolean }>;
+    trainer?: { totalAnswered: number };
+  },
 ) {
   return (
+    (after.trainer?.totalAnswered ?? 0) >
+      (before.trainer?.totalAnswered ?? 0) ||
     after.readPages.some((page) => !before.readPages.includes(page)) ||
     Object.entries(after.quiz).some(
       ([id, attempt]) => attempt.submitted && !before.quiz[id]?.submitted,
