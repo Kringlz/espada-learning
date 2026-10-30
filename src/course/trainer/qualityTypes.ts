@@ -31,3 +31,22 @@ export function numericFamily(
     hint,
   };
 }
+
+/** Russian count forms for the nonnegative integer quantities in authored tasks. */
+export function counted(
+  n: number,
+  forms: readonly [string, string, string],
+): string {
+  // Integer prices may arrive with a floating-point tail (300 * 0.81).
+  const lastTwo = Math.round(Math.abs(n)) % 100;
+  const last = lastTwo % 10;
+  const index =
+    lastTwo >= 11 && lastTwo <= 14
+      ? 2
+      : last === 1
+        ? 0
+        : last >= 2 && last <= 4
+          ? 1
+          : 2;
+  return `${numberText(n)} ${forms[index]}`;
+}

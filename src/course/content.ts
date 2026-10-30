@@ -1,4 +1,5 @@
 import raw from "../../content/math-course/structured.json";
+import lessonReviews from "../../content/math-course/lesson-review.json";
 import { supplemental } from "./supplemental";
 import rawCatalog from "../../content/math-course/catalog.json";
 export type TextRun = {
@@ -35,6 +36,36 @@ export type TopicContent = {
     answers: ContentBlock[];
   };
 };
+type LessonReview = {
+  title: string;
+  prompt: string;
+  hint: string;
+  steps: string[];
+  misconception: string;
+  answer: string;
+};
+const reviews: Record<string, LessonReview> = lessonReviews;
+const paragraph = (text: string): ContentBlock => ({
+  kind: "paragraph",
+  runs: [{ text }],
+});
+// Topic IDs, theory-page indices and practice numbering remain unchanged.
+// The new worked checks belong to theory; no saved trainer sequence is rebuilt.
+function reviewPage(page: TopicContent["pages"][number], review: LessonReview) {
+  return {
+    ...page,
+    title: review.title,
+    blocks: [
+      { kind: "heading", runs: [{ text: review.title }] },
+      paragraph(review.prompt),
+      { kind: "callout", blocks: [paragraph(review.hint)] },
+      { kind: "example", blocks: review.steps.map(paragraph) },
+      { kind: "callout", blocks: [paragraph(review.misconception)] },
+      { kind: "subheading", runs: [{ text: "Что ещё проверить" }] },
+      ...page.blocks.slice(1),
+    ] as ContentBlock[],
+  };
+}
 const original = raw as unknown as Record<string, TopicContent>;
 export const courseContent: Record<string, TopicContent> = Object.fromEntries(
   rawCatalog.map((topic) => {
@@ -51,6 +82,11 @@ export const courseContent: Record<string, TopicContent> = Object.fromEntries(
       topic.id,
       {
         ...content,
+        pages: content.pages.map((page, index) =>
+          index === content.pages.length - 1
+            ? reviewPage(page, reviews[topic.id])
+            : page,
+        ),
         practice: {
           ...content.practice,
           questions: [
