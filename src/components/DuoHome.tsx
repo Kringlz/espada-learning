@@ -1,5 +1,7 @@
+import { useStudentClassroom } from "../classroom/useStudentClassroom";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLessonSummaries } from "../course/videoLesson/useLessonSummaries";
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useMemo, useState, useEffect } from "react";
 import { View } from "react-native";
 import { useCourseProgress } from "../course/storage";
 import { useLearning } from "../services/context";
@@ -19,12 +21,30 @@ export function DuoHome({
 }) {
   const { actor, state } = useLearning();
   const storage = useCourseProgress(actor.id);
+  const [selection, setSelection] = useState<SpaceData["selection"]>();
+  const selectionKey = `espada.space.selection:${actor.id}`;
+  useEffect(() => {
+    let live = true;
+    void AsyncStorage.getItem(selectionKey)
+      .then((raw) => {
+        if (!live || !raw) return;
+        const saved = JSON.parse(raw);
+        if (typeof saved.lessonId === "string") setSelection(saved);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [selectionKey]);
   const active = useContext(MotionActiveContext);
   const reduced = useReducedMotion();
+  const classroom = useStudentClassroom(active);
   const videoLessons = useLessonSummaries(actor.id, active);
   const data: SpaceData = useMemo(
     () => ({
       ...makeSpaceData(storage.progress, videoLessons.summaries),
+      selection,
+      classroom: classroom.snapshot,
       name: actor.name.split(" ")[0],
       ready: storage.ready,
       error: storage.error || videoLessons.error,
@@ -38,6 +58,8 @@ export function DuoHome({
         })),
     }),
     [
+      selection,
+      classroom.snapshot,
       storage.progress,
       videoLessons.summaries,
       videoLessons.error,
@@ -63,7 +85,14 @@ export function DuoHome({
         active={active}
         reduced={reduced}
         onAction={(action) => {
-          if (action.type === "lesson") openCourse(action.id);
+          if (action.type === "classroom") classroom.action(action);
+          else if (action.type === "selection") {
+            const next = { lessonId: action.id };
+            setSelection(next);
+            void AsyncStorage.setItem(selectionKey, JSON.stringify(next)).catch(
+              () => {},
+            );
+          } else if (action.type === "lesson") openCourse(action.id);
           else if (action.type === "interest")
             storage.update(action.id, { interested: action.enabled });
           else if (action.type === "topic") openTopic(action.id);

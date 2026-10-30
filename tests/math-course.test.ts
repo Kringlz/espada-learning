@@ -59,8 +59,8 @@ test("all 55 supplied topics and 317 content pages are reachable, with no missin
 });
 
 test("class and subject filtering follows the supplied programme and search supports codes and ё", () => {
-  assert.equal(searchCourse("", 5, "algebra").length, 6);
-  assert.equal(searchCourse("", 6, "geometry").length, 7);
+  assert.equal(searchCourse("", 5, "algebra").length, 4);
+  assert.equal(searchCourse("", 6, "geometry").length, 1);
   assert.equal(searchCourse("", 11, "geometry").length, 2);
   assert.equal(
     searchCourse("G08-03", null, "all")[0].title,
@@ -72,7 +72,7 @@ test("class and subject filtering follows the supplied programme and search supp
   assert.equal(subjectName(6, "geometry"), "Математика");
   assert.equal(subjectName(10, "geometry"), "Стереометрия");
   assert.equal(searchCourse("", null, "math").length, 13);
-  assert.ok(searchCourse("", null, "algebra").every((t) => t.grade >= 7));
+  assert.ok(searchCourse("", null, "algebra").every((t) => t.subject === "algebra"));
   assert.equal(searchCourse("математика", 5, "all").length, 6);
 });
 

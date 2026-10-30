@@ -49,10 +49,7 @@ export function searchCourse(
     (t) =>
       (!grade || t.grade === grade) &&
       (subject === "all" ||
-        (grade !== null && grade <= 6) ||
-        (subject === "math"
-          ? t.grade <= 6
-          : t.grade >= 7 && t.subject === subject)) &&
+        (subject === "math" ? t.grade <= 6 : t.subject === subject)) &&
       words.every((word) =>
         normalize(
           `${t.id} ${t.title} ${t.grade} класс ${subjectName(t.grade, t.subject)}`,
@@ -61,6 +58,10 @@ export function searchCourse(
   );
 }
 export type TopicProgress = {
+  selectedModule?: string;
+  trainerStage?: "intro" | "video" | "practice";
+  modulePractice?: Record<string, TrainerState>;
+  modulesMastered?: boolean;
   interested?: boolean;
   trainer?: TrainerState;
   practiceUpdatedAt?: string;
@@ -91,6 +92,23 @@ export function parseProgress(raw: string | null): CourseProgress {
     const p = (value as Record<string, any>)[topic.id];
     if (!p || typeof p !== "object") continue;
     result[topic.id] = {
+      ...(typeof p.selectedModule === "string"
+        ? { selectedModule: p.selectedModule }
+        : {}),
+      ...(["intro", "video", "practice"].includes(p.trainerStage)
+        ? { trainerStage: p.trainerStage }
+        : {}),
+      ...(p.modulesMastered === true ? { modulesMastered: true } : {}),
+      ...(p.modulePractice && typeof p.modulePractice === "object"
+        ? {
+            modulePractice: Object.fromEntries(
+              Object.entries(p.modulePractice ?? {}).flatMap(([id, value]) => {
+                const session = parseTrainer(value, topic.id);
+                return session?.moduleId === id ? [[id, session]] : [];
+              }),
+            ),
+          }
+        : {}),
       ...(typeof p.interested === "boolean"
         ? { interested: p.interested }
         : {}),

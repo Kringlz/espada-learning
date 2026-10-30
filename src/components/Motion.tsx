@@ -266,7 +266,9 @@ function SkyDrawing({
   dark,
   width,
   height,
+  settled = false,
 }: {
+  settled?: boolean;
   scene: SkyScene;
   value: Animated.Value;
   dark: boolean;
@@ -316,11 +318,15 @@ function SkyDrawing({
           cy={(star.y * height) / 100}
           r={star.r * unit}
           fill={accent}
-          opacity={value.interpolate({
-            inputRange: [star.delay, star.delay + 0.15, 0.7, 1],
-            outputRange: [0, 0.5, 0.35, 0],
-            extrapolate: "clamp",
-          })}
+          opacity={
+            settled
+              ? 0.4
+              : value.interpolate({
+                  inputRange: [star.delay, star.delay + 0.15, 0.7, 1],
+                  outputRange: [0, 0.5, 0.35, 0],
+                  extrapolate: "clamp",
+                })
+          }
         />
       ))}
       {edges.map(([from, to], i) => {
@@ -337,11 +343,15 @@ function SkyDrawing({
             strokeLinecap="round"
             fill="none"
             strokeDasharray={[length, length]}
-            strokeDashoffset={value.interpolate({
-              inputRange: [start, start + 0.14],
-              outputRange: [length, 0],
-              extrapolate: "clamp",
-            })}
+            strokeDashoffset={
+              settled
+                ? 0
+                : value.interpolate({
+                    inputRange: [start, start + 0.14],
+                    outputRange: [length, 0],
+                    extrapolate: "clamp",
+                  })
+            }
             opacity={0.62}
           />
         );
@@ -352,20 +362,28 @@ function SkyDrawing({
         return (
           <AnimatedGroup
             key={i}
-            opacity={value.interpolate({
-              inputRange: [start, start + 0.055, 0.6, 1],
-              outputRange: [0, 1, 1, 0],
-              extrapolate: "clamp",
-            })}
+            opacity={
+              settled
+                ? 1
+                : value.interpolate({
+                    inputRange: [start, start + 0.055, 0.6, 1],
+                    outputRange: [0, 1, 1, 0],
+                    extrapolate: "clamp",
+                  })
+            }
           >
             <AnimatedCircle
               cx={x}
               cy={y}
-              r={value.interpolate({
-                inputRange: [start, start + 0.1, start + 0.3],
-                outputRange: [unit, 6.5 * unit, 4 * unit],
-                extrapolate: "clamp",
-              })}
+              r={
+                settled
+                  ? 4 * unit
+                  : value.interpolate({
+                      inputRange: [start, start + 0.1, start + 0.3],
+                      outputRange: [unit, 6.5 * unit, 4 * unit],
+                      extrapolate: "clamp",
+                    })
+              }
               fill={tint}
               opacity={0.1}
             />
@@ -380,7 +398,7 @@ function SkyDrawing({
               r={0.8 * unit}
               fill={dark ? "#FFF9EB" : tint}
             />
-            {i === shape.points.length - 1 && (
+            {!settled && i === shape.points.length - 1 && (
               <AnimatedCircle
                 cx={x}
                 cy={y}
@@ -432,53 +450,46 @@ export function ConstellationCelebration({
   const reduced = useReducedMotion();
   const active = useContext(MotionActiveContext);
   const value = useRef(new Animated.Value(0)).current;
+  const drift = useRef(new Animated.Value(0)).current;
   const previousShape = useRef(Math.floor(Math.random() * skyShapes.length));
   const [scene, setScene] = useState<SkyScene | null>(null);
   const [bounds, setBounds] = useState({ width: 0, height: 0 });
   const { width, height } = bounds;
   const [visible, setVisible] = useState(false);
   useEffect(() => {
-    if (!burst || reduced || !active) {
+    if (!burst || (reduced && !persistent) || !active) {
       setVisible(false);
       return;
     }
     const next = newSkyScene(previousShape.current);
     previousShape.current = next.shape;
     setScene(next);
-    value.setValue(0);
+    value.setValue(persistent ? 0.6 : 0);
+    drift.setValue(0);
     setVisible(true);
-    const draw = Animated.timing(value, {
-      toValue: persistent ? 0.6 : 1,
-      duration: persistent ? 1800 : duration,
-      easing: Easing.linear,
-      useNativeDriver: false,
-    });
+    if (persistent && reduced) return;
+    // A saved figure stays completely drawn. Only its position changes;
+    // replaying the reveal timeline would erase lines and stars on each loop.
     const animation = persistent
-      ? Animated.sequence([
-          draw,
-          Animated.loop(
-            Animated.sequence([
-              Animated.timing(value, {
-                toValue: 0.64,
-                duration: 2400,
-                easing: Easing.inOut(Easing.sin),
-                useNativeDriver: false,
-              }),
-              Animated.timing(value, {
-                toValue: 0.6,
-                duration: 2400,
-                easing: Easing.inOut(Easing.sin),
-                useNativeDriver: false,
-              }),
-            ]),
-          ),
-        ])
-      : draw;
+      ? Animated.loop(
+          Animated.timing(drift, {
+            toValue: 1,
+            duration: 10000,
+            easing: Easing.linear,
+            useNativeDriver: false,
+          }),
+        )
+      : Animated.timing(value, {
+          toValue: 1,
+          duration,
+          easing: Easing.linear,
+          useNativeDriver: false,
+        });
     animation.start(({ finished }) => {
       if (finished && !persistent) setVisible(false);
     });
     return () => animation.stop();
-  }, [burst, reduced, active, value, persistent, duration]);
+  }, [burst, reduced, active, value, drift, persistent, duration]);
   if (!visible || !scene) return null;
   const size = Math.min(width >= 1100 ? 280 : 250, width * 0.68, height * 0.38);
   const drawingWidth = immersive ? width * 0.94 : size;
@@ -488,7 +499,7 @@ export function ConstellationCelebration({
     : width / 2 + scene.side * Math.min(56, width * 0.06);
   const centerY = immersive ? height / 2 : height * scene.height;
   return (
-    <CelebrationLayer fullScreen={immersive}>
+    <CelebrationLayer fullScreen={immersive} contained={persistent}>
       <View
         testID="success-constellation"
         onLayout={(event) => {
@@ -508,19 +519,19 @@ export function ConstellationCelebration({
             style={{
               position: "absolute",
               inset: 0,
-              backgroundColor: "#02040D",
-              opacity: value.interpolate({
-                inputRange: [0, 0.12, 0.65, 1],
-                outputRange: [
-                  0,
-                  persistent ? 0.22 : 0.38,
-                  persistent ? 0.22 : 0.38,
-                  0,
-                ],
-              }),
+              backgroundColor: persistent ? "transparent" : "#02040D",
+              ...(Platform.OS === "web" && persistent
+                ? ({ backdropFilter: "blur(10px)" } as object)
+                : {}),
+              opacity: persistent
+                ? 1
+                : value.interpolate({
+                    inputRange: [0, 0.12, 0.65, 1],
+                    outputRange: [0, 0.38, 0.38, 0],
+                  }),
             }}
           >
-            <EdgeGlow />
+            {!persistent && <EdgeGlow />}
           </Animated.View>
         )}
         {width > 0 && height > 0 && (
@@ -532,25 +543,55 @@ export function ConstellationCelebration({
               top: centerY - drawingHeight / 2,
               width: drawingWidth,
               height: drawingHeight,
-              opacity: value.interpolate({
-                inputRange: [0, 0.05, 0.62, 1],
-                outputRange: [0, 1, 1, 0],
-              }),
-              transform: [
-                {
-                  rotate: `${immersive ? scene.rotation * 0.25 : scene.rotation}deg`,
-                },
-                {
-                  scale: value.interpolate({
-                    inputRange: [0, 0.4, 1],
-                    outputRange: [0.96, 1, 1.025],
+              opacity: persistent
+                ? 1
+                : value.interpolate({
+                    inputRange: [0, 0.05, 0.62, 1],
+                    outputRange: [0, 1, 1, 0],
                   }),
-                },
-              ],
+              transform: persistent
+                ? [
+                    {
+                      translateX: drift.interpolate({
+                        inputRange: [0, 0.25, 0.5, 0.75, 1],
+                        outputRange: [0, 8, 0, -8, 0],
+                      }),
+                    },
+                    {
+                      translateY: drift.interpolate({
+                        inputRange: [0, 0.25, 0.5, 0.75, 1],
+                        outputRange: [0, -4, 0, 4, 0],
+                      }),
+                    },
+                    {
+                      rotate: drift.interpolate({
+                        inputRange: [0, 0.25, 0.5, 0.75, 1],
+                        outputRange: [
+                          `${scene.rotation * 0.25}deg`,
+                          `${scene.rotation * 0.25 + 1}deg`,
+                          `${scene.rotation * 0.25}deg`,
+                          `${scene.rotation * 0.25 - 1}deg`,
+                          `${scene.rotation * 0.25}deg`,
+                        ],
+                      }),
+                    },
+                  ]
+                : [
+                    {
+                      rotate: `${immersive ? scene.rotation * 0.25 : scene.rotation}deg`,
+                    },
+                    {
+                      scale: value.interpolate({
+                        inputRange: [0, 0.4, 1],
+                        outputRange: [0.96, 1, 1.025],
+                      }),
+                    },
+                  ],
             }}
           >
             <SkyDrawing
               scene={scene}
+              settled={persistent}
               value={value}
               dark={immersive || dark}
               width={drawingWidth}

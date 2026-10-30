@@ -1,5 +1,10 @@
+import { trainerModules } from "./modules";
+import { moduleSetComplete } from "./moduleProgress";
+import { topicPractice } from "./moduleProgress";
 import { CourseProgress } from "../model";
 export type PracticeSnapshot = {
+  moduleCount?: number;
+  coveredModules?: number;
   topicId: string;
   correct: number;
   incorrect: number;
@@ -11,11 +16,15 @@ export function practiceSnapshots(
   progress: CourseProgress,
 ): PracticeSnapshot[] {
   return Object.entries(progress).flatMap(([topicId, p]) => {
-    const t = p.trainer;
+    const t = topicPractice(topicId, p);
     if (!t || !p.updatedAt || t.correct + t.incorrect === 0) return [];
     return [
       {
         topicId,
+        ...(Object.keys(p.modulePractice ?? {}).length ? {
+          moduleCount: trainerModules(topicId).length,
+          coveredModules: trainerModules(topicId).filter(m => moduleSetComplete(topicId, p.modulePractice?.[m.id])).length,
+        } : {}),
         correct: t.correct,
         incorrect: t.incorrect,
         completed: t.cursor + Number(t.submitted),

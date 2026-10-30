@@ -1,3 +1,4 @@
+import { TeacherClassroom } from "../classroom/TeacherClassroom";
 import { useUITheme } from "./ui";
 import React, { useState } from "react";
 import { View } from "react-native";
@@ -121,6 +122,8 @@ export function GroupCodeAndSchedule({ classId }: { classId: string }) {
   const [failed, setFailed] = useState(false);
   if (!group) return null;
   return (
+    <View style={{gap:18}}>
+    <TeacherClassroom key={classId} classId={classId}/>
     <Disclosure title="Код группы и расписание" icon="calendar">
       <Txt color={colors.muted}>
         Для регистрации код группы не нужен. Добавляйте учеников по их личному
@@ -178,6 +181,7 @@ export function GroupCodeAndSchedule({ classId }: { classId: string }) {
         <Notice tone={failed ? "error" : "success"}>{message}</Notice>
       )}
     </Disclosure>
+    </View>
   );
 }
 

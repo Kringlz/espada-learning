@@ -91,6 +91,8 @@ export function SpaceFlight({
       title="Вселенная Espada — свободный полёт"
       srcDoc={html}
       sandbox="allow-scripts"
+      aria-hidden={!active}
+      inert={!active}
       onLoad={sync}
       style={{
         border: 0,

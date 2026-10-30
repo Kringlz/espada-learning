@@ -1,3 +1,4 @@
+import { classroomMarkup, classroomStyles } from "./classroomView";
 import { progressMarkup, progressStyles } from "./progressView";
 import { SpaceData } from "./model";
 import { spaceRuntime } from "./runtime";
@@ -74,6 +75,7 @@ body.free .bottom{opacity:.7}.top{z-index:9}.bottom{z-index:3}.step{z-index:4;to
 @media(max-height:540px){.top{padding:4px 16px;min-height:52px}.search{top:58px;width:min(320px,calc(100% - 36px))}.search input{height:38px}.preview-card{padding:12px;border-radius:17px}#preview-content,#preview-title{width:min(250px,calc(50% - 100px));top:50%;bottom:auto;--align:-50%;max-height:calc(100% - 220px)}#preview-content{right:calc(50% + 65px)}#preview-title{left:calc(50% + 65px)}#preview-hook{font-size:15px}#formula-image{height:30px}.preview-card li{font-size:11px}.preview-card ul{gap:5px;margin-top:8px}.bottom{bottom:12px;width:min(430px,calc(100% - 80px))}#lesson-title{font-size:17px;-webkit-line-clamp:1;margin:6px auto 8px}#launch{min-height:40px;padding:9px 20px}#lesson-number{font-size:9px}.step{width:48px;padding:10px}.step svg{width:28px}#prev{left:5px}#next{right:5px}#reset{top:98px}}
 
 ${progressStyles}
+${classroomStyles}
 #preview-title{background:none;border:0;box-shadow:none;backdrop-filter:none;padding:0;overflow:visible;max-height:none;width:clamp(190px,25vw,340px)}
 #preview-title #lesson-title{display:block;margin:0;max-width:none;font-size:clamp(20px,2.4vw,30px);line-height:1.25;font-weight:400;text-align:left;text-wrap:balance;overflow:visible}
 #lesson-number{margin-bottom:12px}
@@ -94,11 +96,12 @@ ${progressStyles}
 <div class="top"><button class="wordmark" id="profile" aria-label="Открыть профиль"><span class="brand-icon"><img src="${brandUri.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" alt=""></span><span>Espada</span></button><button id="overview" aria-label="Выбрать класс">5 класс</button><nav class="tools" aria-label="Инструменты"><button id="theme-toggle" aria-label="${dark ? "Включить светлую тему" : "Включить тёмную тему"}" title="Сменить тему"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg></button><button id="sound-toggle" aria-label="Выключить звуки" title="Звуки" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4Z"/><path id="sound-waves" d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg></button><button data-navigate="Formulas" aria-label="Формулы и история" title="Формулы и история"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 4H6l7 8-7 8h12"/></svg></button></nav></div>
 <div class="search" role="search" aria-label="Поиск уроков">
 <div class="search-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="lesson-search" type="search" placeholder="Найти тему или формулу…" aria-label="Поиск уроков" aria-controls="search-results" aria-expanded="false" autocomplete="off"><button id="clear-search" aria-label="Очистить поиск" hidden>×</button></div><div id="search-results" hidden></div></div>
-<div id="preview" aria-label="Превью темы"><section class="preview-card" id="preview-content" aria-label="Содержание темы"><img id="formula-image" alt="Основная формула темы"><ul id="preview-topics"></ul></section><section class="preview-card" id="preview-title"><h1 id="lesson-title"></h1></section></div>
+<div id="preview" aria-label="Превью темы"><section class="preview-card" id="preview-content" aria-label="Содержание темы"><img id="formula-image" alt="Основная формула темы"><ul id="preview-topics"></ul></section><section class="preview-card" id="preview-title"><span id="geometry-label" hidden style="color:#CE9AFF;font-size:12px;letter-spacing:.04em">Геометрия</span><h1 id="lesson-title"></h1></section></div>
 <button id="reset">К уроку</button><div id="grade-labels"></div>
 <button class="step" id="prev" aria-label="Предыдущий урок">${arrow(true)}<span></span></button><button class="step" id="next" aria-label="Следующий урок"><span></span>${arrow()}</button>
 <div class="bottom"><div id="lesson-number"></div><button id="launch">Начать урок ${arrow()}</button></div>
 ${progressMarkup}
+${classroomMarkup}
 <div id="error" role="alert"></div><div id="sr-status" aria-live="polite"></div><div id="transition"></div>
 <script>window.SPACE_INITIAL=${JSON.stringify({ data, reduced, dark, brandUri, soundEnabled }).replace(/</g, "\\u003c")};${spaceRuntime}</script></body></html>`;
 }

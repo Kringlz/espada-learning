@@ -1,3 +1,4 @@
+import { topicPractice } from "./moduleProgress";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -39,7 +40,7 @@ export function PracticeSummary({
           incorrect: s.incorrect,
           completed: s.completed,
           finished: s.finished,
-          passed: !!progress[s.topicId]?.trainer?.mastered,
+          passed: !!topicPractice(s.topicId, progress[s.topicId])?.mastered,
           observed_at: s.updatedAt,
         }));
       }

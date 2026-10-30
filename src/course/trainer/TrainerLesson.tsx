@@ -14,8 +14,6 @@ import Svg, { Path } from "react-native-svg";
 import { Icon, useUITheme } from "../../components/ui";
 import { MathCopy as Txt } from "../../math/MathCopy";
 import { YouTubePlayer } from "../../components/YouTubePlayer";
-import { CourseContent } from "../CourseContent";
-import { courseContent } from "../content";
 import { useCourseProgress } from "../storage";
 import { useScreenScroll } from "../../components/ScreenScroll";
 import {
@@ -50,9 +48,11 @@ import {
   reduceTrainer,
   TrainerAction,
   sessionQuestion,
-  qualifiesForCompletion,
 } from "./model";
 import { topicReferences } from "./topics";
+import { trainerModules } from "./modules";
+import { moduleSetComplete } from "./moduleProgress";
+import type { TopicProgress } from "../model";
 import { trainerOpening } from "./opening";
 
 type Props = { actorId: string; lessonId: string; back: () => void };
@@ -64,7 +64,44 @@ export function TrainerLesson(props: Props) {
   );
 }
 function Lesson({ actorId, lessonId, back }: Props) {
-  const storage = useCourseProgress(actorId);
+  const rawStorage = useCourseProgress(actorId);
+  const entry = rawStorage.progress[lessonId];
+  const modules = trainerModules(lessonId);
+  const selectedModule =
+    entry?.selectedModule ?? (entry?.trainer ? "legacy" : modules[0]?.id);
+  const module = modules.find((m) => m.id === selectedModule);
+  const storage = {
+    ...rawStorage,
+    progress: {
+      ...rawStorage.progress,
+      [lessonId]: {
+        ...entry,
+        trainer: module ? entry?.modulePractice?.[module.id] : entry?.trainer,
+      },
+    },
+    update: (
+      id: string,
+      patch:
+        Partial<TopicProgress> | ((p: TopicProgress) => Partial<TopicProgress>),
+    ) =>
+      rawStorage.update(id, (current) => {
+        const view = {
+          ...current,
+          trainer: module
+            ? current.modulePractice?.[module.id]
+            : current.trainer,
+        };
+        const next = typeof patch === "function" ? patch(view) : patch;
+        return module && next.trainer
+          ? {
+              modulePractice: {
+                ...current.modulePractice,
+                [module.id]: { ...next.trainer, moduleId: module.id },
+              },
+            }
+          : next;
+      }),
+  };
   const videoStore = useLesson(actorId, AsyncStorage, lessonId);
   const { colors } = useUITheme();
   const { width, height } = useWindowDimensions();
@@ -81,10 +118,41 @@ function Lesson({ actorId, lessonId, back }: Props) {
     }).opening,
   );
   const video =
-    meta.videos.find((v) => v.id === videoStore.data.selectedVideo) ??
-    meta.videos[0];
+    meta.videos.find(
+      (v) => v.id === (module?.videoId ?? videoStore.data.selectedVideo),
+    ) ?? meta.videos[0];
   const session = storage.progress[lessonId]?.trainer;
-  const [stage, setStage] = useState<"intro" | "video" | "practice">("intro");
+  const [stage, changeStage] = useState<"intro" | "video" | "practice">(
+    "intro",
+  );
+  const restored = useRef(false);
+  useEffect(() => {
+    if (!rawStorage.ready || restored.current) return;
+    restored.current = true;
+    changeStage(entry?.trainerStage ?? "intro");
+    if (session?.finished)
+      storage.update(lessonId, {
+        trainer: reduceTrainer(session, lessonId, { type: "continue" }),
+      });
+  }, [rawStorage.ready]);
+  function setStage(value: "intro" | "video" | "practice") {
+    changeStage(value);
+    rawStorage.update(lessonId, { trainerStage: value });
+  }
+  function selectModule(id: string) {
+    stopTaskMotion();
+    setLeaving(false);
+    setReview(null);
+    setExplanation(false);
+    setShowFormulas(false);
+    setPrelude(false);
+    answering.current = false;
+    rawStorage.update(lessonId, { selectedModule: id, trainerStage: "video" });
+    const nextModule = modules.find((m) => m.id === id);
+    if (nextModule?.videoId)
+      videoStore.send({ type: "selectVideo", id: nextModule.videoId });
+    changeStage("video");
+  }
   const [introChoice, setIntroChoice] = useState<number>();
   const [prelude, setPrelude] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -98,7 +166,24 @@ function Lesson({ actorId, lessonId, back }: Props) {
   const moving = useRef(false);
   const answering = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const finished = stage === "practice" && !!session?.finished;
+  const [leaving, setLeaving] = useState(false);
+  const finished = stage === "practice" && leaving;
+  const canProceed = module
+    ? moduleSetComplete(lessonId, session)
+    : !!session && session.correct + session.incorrect > 0;
+  useEffect(() => {
+    if (!leaving || !active) return;
+    const timeout = setTimeout(
+      () => {
+        setLeaving(false);
+        const following = module && modules[modules.indexOf(module) + 1];
+        if (following) selectModule(following.id);
+        else back();
+      },
+      reduced ? 500 : 1800,
+    );
+    return () => clearTimeout(timeout);
+  }, [leaving, active]);
   const cursor = review ?? session?.cursor ?? 0;
   const question = session
     ? sessionQuestion(lessonId, session, cursor)
@@ -194,6 +279,8 @@ function Lesson({ actorId, lessonId, back }: Props) {
     setBurst(0);
   }
   function finish() {
+    if (!canProceed || leaving) return;
+    setLeaving(true);
     stopTaskMotion();
     setReview(null);
     setExplanation(false);
@@ -216,7 +303,10 @@ function Lesson({ actorId, lessonId, back }: Props) {
     setBurst(0);
     answering.current = false;
     if (!session || fresh)
-      storage.update(lessonId, { trainer: newTrainer(Date.now(), session) });
+      storage.update(lessonId, {
+        trainer: newTrainer(Date.now(), session, module?.id),
+      });
+    else if (session.finished) act({ type: "continue" });
     setStage("practice");
     setPrelude(true);
   }
@@ -349,15 +439,6 @@ function Lesson({ actorId, lessonId, back }: Props) {
         duration={2100}
         silent
       />
-      {!finished && review !== null && submitted && !explanation && (
-        <ConstellationCelebration
-          key={cursor}
-          burst={1}
-          immersive
-          persistent
-          silent
-        />
-      )}
       <View
         style={{
           flex: 1,
@@ -379,6 +460,87 @@ function Lesson({ actorId, lessonId, back }: Props) {
             <QuietAction label="Повторить" onPress={storage.retry} />
           </View>
         )}
+        {rawStorage.ready &&
+          modules.length > 0 &&
+          !finished &&
+          review === null && (
+            <View style={{ gap: 16 }}>
+              <View
+                accessibilityLabel="Модули"
+                style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}
+              >
+                {modules.map((m, i) => {
+                  const done = moduleSetComplete(
+                    lessonId,
+                    entry?.modulePractice?.[m.id],
+                  );
+                  const chosen = m.id === selectedModule;
+                  return (
+                    <Pressable
+                      key={m.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Модуль ${i + 1}: ${m.title}${done ? ", набор выполнен" : ""}`}
+                      accessibilityState={{ selected: chosen }}
+                      onPress={() => selectModule(m.id)}
+                      style={{
+                        minWidth: 40,
+                        height: 40,
+                        flex: 1,
+                        maxWidth: 72,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderBottomWidth: 2,
+                        borderBottomColor: chosen
+                          ? "#D2EAE0"
+                          : done
+                            ? "#72AD96"
+                            : "#FFFFFF20",
+                      }}
+                    >
+                      {done ? (
+                        <Icon
+                          name="check"
+                          size={17}
+                          color={chosen ? "#D2EAE0" : "#72AD96"}
+                        />
+                      ) : (
+                        <Txt size={14} color={chosen ? "#D2EAE0" : "#64777F"}>
+                          {i + 1}
+                        </Txt>
+                      )}
+                    </Pressable>
+                  );
+                })}
+                {!!entry?.trainer && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Прежняя практика"
+                    onPress={() => selectModule("legacy")}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon name="clock" size={17} color="#8DA49C" />
+                  </Pressable>
+                )}
+              </View>
+              {stage !== "intro" && (
+                <View style={{ flexDirection: "row", gap: 24 }}>
+                  <QuietAction
+                    label="Теория"
+                    onPress={() => {
+                      stopTaskMotion();
+                      setStage("video");
+                    }}
+                  />
+                  <QuietAction label="Практика" onPress={() => start()} />
+                </View>
+              )}
+            </View>
+          )}
         {!loaded || !storage.ready ? (
           <LessonLoading />
         ) : prelude ? (
@@ -396,17 +558,15 @@ function Lesson({ actorId, lessonId, back }: Props) {
             />
             <View style={{ alignItems: "flex-end" }}>
               <PrimaryAction
-                label="Узнать ответ"
+                label="Разобраться"
                 disabled={introChoice === undefined}
                 onPress={() => setStage("video")}
               />
             </View>
             {!!session && (
               <QuietAction
-                label={
-                  session.finished ? "К результату" : "Продолжить тренировку"
-                }
-                onPress={() => setStage("practice")}
+                label="Продолжить тренировку"
+                onPress={() => start()}
               />
             )}
           </SoftReveal>
@@ -426,7 +586,7 @@ function Lesson({ actorId, lessonId, back }: Props) {
                   minWidth: 0,
                 }}
               >
-                {active && videoStore.ready && (
+                {active && videoStore.ready && (!module || module.videoId) && (
                   <YouTubePlayer
                     key={video.id}
                     id={video.id}
@@ -446,10 +606,10 @@ function Lesson({ actorId, lessonId, back }: Props) {
                 )}
               </View>
               <View style={{ width: width >= 1100 ? 230 : "100%" }}>
-                <VideoNotes notes={meta.notes} />
+                <VideoNotes notes={module?.notes ?? meta.notes} />
               </View>
             </View>
-            {meta.videos.length > 1 && (
+            {!modules.length && meta.videos.length > 1 && (
               <Fold title={`Видео по теме · ${meta.videos.length}`}>
                 {meta.videos.map((item) => (
                   <QuietAction
@@ -463,17 +623,19 @@ function Lesson({ actorId, lessonId, back }: Props) {
               </Fold>
             )}
             <Fold title="Конспект">
-              {courseContent[lessonId].pages.map((page, i) => (
-                <Fold key={i} title={page.title}>
-                  <CourseContent blocks={page.blocks} />
-                </Fold>
-              ))}
+              <View style={{ gap: 18 }}>
+                {(module?.notes ?? meta.notes).map((note, i) => (
+                  <Txt key={i} prose size={18}>
+                    {note}
+                  </Txt>
+                ))}
+              </View>
             </Fold>
             <View style={{ alignItems: "flex-end" }}>
               <PrimaryAction
                 arrow
                 label="К тренировке"
-                onPress={() => start(!!session?.finished)}
+                onPress={() => start()}
               />
             </View>
           </>
@@ -481,111 +643,23 @@ function Lesson({ actorId, lessonId, back }: Props) {
           <SoftReveal
             testID="trainer-result"
             changeKey="result"
-            style={{ gap: 26, paddingTop: 20 }}
+            style={{
+              minHeight: 340,
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 24,
+            }}
           >
-            <View style={{ alignItems: "center", gap: 16 }}>
-              <View
-                testID="result-stars"
-                accessibilityLabel={`${session.correct} звёзд за верные ответы`}
-                style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                  gap: 12,
-                  maxWidth: 420,
-                  paddingVertical: 20,
-                }}
-              >
-                {Array.from(
-                  {
-                    length:
-                      session.correct > 60 ? 1 : Math.max(1, session.correct),
-                  },
-                  (_, index) => (
-                    <Svg
-                      key={index}
-                      width={session.correct > 60 ? 56 : 32}
-                      height={session.correct > 60 ? 56 : 32}
-                      viewBox="0 0 24 24"
-                    >
-                      <Path
-                        d="M12 2L14.9 8.6L22 9.6L16.8 14.5L18 21.6L12 18.2L6 21.6L7.2 14.5L2 9.6L9.1 8.6Z"
-                        stroke={session.correct ? "#E8C781" : "#54636C"}
-                        strokeWidth={1.1}
-                        strokeLinejoin="round"
-                        fill={session.correct ? "#E8C781" : "none"}
-                      />
-                    </Svg>
-                  ),
-                )}
-              </View>
-              <Txt size={44} weight="400">
-                {session.correct}
-              </Txt>
-              <Txt size={15} color={colors.muted}>
-                Верных ответов
-              </Txt>
-              <Txt size={26} weight="400" style={{ textAlign: "center" }}>
-                {qualifiesForCompletion(session)
-                  ? "Урок пройден"
-                  : session.correct + session.incorrect === 0
-                    ? "Начни с первой задачи"
-                    : Math.max(
-                          15 - session.correct - session.incorrect,
-                          4 * (session.correct + session.incorrect) -
-                            5 * session.correct,
-                        ) > 0
-                      ? `До прохождения: ещё ${Math.max(15 - session.correct - session.incorrect, 4 * (session.correct + session.incorrect) - 5 * session.correct)} верных с первой попытки`
-                      : "Заверши текущую задачу"}
-              </Txt>
-              <Txt
-                size={16}
-                color={colors.muted}
-              >{`${session.correct + session.incorrect} заданий · ${session.correct + session.incorrect ? Math.floor((100 * session.correct) / (session.correct + session.incorrect)) : 0}% точности`}</Txt>
-            </View>
-            <PrimaryAction large arrow label="Далее" onPress={back} />
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                gap: 24,
-              }}
-            >
-              {[
-                {
-                  label: "Продолжить практику",
-                  icon: "play" as const,
-                  onPress: () => {
-                    answering.current = false;
-                    act({ type: "continue" });
-                  },
-                },
-                {
-                  label: "Начать заново",
-                  icon: "rotate-ccw" as const,
-                  onPress: () => start(true),
-                },
-              ].map((action) => (
-                <Pressable
-                  key={action.label}
-                  accessibilityRole="button"
-                  accessibilityLabel={action.label}
-                  onPress={action.onPress}
-                  style={({ pressed }) => ({
-                    width: 52,
-                    height: 52,
-                    borderRadius: 26,
-                    borderWidth: 1,
-                    borderColor: "#FFFFFF24",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: pressed ? "#FFFFFF18" : "transparent",
-                  })}
-                >
-                  <Icon name={action.icon} size={22} color="#C2D9D0" />
-                </Pressable>
-              ))}
-            </View>
+            <ConstellationCelebration
+              burst={1}
+              immersive
+              silent
+              duration={1800}
+            />
+            <Icon name="check" size={42} color="#A1E4C4" />
+            <Txt size={26} weight="400">
+              {session.correct}
+            </Txt>
           </SoftReveal>
         ) : session && question ? (
           <Animated.View
@@ -599,7 +673,7 @@ function Lesson({ actorId, lessonId, back }: Props) {
                 alignItems: "center",
               }}
             >
-              {counters}
+              {review === null && counters}
             </View>
             <View
               testID="training-stars"
@@ -697,70 +771,112 @@ function Lesson({ actorId, lessonId, back }: Props) {
                 <Icon name="chevron-right" size={20} color="#AABEC0" />
               </Pressable>
             </View>
-            <SoftReveal
-              changeKey={`${session.seed}:${cursor}`}
-              style={{ gap: 26 }}
-            >
-              <Txt
-                size={width < 380 ? 21 : 24}
-                weight="400"
-                accessibilityRole="header"
-              >
-                {question.prompt}
-              </Txt>
-              <Choices
-                question={question}
-                value={selected}
-                disabled={submitted}
-                rejected={rejected}
-                revealResult={submitted}
-                mistake={mistake}
-                wrongChoice={selected}
-                onSelect={choose}
-              />
-            </SoftReveal>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: 12,
-              }}
-            >
-              <QuietAction
-                label="Формулы"
-                icon="book-open"
-                onPress={() => {
-                  cancelAdvance();
-                  setShowFormulas(true);
+            {review !== null && submitted ? (
+              <View
+                testID="completed-task-review"
+                style={{
+                  minHeight: 360,
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  paddingBottom: 30,
+                  overflow: "hidden",
                 }}
-              />
-              {submitted ? (
-                <QuietAction
-                  label="Почему?"
-                  onPress={() => {
-                    cancelAdvance();
-                    setExplanation(true);
+              >
+                {!explanation && (
+                  <ConstellationCelebration
+                    key={cursor}
+                    burst={1}
+                    immersive
+                    persistent
+                    silent
+                  />
+                )}
+                <View style={{ zIndex: 1001 }}>
+                  <QuietAction
+                    label="Почему?"
+                    onPress={() => setExplanation(true)}
+                  />
+                </View>
+              </View>
+            ) : (
+              <>
+                <SoftReveal
+                  changeKey={`${session.seed}:${cursor}`}
+                  style={{ gap: 26 }}
+                >
+                  <Txt
+                    size={width < 380 ? 21 : 24}
+                    weight="400"
+                    accessibilityRole="header"
+                  >
+                    {question.prompt}
+                  </Txt>
+                  <Choices
+                    question={question}
+                    value={selected}
+                    disabled={submitted}
+                    rejected={rejected}
+                    revealResult={submitted}
+                    mistake={mistake}
+                    wrongChoice={selected}
+                    onSelect={choose}
+                  />
+                </SoftReveal>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 12,
                   }}
-                />
-              ) : (
-                <QuietAction
-                  label="Подсказка"
-                  onPress={() => act({ type: "hint" })}
-                />
-              )}
-            </View>
-            {!submitted &&
-              question.hints.slice(0, session.hints).map((hint, index) => (
-                <Txt key={index} prose size={16} color={colors.muted}>
-                  {hint}
-                </Txt>
-              ))}
+                >
+                  <QuietAction
+                    label="Формулы"
+                    icon="book-open"
+                    onPress={() => {
+                      cancelAdvance();
+                      setShowFormulas(true);
+                    }}
+                  />
+                  {submitted ? (
+                    <QuietAction
+                      label="Почему?"
+                      onPress={() => {
+                        cancelAdvance();
+                        setExplanation(true);
+                      }}
+                    />
+                  ) : (
+                    <QuietAction
+                      label="Подсказка"
+                      onPress={() => act({ type: "hint" })}
+                    />
+                  )}
+                </View>
+                {!submitted &&
+                  question.hints.slice(0, session.hints).map((hint, index) => (
+                    <Txt key={index} prose size={16} color={colors.muted}>
+                      {hint}
+                    </Txt>
+                  ))}
+              </>
+            )}
           </Animated.View>
         ) : null}
-        {stage === "practice" && session && !finished && !prelude && (
-          <PrimaryAction large label="Завершить" onPress={finish} />
-        )}
+        {stage === "practice" &&
+          session &&
+          !finished &&
+          !prelude &&
+          review === null && (
+            <PrimaryAction
+              large
+              arrow
+              label="Дальше"
+              disabled={!canProceed}
+              onPress={finish}
+            />
+          )}
       </View>
       <Modal
         visible={active && (explanation || showFormulas)}

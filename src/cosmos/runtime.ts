@@ -1,3 +1,4 @@
+import { classroomRuntime } from "./classroomView";
 import { progressRuntime } from "./progressView";
 /** Self-contained renderer shared by the browser frame and native WebView. No network or storage access. */
 export const spaceRuntime = String.raw`
@@ -7,7 +8,7 @@ var initial=window.SPACE_INITIAL, data=initial.data, reduced=initial.reduced, ac
 var canvas=document.getElementById('space'), ctx=canvas.getContext('2d',{alpha:false});
 var focusCanvas=document.getElementById('focus-star'), focusCtx=focusCanvas.getContext('2d');
 var $=function(id){return document.getElementById(id)};
-var selected=data.lessons.find(function(t){return t.id===data.initialId})||data.lessons[0];
+var selected=data.lessons.find(function(t){return t.id===(data.selection?.lessonId||data.initialId)})||data.lessons[0];
 var grade=selected.grade, overview=false, free=false, disposed=false, interacted=false;
 var preview=$('preview'), previewLesson=selected, previewReveal=0, previewDistance=710, restoreAfterOrbit=false, orbitIdle=0;
 var previewCards=[$('preview-content'),$('preview-title')];
@@ -48,6 +49,7 @@ function pointInScreen(p,margin){return p&&p.x>-margin&&p.x<width+margin&&p.y>-m
 function showError(){var e=$('error');e.textContent='';if(data.error){e.style.display='block';var t=document.createElement('span');t.textContent=data.error+' ';e.appendChild(t);var b=document.createElement('button');b.textContent='Повторить';b.onclick=function(){feedback('tap');send({type:'retry',id:''})};e.appendChild(b)}else e.style.display='none'}
 function currentTopics(){return data.lessons.filter(function(t){return t.grade===grade})}
 function updateUI(){
+
  var topics=currentTopics(),index=topics.findIndex(function(t){return t.id===selected.id});
  document.body.classList.toggle('preview',!overview&&!free);
  document.body.classList.toggle('overview',overview);document.body.classList.toggle('free',free);
@@ -66,11 +68,12 @@ function updateUI(){
  $('overview').setAttribute('aria-label',overview?'Вернуться к уроку':'Выбрать класс');
  $('sr-status').textContent=selected.title+'. '+grade+' класс. '+(index+1)+' из '+topics.length+(selected.complete?'. Урок пройден.':'');
  showError();
- if(progressMode)renderProgress();
+ if(panelIndex===1)renderProgress();if(panelIndex===2)renderClassroom();
 }
 function paintPreview(star){
  previewLesson=star;
  $('lesson-title').textContent=star.title;
+ $('geometry-label').hidden=star.subject!=='geometry';
  $('formula-image').src=star.formulaImage;
  $('formula-image').alt='Основная формула: '+star.title;
  $('preview-topics').replaceChildren();star.topics.forEach(function(title){var li=document.createElement('li');li.textContent=title;$('preview-topics').appendChild(li)});
@@ -98,15 +101,16 @@ function animatePreview(dt){
  document.body.classList.toggle('preview',!overview&&!free&&previewReveal>.02);
 }
 ${progressRuntime}
+${classroomRuntime}
 function setFree(restorePreview){
  // Only an orbit around the selected star returns automatically; free flight stays free.
  restoreAfterOrbit=!!restorePreview&&!overview&&(!free||restoreAfterOrbit);
  orbitIdle=0;interacted=true;if(!free){free=true;updateUI()}
 }
-function selectStar(star,silent){if(!silent)feedback('select');restoreAfterOrbit=false;interacted=true;selected=star;grade=star.grade;seenGrades[grade]=star.id;overview=false;free=false;aim={x:star.x,y:star.y,z:star.z};destination={yaw:-.12,pitch:.08,distance:mobile?650:710};previewDistance=destination.distance;if(reduced){focus={...aim};orbit={...destination}}updateUI();wake();}
+function selectStar(star,silent){if(!silent)feedback('select');restoreAfterOrbit=false;interacted=true;selected=star;grade=star.grade;if(!silent)send({type:'selection',id:star.id});seenGrades[grade]=star.id;overview=false;free=false;aim={x:star.x,y:star.y,z:star.z};destination={yaw:-.12,pitch:.08,distance:mobile?650:710};previewDistance=destination.distance;if(reduced){focus={...aim};orbit={...destination}}updateUI();wake();}
 function adjacent(direction){var list=currentTopics(),index=list.findIndex(function(t){return t.id===selected.id});if(list[index+direction])return list[index+direction];var targetGrade=grade+direction;if(targetGrade<5||targetGrade>11)return null;var target=data.lessons.filter(function(t){return t.grade===targetGrade});return (direction>0?target[0]:target[target.length-1])||null}
 function move(direction){var next=adjacent(direction);if(next)selectStar(next)}
-function chooseGrade(g){var t=data.lessons.find(function(t){return t.id===seenGrades[g]})||data.lessons.find(function(t){return t.grade===g&&!t.complete})||data.lessons.find(function(t){return t.grade===g});selectStar(t)}
+function chooseGrade(g){var t=data.lessons.find(function(t){return t.id===seenGrades[g]})||data.lessons.find(function(t){return t.grade===g&&!t.complete})||data.lessons.find(function(t){return t.grade===g});if(t)selectStar(t)}
 function toggleOverview(){restoreAfterOrbit=false;interacted=true;feedback(overview?'collapse':'expand');if(overview){selectStar(selected,true);return}overview=true;free=false;aim={x:400,y:0,z:-2400};destination={yaw:0,pitch:.12,distance:mobile?12200:7800};if(reduced){focus={...aim};orbit={...destination}}updateUI();wake()}
 function launch(){if(!data.ready||jumpTimer)return;feedback('navigate');if(reduced){send({type:'lesson',id:selected.id});return}var id=selected.id;aim={x:selected.x,y:selected.y,z:selected.z};destination.distance=100;document.body.classList.add('jumping');jumpTimer=setTimeout(function(){send({type:'lesson',id:id});document.body.classList.remove('jumping');jumpTimer=null;destination.distance=mobile?650:710;},420)}
 data.grades.forEach(function(g){var label=document.createElement('button');label.dataset.grade=g.grade;label.textContent=g.grade+' класс';label.setAttribute('aria-label','Выбрать '+g.grade+' класс');label.onclick=function(){chooseGrade(g.grade)};$('grade-labels').appendChild(label)});
@@ -114,7 +118,7 @@ $('prev').onclick=function(){move(-1)};$('next').onclick=function(){move(1)};$('
 document.querySelectorAll('[data-navigate]').forEach(function(b){b.onclick=function(){send({type:'navigate',id:b.dataset.navigate})}});
 function normalizeSearch(s){return s.toLocaleLowerCase('ru').replace(/ё/g,'е').trim()}
 function closeSearch(){ $('search-results').hidden=true;$('lesson-search').setAttribute('aria-expanded','false'); }
-function searchLessons(){var query=normalizeSearch($('lesson-search').value);$('clear-search').hidden=!query;var box=$('search-results');box.replaceChildren();if(!query){closeSearch();return}var words=query.split(/\s+/),matches=data.lessons.filter(function(t){var text=normalizeSearch(t.searchText+' '+t.title+' '+t.id);return words.every(function(w){return text.includes(w)})});box.hidden=false;$('lesson-search').setAttribute('aria-expanded','true');if(!matches.length){var empty=document.createElement('div');empty.id='search-empty';empty.textContent='Ничего не найдено. Попробуй другое слово или номер класса.';box.appendChild(empty)}matches.forEach(function(t){var b=document.createElement('button');b.textContent=t.title;var meta=document.createElement('small');meta.textContent=t.grade+' класс · '+t.exercises+' заданий';b.appendChild(meta);b.onclick=function(){selectStar(t);closeSearch();$('lesson-search').blur();$('launch').focus()};box.appendChild(b)})}
+function searchLessons(){var query=normalizeSearch($('lesson-search').value);$('clear-search').hidden=!query;var box=$('search-results');box.replaceChildren();if(!query){closeSearch();return}var words=query.split(/\s+/),matches=data.lessons.filter(function(t){var text=normalizeSearch(t.searchText+' '+t.title+' '+t.id);return t.grade===grade&&words.every(function(w){return text.includes(w)})});box.hidden=false;$('lesson-search').setAttribute('aria-expanded','true');if(!matches.length){var empty=document.createElement('div');empty.id='search-empty';empty.textContent='Ничего не найдено. Попробуй другое слово или номер класса.';box.appendChild(empty)}matches.forEach(function(t){var b=document.createElement('button');b.textContent=t.title;var meta=document.createElement('small');meta.textContent=t.grade+' класс'+(t.subject==='geometry'?' · Геометрия':'')+' · '+t.exercises+' заданий';b.appendChild(meta);b.onclick=function(){selectStar(t);closeSearch();$('lesson-search').blur();$('launch').focus()};box.appendChild(b)})}
 $('lesson-search').addEventListener('input',searchLessons);$('lesson-search').addEventListener('focus',searchLessons);
 $('clear-search').onclick=function(){feedback('collapse');$('lesson-search').value='';searchLessons();$('lesson-search').focus()};
 $('lesson-search').addEventListener('keydown',function(e){if(e.key==='Escape'){closeSearch();$('lesson-search').blur();canvas.focus()}else if(e.key==='ArrowDown'){e.preventDefault();var first=$('search-results').querySelector('button');if(first)first.focus()}else if(e.key==='Enter'){var first=$('search-results').querySelector('button');if(first){e.preventDefault();first.click()}}});
@@ -124,7 +128,7 @@ document.addEventListener('pointerdown',function(e){if(!e.target.closest('.searc
 // No planet-like rim or noisy surface; deterministic tint and size keep each star distinct.
 function drawSun(star,p,time){
  var amount=selectedSize[star.id]||0,base=2.2+(star.seed%9)*.20;
- var r=clamp((base+amount*(mobile?10:7))*p.scale,.65,26),col=star.complete?[80,255,205]:colors[star.color],rgb=col.join(',');
+ var r=clamp((base+amount*(mobile?10:7))*p.scale,.65,26),col=star.subject==='geometry'?[193,119,255]:star.complete?[80,255,205]:colors[star.color],rgb=col.join(',');
  var emphasis=overview||star.grade===grade?1:star.complete?.5:.14;
  var pulse=reduced?1:1+.025*Math.sin(time*.0009+star.seed%31);
  ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=emphasis;
@@ -180,7 +184,7 @@ window.addEventListener('keydown',function(e){if(e.key==='Tab'||progressMode||$(
  if(k==='ArrowRight')move(1);else if(k==='ArrowLeft')move(-1);else if(k==='Home')selectStar(currentTopics()[0]);else if(k==='End'){var t=currentTopics();selectStar(t[t.length-1])}else if(k==='r')selectStar(selected);else if(k==='Escape'&&overview)selectStar(selected);else if(k==='Enter'&&e.target===canvas)launch();
  keys[k]=true;wake();
 });window.addEventListener('keyup',function(e){keys[e.key.length===1?e.key.toLowerCase():e.key]=false});window.addEventListener('blur',function(){keys={};pointers.clear();drag=null;pinch=null});
-window.addEventListener('message',function(event){var m=event.data;if(!m||m.source!=='espada-host'||(event.source&&event.source!==parent&&event.source!==window))return;if(m.data){var resume=!data.ready&&m.data.ready&&!interacted;data=m.data;selected=data.lessons.find(function(t){return t.id===(resume?data.initialId:selected.id)})||data.lessons[0];grade=selected.grade;if(resume)selectStar(selected,true);else updateUI()}if(typeof m.soundEnabled==='boolean')applySound(m.soundEnabled);if(typeof m.dark==='boolean')applyTheme(m.dark,m.brandUri);if(typeof m.reduced==='boolean'){reduced=m.reduced;if(reduced)stopProgressMotion()}if(typeof m.active==='boolean')active=m.active;if(active)wake();else pause()});
+window.addEventListener('message',function(event){var m=event.data;if(!m||m.source!=='espada-host'||(event.source&&event.source!==parent&&event.source!==window))return;if(m.data){var resume=!data.ready&&m.data.ready&&!interacted;data=m.data;if(!interacted&&data.selection){data.initialId=data.selection.lessonId;resume=true;}selected=data.lessons.find(function(t){return t.id===(resume?data.initialId:selected.id)})||data.lessons[0];grade=selected.grade;if(resume)selectStar(selected,true);else updateUI()}if(typeof m.soundEnabled==='boolean')applySound(m.soundEnabled);if(typeof m.dark==='boolean')applyTheme(m.dark,m.brandUri);if(typeof m.reduced==='boolean'){reduced=m.reduced;if(reduced)stopProgressMotion()}if(typeof m.active==='boolean')active=m.active;if(active)wake();else pause()});
 var sizeObserver=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;if(sizeObserver)sizeObserver.observe(canvas);
 document.addEventListener('visibilitychange',function(){if(document.hidden)pause();else wake()});window.addEventListener('resize',resize);window.addEventListener('pagehide',function(){disposed=true;pause();if(sizeObserver)sizeObserver.disconnect();if(jumpTimer)clearTimeout(jumpTimer)});
 applySound(initial.soundEnabled!==false);applyTheme(dark,initial.brandUri);selectedSize[selected.id]=1;updateUI();resize();wake();tellReady();

@@ -1,3 +1,5 @@
+import { WeeklyRewardOutbox } from "./weeklyRewards";
+import { backend } from "../services/supabase";
 import { useStreak } from "./StreakContext";
 import React, {
   createContext,
@@ -34,7 +36,7 @@ const Context = createContext({
 });
 export const useRewards = () => useContext(Context);
 export function RewardsProvider({ children }: { children: React.ReactNode }) {
-  const { actor, state } = useLearning();
+  const { actor, state, mode } = useLearning();
   const { mark } = useStreak();
   const course = useCourseProgress(actor.id);
   const { play } = useSounds();
@@ -42,6 +44,8 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
   const latest = useRef<RewardLedger>({});
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
+  const [syncError, setSyncError] = useState("");
+  const weekly = useRef<WeeklyRewardOutbox | null>(null);
   const [notice, setNotice] = useState("");
   const [reload, setReload] = useState(0);
   const queue = useRef(Promise.resolve());
@@ -67,6 +71,37 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
       mounted.current = false;
     };
   }, [key, reload]);
+  useEffect(() => {
+    setSyncError("");
+    if (mode !== "supabase" || actor.role !== "student" || !backend) return;
+    const outbox = new WeeklyRewardOutbox(
+      actor.id,
+      AsyncStorage,
+      async (events) => {
+        const { data: auth } = await backend!.auth.getSession();
+        if (auth.session?.user.id !== actor.id) throw Error("Actor changed");
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+        try {
+          const { error } = await backend!
+            .rpc("record_learning_rewards", { p_events: events })
+            .abortSignal(controller.signal);
+          if (error) throw error;
+        } finally {
+          clearTimeout(timeout);
+        }
+      },
+      setSyncError,
+    );
+    weekly.current = outbox;
+    void outbox.retry();
+    const timer = setInterval(() => void outbox.retry(), 15000);
+    return () => {
+      outbox.stop();
+      weekly.current = null;
+      clearInterval(timer);
+    };
+  }, [actor.id, actor.role, mode]);
   const persist = useCallback(
     (data: RewardLedger) => {
       const value = JSON.stringify(data);
@@ -86,11 +121,15 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
     [key],
   );
   const record = useCallback(
-    (events: RewardEvent[], celebrate: boolean) => {
+    (events: RewardEvent[], celebrate: boolean, liveAward = false) => {
       if (!ready || actor.role !== "student") return;
       const before = totalPoints(latest.current);
       const result = addRewards(latest.current, events);
       if (!result.gained) return;
+      if (liveAward)
+        void weekly.current?.enqueue(
+          events.filter((e) => !latest.current[rewardKey(e)]),
+        );
       latest.current = result.ledger;
       setLedger(result.ledger);
       persist(result.ledger);
@@ -150,15 +189,18 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
       value={{
         points: totalPoints(ledger),
         ready,
-        error,
+        error: error || syncError,
         notice,
         award: (events, celebrate = true) => {
           if (events.length) mark();
-          record(events, celebrate);
+          record(events, celebrate, true);
         },
         earned: (event) => !!ledger[rewardKey(event)],
-        retry: () =>
-          ready ? persist(latest.current) : setReload((n) => n + 1),
+        retry: () => {
+          void weekly.current?.retry();
+          if (ready) persist(latest.current);
+          else setReload((n) => n + 1);
+        },
       }}
     >
       {children}

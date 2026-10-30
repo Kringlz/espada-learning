@@ -763,7 +763,7 @@ function Lesson({
             ) : !submitted ? (
               <View style={{ alignItems: "flex-end" }}>
                 <PrimaryAction
-                  label={stage === "intro" ? "Узнать ответ" : "Ответить"}
+                  label={stage === "intro" ? "Разобраться" : "Ответить"}
                   disabled={selected === undefined}
                   onPress={submitAnswer}
                 />

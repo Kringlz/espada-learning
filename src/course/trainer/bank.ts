@@ -1,3 +1,5 @@
+import { moduleSkillBank } from "./moduleQuestions";
+import { moduleCatalog } from "./moduleCatalog";
 import {
   trainerBank as bankV1,
   trainerQuestion as questionV1,
@@ -64,8 +66,21 @@ export function trainerBank(topic: string): Question[] {
   return banks.get(topic)!;
 }
 export function questionById(topic: string, id: string): Question | undefined {
+  const extra = id.match(/^([AG]\d{2}-\d{2})-module-v1-(.+)-(\d+)$/);
+  if (extra) {
+    const skill = "@" + extra[2];
+    if (
+      !moduleCatalog[extra[1]]?.some((row) =>
+        row.split("|")[0].split(",").includes(skill),
+      )
+    )
+      return undefined;
+    return moduleSkillBank(extra[1], skill).find((q) => q.id === id);
+  }
+  const source = id.match(/^([AG]\d{2}-\d{2})-/)?.[1] ?? topic;
+  if (!Object.hasOwn(moduleCatalog, source)) return undefined;
   return (
-    trainerBank(topic).find((q) => q.id === id) ??
+    trainerBank(source).find((q) => q.id === id) ??
     bankV2(topic).find((q) => q.id === id) ??
     bankV1(topic).find((q) => q.id === id)
   );
@@ -83,9 +98,22 @@ function shuffled<T>(items: readonly T[], seed: number): T[] {
   return result;
 }
 /** Stable, family-balanced cycles. First encounter introduces basic skills before compound tasks. */
-function practiceOrder(topic: string, seed: number): Question[] {
+export function moduleBank(topic: string, skills: string[]): Question[] {
+  return skills.flatMap((key) => {
+    if (key.startsWith("@")) return moduleSkillBank(topic, key);
+    const [source, skill] = key.includes(":") ? key.split(":") : [topic, key];
+    return trainerBank(source)
+      .filter((q) => q.skill === skill)
+      .map((q) => ({ ...q, skill: key }));
+  });
+}
+function practiceOrder(
+  topic: string,
+  seed: number,
+  skills?: string[],
+): Question[] {
   const groups = new Map<string, Question[]>();
-  for (const q of trainerBank(topic)) {
+  for (const q of skills ? moduleBank(topic, skills) : trainerBank(topic)) {
     const group = groups.get(q.skill!) ?? [];
     group.push(q);
     groups.set(q.skill!, group);
@@ -95,10 +123,15 @@ function practiceOrder(topic: string, seed: number): Question[] {
   );
   const result: Question[] = [];
   for (const queue of shuffled(
-    queues.filter((group) => group.some((q) => q.difficulty === 1)),
+    skills
+      ? queues
+      : queues.filter((group) => group.some((q) => q.difficulty === 1)),
     seed,
   )) {
-    const basic = queue.findIndex((q) => q.difficulty === 1);
+    const basic = Math.max(
+      0,
+      queue.findIndex((q) => q.difficulty === 1),
+    );
     result.push(queue.splice(basic, 1)[0]);
   }
   const order = shuffled(queues, seed ^ 0x4bd16a53);
@@ -113,14 +146,15 @@ export function trainerQuestion(
   seed: number,
   cursor: number,
   version = TRAINER_BANK_VERSION,
+  skills?: string[],
 ): Question {
   if (version === 1) return questionV1(topic, seed, cursor);
   if (version === 2) return questionV2(topic, seed, cursor);
-  const key = `${topic}:${seed}`;
+  const key = `${topic}:${seed}:${skills?.join(",") ?? "all"}`;
   if (!orders.has(key)) {
     // Bound the cache: a user can explicitly start many sessions.
     if (orders.size >= 128) orders.delete(orders.keys().next().value!);
-    orders.set(key, practiceOrder(topic, seed));
+    orders.set(key, practiceOrder(topic, seed, skills));
   }
   const order = orders.get(key)!,
     round = Math.floor(cursor / order.length);

@@ -1,3 +1,9 @@
+import {
+  validClassroomAction,
+  type ClassroomAction,
+} from "../classroom/protocol";
+import type { StudentClassroomData } from "../classroom/useStudentClassroom";
+import { topicPractice } from "../course/trainer/moduleProgress";
 import { makeSpaceProgress, SpaceProgress } from "./progress";
 import { trainerPreview } from "../course/trainer/preview";
 import { trainerBank } from "../course/trainer/bank";
@@ -11,6 +17,7 @@ import {
 } from "../course/constellation";
 
 export type SpaceLesson = {
+  subject: "algebra" | "geometry";
   hook: string;
   topics: string[];
   formulaImage: string;
@@ -31,6 +38,8 @@ export type SpaceLesson = {
   exercises: number;
 };
 export type SpaceData = {
+  classroom?: StudentClassroomData;
+  selection?: { lessonId: string };
   progress: SpaceProgress;
   lessons: SpaceLesson[];
   grades: { grade: number; name: string; x: number; y: number; z: number }[];
@@ -41,12 +50,17 @@ export type SpaceData = {
   signals: { id: string; title: string }[];
 };
 export type SpaceAction =
+  | ClassroomAction
+  | { type: "selection"; id: string }
   | {
       type: "lesson" | "topic" | "navigate" | "retry";
       id: string;
     }
   | { type: "interest"; id: string; enabled: boolean }
-  | { type: "feedback"; id: "tap" | "toggle" | "select" | "navigate" | "expand" | "collapse" }
+  | {
+      type: "feedback";
+      id: "tap" | "toggle" | "select" | "navigate" | "expand" | "collapse";
+    }
   | { type: "theme"; id: "light" | "dark" };
 export function makeSpaceData(
   progress: CourseProgress,
@@ -73,6 +87,7 @@ export function makeSpaceData(
           ...trainerPreview(topic.id),
           searchText: `${topic.title} ${trainerPreview(topic.id).topics.join(" ")} ${topic.grade} класс`,
           id: topic.id,
+          subject: topic.subject,
           grade: topic.grade,
           title: topic.title,
           x: center.x + point.x * 1600,
@@ -80,17 +95,19 @@ export function makeSpaceData(
           z: center.z,
           seed: starIdentity(topic.id).seed,
           color: (i + topic.grade) % 5,
-          complete: !!progress[topic.id]?.trainer?.mastered,
+          complete: !!topicPractice(topic.id, progress[topic.id])?.mastered,
           practicing:
-            !!progress[topic.id]?.trainer?.totalAnswered &&
-            !progress[topic.id]?.trainer?.mastered,
+            !!topicPractice(topic.id, progress[topic.id])?.totalAnswered &&
+            !topicPractice(topic.id, progress[topic.id])?.mastered,
           started: status.started || !!videoLessons[topic.id]?.started,
-          percent: progress[topic.id]?.trainer?.mastered
+          percent: topicPractice(topic.id, progress[topic.id])?.mastered
             ? 100
             : Math.min(
                 99,
                 Math.round(
-                  ((progress[topic.id]?.trainer?.correct ?? 0) / 15) * 100,
+                  ((topicPractice(topic.id, progress[topic.id])?.correct ?? 0) /
+                    15) *
+                    100,
                 ),
               ),
           parts: topic.pages.length,
@@ -126,13 +143,24 @@ export function validSpaceAction(
   if (!value || typeof value !== "object") return false;
   const { type, id } = value as SpaceAction;
   if (typeof id !== "string") return false;
+  if (type === "classroom")
+    return validClassroomAction(value as ClassroomAction);
+  if (type === "selection") return data.lessons.some((t) => t.id === id);
   if (type === "interest")
     return (
       data.ready &&
       data.lessons.some((t) => t.id === id) &&
       typeof (value as { enabled?: unknown }).enabled === "boolean"
     );
-  if (type === "feedback") return ["tap", "toggle", "select", "navigate", "expand", "collapse"].includes(id);
+  if (type === "feedback")
+    return [
+      "tap",
+      "toggle",
+      "select",
+      "navigate",
+      "expand",
+      "collapse",
+    ].includes(id);
   if (type === "theme") return id === "light" || id === "dark";
   if (type === "lesson")
     return data.ready && data.lessons.some((t) => t.id === id);

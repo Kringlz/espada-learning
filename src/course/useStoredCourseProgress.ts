@@ -1,3 +1,4 @@
+import { topicPractice } from "./trainer/moduleProgress";
 import { useEffect, useRef, useState } from "react";
 import { didStudy } from "../engagement/streak";
 import {
@@ -85,20 +86,28 @@ export function useStoredCourseProgress(
     if (!ready) return;
     const current = latest.current[id] ?? emptyProgress();
     const changes = typeof patch === "function" ? patch(current) : patch;
+    if (changes.modulePractice) {
+      changes.modulesMastered =
+        current.modulesMastered ||
+        topicPractice(id, { ...current, ...changes })?.mastered;
+    }
     const preferenceOnly =
       Object.keys(changes).length > 0 &&
-      Object.keys(changes).every((key) => key === "interested");
+      Object.keys(changes).every((key) =>
+        ["interested", "selectedModule", "trainerStage"].includes(key),
+      );
     const data = {
       ...latest.current,
       [id]: {
         ...current,
         ...changes,
-        ...(changes.trainer &&
-        (changes.trainer.correct !== current.trainer?.correct ||
-          changes.trainer.incorrect !== current.trainer?.incorrect ||
-          changes.trainer.cursor !== current.trainer?.cursor ||
-          changes.trainer.submitted !== current.trainer?.submitted ||
-          changes.trainer.finished !== current.trainer?.finished)
+        ...(changes.modulePractice ||
+        (changes.trainer &&
+          (changes.trainer.correct !== current.trainer?.correct ||
+            changes.trainer.incorrect !== current.trainer?.incorrect ||
+            changes.trainer.cursor !== current.trainer?.cursor ||
+            changes.trainer.submitted !== current.trainer?.submitted ||
+            changes.trainer.finished !== current.trainer?.finished))
           ? { practiceUpdatedAt: new Date().toISOString() }
           : {}),
         updatedAt: preferenceOnly
@@ -106,7 +115,13 @@ export function useStoredCourseProgress(
           : new Date().toISOString(),
       },
     };
-    if (didStudy(current, data[id])) mark();
+    if (
+      didStudy(
+        { ...current, trainer: topicPractice(id, current) },
+        { ...data[id], trainer: topicPractice(id, data[id]) },
+      )
+    )
+      mark();
     latest.current = data;
     setProgress(data);
     persist(data);

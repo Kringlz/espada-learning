@@ -1,4 +1,5 @@
 import { trainerQuestion, TRAINER_BANK_VERSION } from "./bank";
+import { trainerModules } from "./modules";
 
 export function qualifiesForCompletion(
   state: Pick<TrainerState, "correct" | "incorrect"> &
@@ -24,6 +25,7 @@ export function sessionQuestion(
     state.seed,
     previous ? cursor - previous.from : cursor - state.legacyThrough,
     previous ? previous.version : TRAINER_BANK_VERSION,
+    state.moduleId ? trainerModules(topic).find(m => m.id === state.moduleId)?.skills : undefined,
   );
 }
 export type PracticeEvent = {
@@ -58,6 +60,7 @@ function recordDay(
     .slice(-35);
 }
 export type TrainerState = {
+  moduleId?: string;
   rejected: number[];
   mastered: boolean;
   legacyThrough: number;
@@ -84,8 +87,10 @@ export type TrainerState = {
 export function newTrainer(
   seed: number,
   previous?: TrainerState,
+  moduleId?: string,
 ): TrainerState {
   return {
+    ...(moduleId ? { moduleId } : {}),
     rejected: [],
     mastered: previous?.mastered ?? false,
     legacyThrough: 0,
@@ -130,7 +135,7 @@ export function reduceTrainer(
     return {
       ...state,
       finished: true,
-      mastered: state.mastered || qualifiesForCompletion(state),
+      mastered: state.mastered || (!state.moduleId && qualifiesForCompletion(state)),
       completedSessions:
         state.completedSessions +
         (!state.recorded && state.correct + state.incorrect > 0 ? 1 : 0),
@@ -196,6 +201,7 @@ export function parseTrainer(
 ): TrainerState | undefined {
   if (!value || typeof value !== "object") return undefined;
   const input = value as TrainerState;
+  if (input.moduleId && !trainerModules(topic).some(m => m.id === input.moduleId)) return undefined;
   // Retain scores and the exact old questions for review; only upcoming tasks use the new bank.
   const cutoff =
     input.cursor + Number(input.submitted === true || !!input.rejected?.length);
@@ -389,9 +395,10 @@ export function parseTrainer(
         [] as PracticeDay[],
       );
   return {
+    ...(v.moduleId ? { moduleId: v.moduleId } : {}),
     rejected,
     mastered:
-      v.mastered === true || (v.finished === true && qualifiesForCompletion(v)),
+      !v.moduleId && (v.mastered === true || (v.finished === true && qualifiesForCompletion(v))),
     legacyThrough,
     previousBanks: banks,
     daily,

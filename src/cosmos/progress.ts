@@ -1,3 +1,4 @@
+import { topicPractice } from "../course/trainer/moduleProgress";
 import { questionById } from "../course/trainer/bank";
 import { practiceDay, sessionQuestion } from "../course/trainer/model";
 import { course, CourseProgress } from "../course/model";
@@ -35,7 +36,7 @@ export function makeSpaceProgress(progress: CourseProgress, now = new Date()) {
   });
   const topics = course.map((topic) => {
     const p = progress[topic.id],
-      s = p?.trainer;
+      s = topicPractice(topic.id, p);
     // Old saves have no answer dates. Keep their latest counts, without inventing a daily history.
     const events = (s?.recent ?? []).filter(
       (event) => Date.parse(event.at) <= now.getTime(),
@@ -90,7 +91,7 @@ export function makeSpaceProgress(progress: CourseProgress, now = new Date()) {
   frequent.forEach((t) => add(t.id, "Часто выбираешь"));
   const recommendations = choices.slice(0, 3).map((choice) => {
     const topic = topics.find((t) => t.id === choice.id)!;
-    const session = progress[topic.id]?.trainer;
+    const session = topicPractice(topic.id, progress[topic.id]);
     const lastError = session?.recent
       .filter(
         (event) =>

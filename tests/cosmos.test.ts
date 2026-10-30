@@ -8,6 +8,7 @@ import {
 } from "../src/cosmos/model";
 import { spaceDocument } from "../src/cosmos/document";
 import { spaceRuntime } from "../src/cosmos/runtime";
+import { classroomRuntime, classroomMarkup } from "../src/cosmos/classroomView";
 
 const data: SpaceData = {
   ...makeSpaceData({}),
@@ -16,6 +17,25 @@ const data: SpaceData = {
   name: "Ученик",
   signals: [{ id: "assignment-1", title: "Задание учителя" }],
 };
+
+test("classroom sends messages without native form submission in the sandbox", () => {
+  const elements = new Map<string, any>();
+  const get = (id: string) => {
+    if (!elements.has(id)) elements.set(id, { value: "", disabled: false });
+    return elements.get(id);
+  };
+  const actions: unknown[] = [];
+  new Function("$", "send", classroomRuntime)(get, (action: unknown) =>
+    actions.push(action),
+  );
+  get("classroom-message").value = "  Вопрос по задаче  ";
+  get("classroom-send").onclick();
+  get("classroom-send").onclick();
+  assert.deepEqual(actions, [
+    { type: "classroom", id: "send", value: "Вопрос по задаче" },
+  ]);
+  assert.equal(classroomMarkup.includes('type="submit"'), false);
+});
 
 test("space contains every real lesson and resumes the most recently studied grade", () => {
   assert.equal(data.lessons.length, course.length);

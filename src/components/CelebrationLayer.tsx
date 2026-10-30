@@ -7,6 +7,7 @@ export function CelebrationLayer({
 }: {
   children: React.ReactNode;
   fullScreen?: boolean;
+  contained?: boolean;
 }) {
   if (fullScreen)
     return (
