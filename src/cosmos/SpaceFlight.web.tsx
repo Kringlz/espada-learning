@@ -76,7 +76,7 @@ export function SpaceFlight({
       if (validSpaceAction(event.data.action, latest.current.data)) {
         if (event.data.action.type === "feedback") {
           if (event.data.action.id === "toggle") latest.current.sounds.toggle();
-          else latest.current.sounds.play("open");
+          else latest.current.sounds.play(event.data.action.id === "tap" ? "open" : event.data.action.id);
         } else if (event.data.action.type === "theme")
           latest.current.setPreference(event.data.action.id);
         else latest.current.onAction(event.data.action);

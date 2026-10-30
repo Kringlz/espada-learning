@@ -14,7 +14,7 @@ with wave.open(str(OUTPUT / 'source-click.wav')) as source:
 SOUNDS = {
     'open': [(0, 1)],
     'select': [(0, .88)],
-    'navigate': [(0, .94)],
+    'navigate': [(0, .72), (.038, .42)],
     'expand': [(0, .9), (.028, .22)],
     'collapse': [(0, .78)],
     'copy': [(0, .7), (.055, .9)],

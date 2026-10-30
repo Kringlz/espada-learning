@@ -80,6 +80,15 @@ ${progressStyles}
 @media(max-width:700px){#preview-title{left:calc(50% + 12px);top:calc(50% + 40px);width:calc(50% - 30px)}#preview-title #lesson-title{font-size:clamp(16px,4.4vw,23px);line-height:1.25}}
 @media(max-width:700px) and (max-height:660px){#preview-title{top:calc(50% + 22px);left:calc(50% + 4px);width:calc(50% - 20px)}#preview-title #lesson-title{font-size:16px}#lesson-number{margin-bottom:8px}}
 @media(max-height:540px){#preview-title{left:calc(50% + 65px);top:50%;width:calc(50% - 100px);max-height:none}#preview-title #lesson-title{font-size:17px;line-height:1.2}}
+/* Keep controls comfortably inside the viewport while the sky stays edge-to-edge. */
+:root{--side-space:clamp(24px,3vw,44px)}
+.top{padding-left:max(var(--side-space),env(safe-area-inset-left));padding-right:max(var(--side-space),env(safe-area-inset-right))}
+.search{width:min(430px,calc(100% - var(--side-space)*2))}
+#preview-content{max-width:calc(50% - 80px - var(--side-space))}
+#preview-title{max-width:calc(50% - 80px - var(--side-space))}
+@media(max-width:700px){#prev{left:12px}#next{right:12px}#preview-content,#preview-title{max-width:calc(50% - 12px - var(--side-space))}}
+@media(max-width:700px) and (max-height:660px){#preview-title{max-width:calc(50% - 4px - var(--side-space))}}
+@media(max-height:540px){.search{width:min(320px,calc(100% - var(--side-space)*2))}#preview-content,#preview-title{max-width:calc(50% - 65px - var(--side-space))}}
 </style></head><body class="${dark ? "dark" : "light"}">
 <canvas id="space" tabindex="0" aria-label="Карта уроков. Перетаскивай для поворота, используй колесо для приближения. Стрелки выбирают урок, Enter открывает его, R возвращает камеру."></canvas><canvas id="focus-star" aria-hidden="true"></canvas><div id="vignette"></div>
 <div class="top"><button class="wordmark" id="profile" aria-label="Открыть профиль"><span class="brand-icon"><img src="${brandUri.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" alt=""></span><span>Espada</span></button><button id="overview" aria-label="Выбрать класс">5 класс</button><nav class="tools" aria-label="Инструменты"><button id="theme-toggle" aria-label="${dark ? "Включить светлую тему" : "Включить тёмную тему"}" title="Сменить тему"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg></button><button id="sound-toggle" aria-label="Выключить звуки" title="Звуки" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4Z"/><path id="sound-waves" d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg></button><button data-navigate="Formulas" aria-label="Формулы и история" title="Формулы и история"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 4H6l7 8-7 8h12"/></svg></button></nav></div>

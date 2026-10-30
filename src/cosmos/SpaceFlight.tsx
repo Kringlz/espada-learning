@@ -55,7 +55,7 @@ export function SpaceFlight({
           ) {
             if (message.action.type === "feedback") {
               if (message.action.id === "toggle") sounds.toggle();
-              else sounds.play("open");
+              else sounds.play(message.action.id === "tap" ? "open" : message.action.id);
             } else if (message.action.type === "theme")
               setPreference(message.action.id);
             else onAction(message.action);

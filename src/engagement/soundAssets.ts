@@ -13,14 +13,14 @@ export const soundAssets = {
 export const musicAsset = require("../../assets/sounds/clarity/music.wav");
 export type SoundName = keyof typeof soundAssets;
 export const soundGain: Record<SoundName, number> = {
-  open: 0.3,
-  select: 0.32,
-  navigate: 0.28,
-  expand: 0.26,
-  collapse: 0.24,
-  copy: 0.42,
-  success: 0.52,
-  successAlt: 0.52,
-  wrong: 0.32,
-  level: 0.6,
+  open: 0.22,
+  select: 0.24,
+  navigate: 0.22,
+  expand: 0.20,
+  collapse: 0.18,
+  copy: 0.30,
+  success: 0.38,
+  successAlt: 0.38,
+  wrong: 0.24,
+  level: 0.44,
 };

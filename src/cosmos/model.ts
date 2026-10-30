@@ -46,7 +46,7 @@ export type SpaceAction =
       id: string;
     }
   | { type: "interest"; id: string; enabled: boolean }
-  | { type: "feedback"; id: "tap" | "toggle" }
+  | { type: "feedback"; id: "tap" | "toggle" | "select" | "navigate" | "expand" | "collapse" }
   | { type: "theme"; id: "light" | "dark" };
 export function makeSpaceData(
   progress: CourseProgress,
@@ -132,7 +132,7 @@ export function validSpaceAction(
       data.lessons.some((t) => t.id === id) &&
       typeof (value as { enabled?: unknown }).enabled === "boolean"
     );
-  if (type === "feedback") return id === "tap" || id === "toggle";
+  if (type === "feedback") return ["tap", "toggle", "select", "navigate", "expand", "collapse"].includes(id);
   if (type === "theme") return id === "light" || id === "dark";
   if (type === "lesson")
     return data.ready && data.lessons.some((t) => t.id === id);

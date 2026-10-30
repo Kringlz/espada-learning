@@ -323,7 +323,7 @@ function Lesson({ actorId, lessonId, back }: Props) {
     >
       <View
         style={{
-          paddingHorizontal: width < 600 ? 20 : 36,
+          paddingHorizontal: width < 600 ? 24 : 40,
           height: 64,
           justifyContent: "center",
         }}
@@ -364,7 +364,7 @@ function Lesson({ actorId, lessonId, back }: Props) {
           width: "100%",
           maxWidth: stage === "video" ? 1080 : 740,
           alignSelf: "center",
-          paddingHorizontal: width < 380 ? 20 : width < 600 ? 26 : 40,
+          paddingHorizontal: width < 380 ? 24 : width < 600 ? 28 : 44,
           paddingTop: prelude ? 0 : width < 600 ? 16 : 34,
           paddingBottom: 48,
           justifyContent: stage === "intro" ? "center" : undefined,

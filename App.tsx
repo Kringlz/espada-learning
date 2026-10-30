@@ -709,8 +709,8 @@ function Shell() {
                           paddingHorizontal: immersiveLesson
                             ? 0
                             : desktop
-                              ? 32
-                              : 18,
+                              ? 40
+                              : 24,
                           paddingTop: immersiveLesson ? 0 : desktop ? 26 : 20,
                           paddingBottom: immersiveLesson ? 0 : 40,
                           alignItems: "center",
