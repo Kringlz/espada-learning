@@ -1,3 +1,4 @@
+import { useLearning } from "../../services/context";
 import { useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { lessonKey, parseLesson } from "./model";
@@ -5,6 +6,7 @@ import { lessonSync } from "../../progress/service";
 import { LessonSummaries, summarizeRuns, onLessonSaved } from "./completion";
 
 export function useLessonSummaries(actor: string, active: boolean) {
+  const { mode } = useLearning();
   const [summaries, setSummaries] = useState<LessonSummaries>({});
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
@@ -43,7 +45,7 @@ export function useLessonSummaries(actor: string, active: boolean) {
         setSummaries(local);
         setError("");
       }
-      if (lessonSync) {
+      if (lessonSync && mode !== "guest") {
         const remote = await lessonSync.read(actor, actor);
         if (live)
           setSummaries(
@@ -63,6 +65,6 @@ export function useLessonSummaries(actor: string, active: boolean) {
     return () => {
       live = false;
     };
-  }, [actor, active, revision]);
+  }, [actor, active, revision, mode]);
   return { summaries, error, refresh };
 }

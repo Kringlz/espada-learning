@@ -384,6 +384,18 @@ export function AuthScreen(p: AuthScreenProps) {
                         ) : (
                           <Button onPress={p.retry}>Открыть демо</Button>
                         )}
+                        <Button
+                          fullWidth
+                          secondary
+                          disabled={busy}
+                          onPress={() => void run(p.enterGuest)}
+                        >
+                          Войти как гость
+                        </Button>
+                        <Txt size={12} color={colors.muted}>
+                          Кабинет ученика без регистрации. Прогресс сохраняется
+                          только на этом устройстве.
+                        </Txt>
                         {link("Создать аккаунт", () => {
                           setRole("student");
                           change("register");

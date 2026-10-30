@@ -944,7 +944,7 @@ export function StudentProgress(props: {
   studentId: string;
   details?: React.ReactNode;
 }) {
-  const { actor } = useLearning();
+  const { actor, mode } = useLearning();
   return (
     <VideoLessonTheme>
       <View
@@ -956,7 +956,12 @@ export function StudentProgress(props: {
           </Txt>
         )}
         <PracticeSummary studentId={props.studentId} />
-        {actor.role === "student" ? (
+        {mode === "guest" ? (
+          <Txt>
+            Гостевой прогресс сохраняется на этом устройстве. История работ с
+            учителем доступна после входа в аккаунт.
+          </Txt>
+        ) : actor.role === "student" ? (
           <StudentProgressContent {...props} />
         ) : (
           <Disclosure title="Работы и история занятий">

@@ -417,7 +417,7 @@ export function Progress({
   showHistoryRequest?: number;
 }) {
   const { colors, styles } = useUITheme();
-  const { state: s, actor } = useLearning();
+  const { state: s, actor, mode } = useLearning();
   const id = studentId ?? actor.id;
   const personal = actor.role === "student" && !studentId;
   const [view, setView] = useState<"activity" | "reports" | "topics">(
@@ -451,6 +451,7 @@ export function Progress({
     "Получается",
     "Освоено",
   ];
+  if (mode === "guest") return <StudentProgress studentId={id} />;
   if (testAttempt)
     return (
       <LessonLibrary

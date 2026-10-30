@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button, Txt, useUITheme, Disclosure } from "../../components/ui";
-import { backend, mode } from "../../services/supabase";
+import { backend } from "../../services/supabase";
 import { useLearning } from "../../services/context";
 import { course, parseProgress, progressKey } from "../model";
 import {
@@ -17,7 +17,7 @@ export function PracticeSummary({
   studentId: string;
   compact?: boolean;
 }) {
-  const { actor } = useLearning(),
+  const { actor, mode } = useLearning(),
     { colors } = useUITheme();
   const [rows, setRows] = useState<SharedPractice[]>([]),
     [error, setError] = useState(""),
@@ -29,7 +29,7 @@ export function PracticeSummary({
     setLoading(true);
     setError("");
     (async () => {
-      if (mode === "demo") {
+      if (mode !== "supabase") {
         const progress = parseProgress(
           await AsyncStorage.getItem(progressKey(studentId)),
         );
@@ -65,7 +65,7 @@ export function PracticeSummary({
     return () => {
       live = false;
     };
-  }, [actor.id, studentId, epoch]);
+  }, [actor.id, studentId, epoch, mode]);
   if (compact)
     return (
       <View style={{ gap: 4 }}>
@@ -115,7 +115,7 @@ export function PracticeSummary({
         </Txt>
       ) : !rows.length ? (
         <Txt color={colors.muted}>
-          {mode === "demo"
+          {mode !== "supabase"
             ? "На этом устройстве ещё нет практики ученика."
             : "Ученик ещё не передал результаты тренажёров."}
         </Txt>

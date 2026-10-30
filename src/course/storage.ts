@@ -20,10 +20,10 @@ export function CourseProgressProvider({
 }) {
   const { mark } = useStreak();
   const storage = useStoredCourseProgress(actorId, AsyncStorage, mark);
-  const { actor } = useLearning();
+  const { actor, mode } = useLearning();
   const practiceSync = usePracticeSharing(
     actorId,
-    actor.role === "student",
+    actor.role === "student" && mode === "supabase",
     storage.ready,
     storage.progress,
   );

@@ -48,9 +48,11 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           {actor.name}
         </Txt>
         <Txt color={colors.muted}>
-          {mode === "demo"
-            ? "Учебный аккаунт · локальное демо"
-            : "Аккаунт Espada"}
+          {mode === "guest"
+            ? "Гостевой режим · прогресс на этом устройстве"
+            : mode === "demo"
+              ? "Учебный аккаунт · локальное демо"
+              : "Аккаунт Espada"}
         </Txt>
       </Card>
       <Card>
@@ -77,21 +79,38 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           ))}
         </View>
       </Card>
-      {(actor.role === "student" || actor.role === "parent") && (
+      {mode !== "guest" &&
+        (actor.role === "student" || actor.role === "parent") && (
+          <Card>
+            <Txt weight="600">
+              {actor.role === "student" ? "Код ученика" : "Код родителя"}
+            </Txt>
+            <Txt color={colors.muted}>
+              {actor.role === "student"
+                ? "Этот код понадобится родителю, чтобы увидеть ваш прогресс, или учителю — чтобы добавить вас в группу."
+                : "Этот код — ваш личный идентификатор аккаунта."}
+            </Txt>
+            <CopyCode code={actor.code} />
+          </Card>
+        )}
+      {actor.role === "teacher" && <TeacherContactEditor key={actor.id} />}
+      {actor.role === "student" && mode !== "guest" && <MyGroups />}
+      {mode === "guest" && (
         <Card>
-          <Txt weight="600">
-            {actor.role === "student" ? "Код ученика" : "Код родителя"}
+          <Txt>
+            Вы можете изучать темы, решать задания и смотреть свой прогресс без
+            регистрации.
           </Txt>
           <Txt color={colors.muted}>
-            {actor.role === "student"
-              ? "Этот код понадобится родителю, чтобы увидеть ваш прогресс, или учителю — чтобы добавить вас в группу."
-              : "Этот код — ваш личный идентификатор аккаунта."}
+            Прогресс хранится в этом браузере или приложении. Он не переносится
+            в аккаунт и исчезнет при очистке данных. Для связи с учителем и
+            родителем нужен аккаунт.
           </Txt>
-          <CopyCode code={actor.code} />
+          <Button onPress={() => void signOut().catch(() => {})}>
+            Войти или создать аккаунт
+          </Button>
         </Card>
       )}
-      {actor.role === "teacher" && <TeacherContactEditor key={actor.id} />}
-      {actor.role === "student" && <MyGroups />}
       {actor.role === "student" &&
         mode === "supabase" &&
         practiceSync.status !== "saved" && (
@@ -150,11 +169,14 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
       </Disclosure>
       <Disclosure title="Ваши данные" icon="shield">
         <Txt color={colors.muted}>
-          {mode === "demo"
-            ? "This demo stays in local browser or device storage. Clearing that storage removes the demo records. Different devices do not sync."
-            : "Your organisation holds your learning records. A deletion request goes to its administrator for review, including any lawful retention obligations."}
+          {mode === "guest"
+            ? "Гостевые данные хранятся только на этом устройстве. Удалить их можно очисткой данных приложения или сайта."
+            : mode === "demo"
+              ? "This demo stays in local browser or device storage. Clearing that storage removes the demo records. Different devices do not sync."
+              : "Your organisation holds your learning records. A deletion request goes to its administrator for review, including any lawful retention obligations."}
         </Txt>
         {actor.role === "student" &&
+          mode !== "guest" &&
           (requested ? (
             <Pill>Deletion request received</Pill>
           ) : confirm ? (
@@ -185,9 +207,9 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
             </Button>
           ))}
       </Disclosure>
-      {mode === "supabase" && (
+      {mode !== "demo" && (
         <Button secondary onPress={() => void signOut().catch(() => {})}>
-          Выйти из аккаунта
+          {mode === "guest" ? "Выйти из гостевого режима" : "Выйти из аккаунта"}
         </Button>
       )}
     </View>

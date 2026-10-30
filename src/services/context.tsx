@@ -49,7 +49,9 @@ import {
 } from "./supabase";
 import { demoStudentId } from "../data/seed";
 import { LearningOutbox } from "./outbox";
+import { GuestRepository, GUEST_ID, GUEST_ACTIVE_KEY } from "./guest";
 const repo = new LocalRepository(AsyncStorage);
+const guestRepo = new GuestRepository(AsyncStorage);
 const outbox = new LearningOutbox(secureStorage, async (command, owner) => {
   const { data } = await backend!.auth.getSession();
   if (!data.session || data.session.user.id !== owner)
@@ -84,7 +86,7 @@ type Context = {
   retryPending: () => Promise<void>;
   error: string | null;
   clearError: () => void;
-  mode: typeof mode;
+  mode: typeof mode | "guest";
 };
 const Ctx = createContext<Context | null>(null);
 export const useLearning = () => {
@@ -97,6 +99,7 @@ export type AuthScreenProps = {
   error: string | null;
   retry: () => void;
   login: (email: string, password: string, remember: boolean) => Promise<void>;
+  enterGuest: () => Promise<void>;
   hasSession: boolean;
   pendingRegistration: PendingRegistration | null;
   registerProfile: (input: {
@@ -170,20 +173,40 @@ export function LearningProvider({
               : s.profiles.find((p) => p.role === "admin")!.id,
         );
       } else {
-        if (!backend)
-          throw Error(
-            "Supabase is not configured. Set the public URL and publishable key.",
-          );
-        const { data, error: sessionError } = await backend.auth.getSession();
+        const { data, error: sessionError } = backend
+          ? await backend.auth.getSession()
+          : { data: { session: null }, error: null };
         if (stale() || closing.current) return;
         if (sessionError) throw authFailure(sessionError);
         if (!data.session) {
+          const guestActive = await AsyncStorage.getItem(GUEST_ACTIVE_KEY);
+          if (stale()) return;
+          if (guestActive === "1") {
+            const guestState = await guestRepo.read();
+            if (stale() || closing.current) return;
+            identity.current = GUEST_ID;
+            setState(guestState);
+            setActorId(GUEST_ID);
+            setHasSession(false);
+            setPendingCount(0);
+            setPendingRegistration(null);
+            setRecovering(false);
+            setNeedsProfile(false);
+            setError(null);
+            return;
+          }
+          if (!backend)
+            throw Error(
+              "Сервер входа не настроен. Можно продолжить как гость.",
+            );
           const pending = await readPendingRegistration();
           if (stale()) return;
           clearAccount();
           setPendingRegistration(pending);
           return;
         }
+        await AsyncStorage.removeItem(GUEST_ACTIVE_KEY);
+        if (stale() || closing.current) return;
         const userId = data.session.user.id;
         if (identity.current !== userId) {
           setState(null);
@@ -216,7 +239,7 @@ export function LearningProvider({
             ].includes(e.message)
           )
             throw e;
-          const profile = await backend
+          const profile = await backend!
             .from("profiles")
             .select("id,active")
             .eq("id", userId)
@@ -280,7 +303,8 @@ export function LearningProvider({
     const auth = backend?.auth.onAuthStateChange((event, session) => {
       if (!session) {
         // INITIAL_SESSION must not cancel the startup read of the confirmation draft.
-        if (event !== "INITIAL_SESSION") clearAccount();
+        if (event !== "INITIAL_SESSION" && identity.current !== GUEST_ID)
+          clearAccount();
       } else {
         if (
           identity.current !== session.user.id ||
@@ -319,9 +343,11 @@ export function LearningProvider({
     setSaving(true);
     try {
       const next =
-        mode === "demo"
-          ? await repo.dispatch(actorId!, cmd)
-          : await outbox.submit(actorId!, cmd);
+        actorId === GUEST_ID
+          ? await guestRepo.dispatch(cmd)
+          : mode === "demo"
+            ? await repo.dispatch(actorId!, cmd)
+            : await outbox.submit(actorId!, cmd);
       if (ticket !== generation.current || closing.current) return;
       setState(next);
       setError(null);
@@ -330,18 +356,40 @@ export function LearningProvider({
       setError(`Сохранение не подтверждено: ${errorMessage(e)}`);
       throw e;
     } finally {
-      if (mode === "supabase" && ticket === generation.current)
+      if (
+        mode === "supabase" &&
+        actorId !== GUEST_ID &&
+        ticket === generation.current
+      )
         setPendingCount((await outbox.read(actorId!).catch(() => [])).length);
       busy.current--;
       setSaving(busy.current > 0);
     }
   }
   async function switchAccount(id: string) {
-    if (mode !== "demo") throw Error("Для смены аккаунта сначала выйдите.");
+    if (mode !== "demo" || actorId === GUEST_ID)
+      throw Error("Для смены аккаунта сначала выйдите.");
     generation.current++;
     await AsyncStorage.setItem("espada.actor", id);
     setActorId(id);
     setError(null);
+  }
+  async function enterGuest() {
+    if (closing.current || busy.current > 0) return;
+    if (backend) {
+      const { data, error } = await backend.auth.getSession();
+      if (error) throw authFailure(error);
+      if (data.session) throw Error("Сначала выйдите из аккаунта.");
+    }
+    const guestState = await guestRepo.read();
+    await AsyncStorage.setItem(GUEST_ACTIVE_KEY, "1");
+    clearAccount();
+    identity.current = GUEST_ID;
+    setPendingRegistration(null);
+    setState(guestState);
+    setActorId(GUEST_ID);
+    setError(null);
+    setLoading(false);
   }
   async function login(email: string, password: string, remember: boolean) {
     setError(null);
@@ -485,6 +533,13 @@ export function LearningProvider({
     }
     closing.current = true;
     try {
+      if (actorId === GUEST_ID) {
+        await AsyncStorage.removeItem(GUEST_ACTIVE_KEY);
+        clearAccount();
+        setPendingRegistration(null);
+        setError(null);
+        return;
+      }
       if (actorId && mode === "supabase") {
         try {
           await progressOutbox.flush(actorId);
@@ -545,6 +600,7 @@ export function LearningProvider({
             void refresh();
           },
           login,
+          enterGuest,
           hasSession,
           pendingRegistration,
           registerProfile,
@@ -566,7 +622,9 @@ export function LearningProvider({
         state: visibleState!,
         actor,
         accounts:
-          mode === "demo" ? state.profiles.filter((p) => p.active) : [actor],
+          mode === "demo" && actorId !== GUEST_ID
+            ? state.profiles.filter((p) => p.active)
+            : [actor],
         dispatch,
         switchAccount,
         refresh,
@@ -574,7 +632,8 @@ export function LearningProvider({
         saving,
         pendingCount,
         retryPending: async () => {
-          if (closing.current) return;
+          if (closing.current || actorId === GUEST_ID || mode !== "supabase")
+            return;
           const ticket = generation.current;
           busy.current++;
           setSaving(true);
@@ -597,7 +656,7 @@ export function LearningProvider({
         },
         error,
         clearError: () => setError(null),
-        mode,
+        mode: actorId === GUEST_ID ? "guest" : mode,
       }}
     >
       {children}

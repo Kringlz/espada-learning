@@ -85,12 +85,12 @@ function Lesson({
   const wide = width >= 1100;
   const active = useContext(MotionActiveContext);
   const reduced = useReducedMotion();
-  const { actor } = useLearning();
+  const { actor, mode } = useLearning();
   const store = useLesson(
     actorId,
     AsyncStorage,
     lessonId,
-    actor.role === "student" ? lessonSync : undefined,
+    actor.role === "student" && mode !== "guest" ? lessonSync : undefined,
   );
   const { award, earned, ready: rewardsReady } = useRewards();
   const { play } = useSounds();
