@@ -96,13 +96,37 @@ test("Pages preparation records the exact build and rejects archived output", ()
   const root = mkdtempSync(join(realpathSync(tmpdir()), "espada-pages-test-"));
   try {
     mkdirSync(join(root, "dist"));
-    writeFileSync(join(root, "dist/index.html"), '<script src="/espada-learning/app.js"></script>');
+    writeFileSync(join(root, "dist/index.html"), '<html><head></head><body><script src="/espada-learning/app.js"></script></body></html>');
     writeFileSync(join(root, "dist/app.js"), "app");
     const script = new URL("../scripts/prepare-pages.mjs", import.meta.url);
     const env = { ...process.env, GITHUB_SHA: "a".repeat(40), GITHUB_REF_NAME: "main", GITHUB_PAGES_BASE_PATH: "/espada-learning" };
     const prepare = () => spawnSync(process.execPath, [script.pathname], { cwd: root, env, encoding: "utf8" });
     assert.equal(prepare().status, 0);
     assert.equal(JSON.parse(readFileSync(join(root, "dist/release.json"), "utf8")).commit, env.GITHUB_SHA);
+    const html = readFileSync(join(root, "dist/index.html"), "utf8");
+    assert.match(html, /href="\/espada-learning\/manifest.webmanifest"/);
+    assert.match(html, /src="\/espada-learning\/register.js"/);
+    assert.equal(readFileSync(join(root, "dist/404.html"), "utf8"), html);
+    const manifest = JSON.parse(readFileSync(join(root, "dist/manifest.webmanifest"), "utf8"));
+    const url = new URL("https://example.test/espada-learning/manifest.webmanifest");
+    for (const field of ["id", "start_url", "scope"]) {
+      assert.equal(new URL(manifest[field], url).href, "https://example.test/espada-learning/");
+    }
+    assert.equal(manifest.display, "standalone");
+    for (const icon of manifest.icons) {
+      const png = readFileSync(join(root, "dist", icon.src));
+      assert.equal(png.subarray(1, 4).toString(), "PNG");
+      assert.equal(`${png.readUInt32BE(16)}x${png.readUInt32BE(20)}`, icon.sizes);
+    }
+    assert.ok(manifest.icons.some((icon: { purpose: string }) => icon.purpose === "maskable"));
+    assert.ok(existsSync(join(root, "dist/service-worker.js")));
+    assert.equal(prepare().status, 0);
+    assert.equal(readFileSync(join(root, "dist/index.html"), "utf8"), html);
+    // Root-domain hosting must not inherit the project subdirectory.
+    env.GITHUB_PAGES_BASE_PATH = "";
+    writeFileSync(join(root, "dist/index.html"), '<html><head></head><body><script src="/app.js"></script></body></html>');
+    assert.equal(prepare().status, 0);
+    assert.match(readFileSync(join(root, "dist/index.html"), "utf8"), /href="\/manifest.webmanifest"/);
     mkdirSync(join(root, "dist/design-lab"));
     assert.notEqual(prepare().status, 0);
   } finally { rmSync(root, { recursive: true, force: true }); }
