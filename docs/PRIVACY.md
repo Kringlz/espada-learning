@@ -13,6 +13,7 @@ All shipped demo records are synthetic. No advertising, public profiles, marketi
 | Browser sessionStorage | Non-remembered session tokens and pending student commands | Connected mode; clears with browser tab session |
 | Browser localStorage | Remembered session tokens | Only when “Remember me” is selected; sign-out removes them |
 | AsyncStorage preferences | Remember-me choice, scoped to the Supabase project | Contains no password or session token |
+| Local study reminders (iOS / Android) | Device-wide opt-in and preferred hour/minute in AsyncStorage; generic text, time and timezone in the OS notification schedule | Only scheduled after opt-in and OS permission; no push token, remote notification service, name, grades or account identifier. The choice persists after sign-out and can be disabled in any profile. Web reminders are not implemented. |
 | Video host | Network/device request metadata and requested media | Only if an administrator/operator supplies an approved asset; none currently supplied |
 | Expo/EAS | Build source, dependency/configuration metadata and signing artifacts as configured | EAS has not been used; local Expo tooling downloads development packages |
 | AI provider | Nothing | Disabled; no provider or key configured |

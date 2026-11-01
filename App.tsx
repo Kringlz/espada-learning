@@ -1,4 +1,6 @@
 import { LessonSceneContext, LessonScene } from "./src/components/LessonFocus";
+import { ReminderProvider } from "./src/reminders/ReminderContext";
+import { listenForStudyReminder } from "./src/reminders/service";
 import { lessonFromHash } from "./src/course/navigation";
 import { SpaceBackdrop } from "./src/components/SpaceBackdrop";
 import { AuthScreen } from "./src/screens/Auth";
@@ -64,15 +66,17 @@ export default function App() {
       <ClarityThemeProvider>
         <SoundProvider>
           <SafeAreaProvider>
-            <LearningProvider
-              fallback={(props) => (
-                <VideoLessonTheme>
-                  <AuthScreen {...props} />
-                </VideoLessonTheme>
-              )}
-            >
-              <Workspace />
-            </LearningProvider>
+            <ReminderProvider>
+              <LearningProvider
+                fallback={(props) => (
+                  <VideoLessonTheme>
+                    <AuthScreen {...props} />
+                  </VideoLessonTheme>
+                )}
+              >
+                <Workspace />
+              </LearningProvider>
+            </ReminderProvider>
           </SafeAreaProvider>
         </SoundProvider>
       </ClarityThemeProvider>
@@ -169,6 +173,10 @@ function Shell() {
     courseOrigin.current = null;
     navigate("Home");
   }
+  useEffect(() => {
+    if (actor.role !== "student") return;
+    return listenForStudyReminder(returnToSpace);
+  }, [actor.id, actor.role]);
   const [accountOpen, setAccountOpen] = useState(false);
   const scroller = useRef<ScrollView>(null);
   const scrollContent = useRef<View>(null);

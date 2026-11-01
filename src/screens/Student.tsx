@@ -1,4 +1,5 @@
 import { useCourseProgress } from "../course/storage";
+import { StudyReminderSettings } from "../reminders/ReminderSettings";
 import { Support } from "./Support";
 import { TeacherContactEditor } from "./Family";
 import { CopyCode } from "../components/CopyCode";
@@ -79,6 +80,7 @@ export function Profile({ switchDemo }: { switchDemo?: () => void }) {
           ))}
         </View>
       </Card>
+      <StudyReminderSettings />
       {mode !== "guest" &&
         (actor.role === "student" || actor.role === "parent") && (
           <Card>
